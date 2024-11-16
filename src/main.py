@@ -1,3 +1,7 @@
+"""
+CLI script for running PotLine.
+"""
+
 from argparse import Namespace, ArgumentParser
 from potline import PotLine
 
