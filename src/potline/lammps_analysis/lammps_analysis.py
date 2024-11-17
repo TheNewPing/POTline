@@ -2,26 +2,26 @@
 Data analysis for LAMMPS simulations.
 """
 
-import os
 import subprocess
 from string import Template
+from pathlib import Path
 
-SUBMIT_SCRIPT_TEMPLATE_PATH = ''
-
-def run_properties_simulation(out_path: str,
-                              yace_path:str,
-                              lammps_bin_path: str,
-                              lammps_inps_path: str,
-                              pps_python_path: str):
+def run_properties_simulation(out_path: Path,
+                              yace_path:Path,
+                              submit_template_path: Path,
+                              lammps_bin_path: Path,
+                              lammps_inps_path: Path,
+                              pps_python_path: Path):
     """
     Run the properties simulation using LAMMPS.
 
     Args:
-        out_path (str): The path to the output directory.
-        yace_path (str): The path to the YACE executable.
-        lammps_bin_path (str): The path to the LAMMPS binary.
-        lammps_inps_path (str): The path to the LAMMPS input files.
-        pps_python_path (str): The path to the Python script for post-processing.
+        out_path (Path): The path to the output directory.
+        yace_path (Path): The path to the YACE executable.
+        submit_template_path (Path): The path to the submit script template.
+        lammps_bin_path (Path): The path to the LAMMPS binary.
+        lammps_inps_path (Path): The path to the LAMMPS input files.
+        pps_python_path (Path): The path to the Python script for post-processing.
     """
     simulation_values: dict = {
         'lammps_bin_path': lammps_bin_path,
@@ -29,11 +29,11 @@ def run_properties_simulation(out_path: str,
         'pps_python_path': pps_python_path,
         'yace_path': yace_path
     }
-    with open(SUBMIT_SCRIPT_TEMPLATE_PATH, 'r', encoding='utf-8') as file_template:
+    with submit_template_path.open('r', encoding='utf-8') as file_template:
         simulation_script_template: Template = Template(file_template.read())
         simulation_script_content: str = simulation_script_template.substitute(simulation_values)
-        simulation_script_out_path: str = os.path.join(out_path, 'submit.sh')
-        with open(simulation_script_out_path, 'w', encoding='utf-8') as file_out:
+        simulation_script_out_path: Path = out_path / 'submit.sh'
+        with simulation_script_out_path.open('w', encoding='utf-8') as file_out:
             file_out.write(simulation_script_content)
 
     subprocess.run(['bash', simulation_script_out_path], check=True)

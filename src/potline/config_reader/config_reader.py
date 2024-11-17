@@ -1,6 +1,7 @@
 """
 Configuration file reader for the optimization pipeline.
 """
+from pathlib import Path
 
 import hjson # type: ignore
 
@@ -16,13 +17,13 @@ class ConfigReader():
     - data_analysis: contains the configuration for the data analysis on mechanical properties with LAMMPS.
     - lammps: contains the configuration for the LAMMPS simulation.
     """
-    def __init__(self, file_path: str):
-        self.file_path: str = file_path
+    def __init__(self, file_path: Path):
+        self.file_path: Path = file_path
         with open(file_path, 'r', encoding='utf-8') as file:
             self.config_data: dict = hjson.load(file)
 
     def create_optimizer(self) -> Optimizer:
-        converted_file_path: str = self.file_path.replace('.hjson', '_converted.hjson')
+        converted_file_path: Path = self.file_path.with_stem(self.file_path.stem + '_converted')
         if 'optimizer' not in self.config_data:
             raise ValueError('No optimizer configuration found in the config file.')
         if 'xpot' not in self.config_data['optimizer']:

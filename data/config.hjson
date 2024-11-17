@@ -1,6 +1,7 @@
 {
     lammps: {
         bin_path: "",
+        out_yace_path: "",
     }
     inference: {
         prerun_steps: 10,
@@ -8,7 +9,9 @@
         n_cpu: 1,
     }
     data_analysis: {
-
+        submit_template_path: "",
+        lammps_inps_path: "",
+        pps_python_path: "",
     }
     optimizer: {
         "xpot": {
