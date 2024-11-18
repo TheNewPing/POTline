@@ -35,7 +35,7 @@
         },
         "potential": {
             "deltaSplineBins": 0.001,
-            "elements": ["Cu"],
+            "elements": ["Fe"],
             "embeddings": {
                 "ALL": {
                     "npot": "FinnisSinclairShiftedScaled",

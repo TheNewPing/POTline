@@ -3,10 +3,9 @@ Data analysis for LAMMPS simulations.
 """
 
 import subprocess
-from string import Template
 from pathlib import Path
 
-from ..config_reader import unpatify
+from ..config_reader import unpatify, gen_from_template
 
 def run_properties_simulation(out_path: Path,
                               yace_path:Path,
@@ -35,11 +34,7 @@ def run_properties_simulation(out_path: Path,
         'yace_path': yace_path,
         'out_path': yace_path.parent,
     })
-    with submit_template_path.open('r', encoding='utf-8') as file_template:
-        simulation_script_template: Template = Template(file_template.read())
-        simulation_script_content: str = simulation_script_template.safe_substitute(simulation_values)
-        simulation_script_out_path: Path = out_path / 'submit.sh'
-        with simulation_script_out_path.open('w', encoding='utf-8') as file_out:
-            file_out.write(simulation_script_content)
+    simulation_script_out_path: Path = out_path / 'submit.sh'
+    gen_from_template(submit_template_path, simulation_values, simulation_script_out_path)
 
     subprocess.run(['bash', simulation_script_out_path], check=True)

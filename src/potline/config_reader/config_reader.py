@@ -5,26 +5,9 @@ from pathlib import Path
 
 import hjson # type: ignore
 
+from .path_utils import patify
 from ..optimizer import Optimizer
 from ..optimizer import XpotAdapter
-
-def patify(config_dict: dict[str, str | int | float | Path]) -> dict[str, str | int | float | Path]:
-    """
-    Convert all string path values in the dictionary to Path objects.
-    """
-    for key, value in config_dict.items():
-        if key.endswith('_path') and isinstance(value, str):
-            config_dict[key] = Path(value)
-    return config_dict
-
-def unpatify(config_dict: dict[str, str | int | float | Path]) -> dict[str, str | int | float | str | Path]:
-    """
-    Convert all Path objects in the dictionary to string paths.
-    """
-    for key, value in config_dict.items():
-        if key.endswith('_path') and isinstance(value, Path):
-            config_dict[key] = str(value)
-    return config_dict
 
 class ConfigReader():
     """
