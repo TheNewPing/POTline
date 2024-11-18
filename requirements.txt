@@ -1,0 +1,3 @@
+hjson
+quippy-ase
+protobuf==3.20

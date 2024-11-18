@@ -163,3 +163,8 @@ cython_debug/
 
 # Dataset
 *.xyz
+*.gzip
+
+# output
+out/*
+first_test/*

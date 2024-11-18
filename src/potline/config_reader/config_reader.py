@@ -8,6 +8,24 @@ import hjson # type: ignore
 from ..optimizer import Optimizer
 from ..optimizer import XpotAdapter
 
+def patify(config_dict: dict[str, str | int | float | Path]) -> dict[str, str | int | float | Path]:
+    """
+    Convert all string path values in the dictionary to Path objects.
+    """
+    for key, value in config_dict.items():
+        if key.endswith('_path') and isinstance(value, str):
+            config_dict[key] = Path(value)
+    return config_dict
+
+def unpatify(config_dict: dict[str, str | int | float | Path]) -> dict[str, str | int | float | str | Path]:
+    """
+    Convert all Path objects in the dictionary to string paths.
+    """
+    for key, value in config_dict.items():
+        if key.endswith('_path') and isinstance(value, Path):
+            config_dict[key] = str(value)
+    return config_dict
+
 class ConfigReader():
     """
     Class for reading and converting configuration files.
@@ -23,26 +41,44 @@ class ConfigReader():
             self.config_data: dict = hjson.load(file)
 
     def create_optimizer(self) -> Optimizer:
+        """
+        Convert the configuration file to the XPOT format and create an optimizer.
+        """
         converted_file_path: Path = self.file_path.with_stem(self.file_path.stem + '_converted')
         if 'optimizer' not in self.config_data:
             raise ValueError('No optimizer configuration found in the config file.')
         if 'xpot' not in self.config_data['optimizer']:
             raise ValueError('No XPOT configuration found in the optimizer configuration.')
+
+        # add model name
+        self.config_data['optimizer']['xpot']['fitting_executable'] = \
+            self.config_data['general']['model_name']
+
         with open(converted_file_path, 'w', encoding='utf-8') as converted_file:
             hjson.dump(self.config_data['optimizer'], converted_file)
         return XpotAdapter(converted_file_path)
 
-    def get_inf_benchmark_config(self) -> dict:
+    def get_inf_benchmark_config(self) -> dict[str, str | int | float | Path]:
         if 'inference' not in self.config_data:
             raise ValueError('No inference configuration found in the config file.')
-        return self.config_data['inference']
+        return patify(self.config_data['inference'])
 
-    def get_data_analysis_config(self) -> dict:
+    def get_data_analysis_config(self) -> dict[str, str | int | float | Path]:
         if 'data_analysis' not in self.config_data:
             raise ValueError('No data analysis configuration found in the config file.')
-        return self.config_data['data_analysis']
+        return patify(self.config_data['data_analysis'])
 
-    def get_lammps_config(self) -> dict:
-        if 'lammps' not in self.config_data:
-            raise ValueError('No LAMMPS configuration found in the config file.')
-        return self.config_data['lammps']
+    def get_lammps_bin_path(self) -> Path:
+        if 'general' not in self.config_data or 'lammps_bin_path' not in self.config_data['general']:
+            raise ValueError('No LAMMPS binary path found in the config file.')
+        return Path(self.config_data['general']['lammps_bin_path'])
+
+    def get_out_yace_path(self) -> Path:
+        if 'general' not in self.config_data or 'out_yace_path' not in self.config_data['general']:
+            raise ValueError('No YACE output path found in the config file.')
+        return Path(self.config_data['general']['out_yace_path'])
+
+    def get_model_name(self) -> str:
+        if 'general' not in self.config_data or 'model_name' not in self.config_data['general']:
+            raise ValueError('No model name found in the config file.')
+        return self.config_data['general']['model_name']

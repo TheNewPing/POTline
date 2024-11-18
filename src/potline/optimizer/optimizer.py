@@ -18,7 +18,11 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def optimize(self, max_iter: int, out_yace_path: Path) -> list[Path]:
+    def optimize(self, max_iter: int):
+        pass
+
+    @abstractmethod
+    def get_sweep_path(self) -> Path:
         pass
 
     @abstractmethod
