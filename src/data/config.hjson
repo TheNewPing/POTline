@@ -1,21 +1,21 @@
 {
     general: {
-        lammps_bin_path: "/home/edoardo/repos/lammps/build/lmp",
-        out_yace_path: "/home/edoardo/repos/POTline/out/",
+        lammps_bin_path: "/media/HDD/erodaro/lammps/build/lmp",
+        out_yace_path: "./out/",
         model_name: pacemaker
     }
     inference: {
         prerun_steps: 10,
         max_steps: 100,
         n_cpu: 1,
-        lammps_inps_template_path: "/home/edoardo/repos/POTline/src/potline/lammps_runner/template/bench.in",
-        bench_script_template_path: "/home/edoardo/repos/POTline/src/potline/lammps_runner/template/run.sh",
+        lammps_inps_template_path: "./src/potline/lammps_runner/template/bench.in",
+        bench_script_template_path: "./src/potline/lammps_runner/template/run.sh",
     }
     data_analysis: {
-        submit_template_path: "/home/edoardo/repos/POTline/src/potline/lammps_analysis/template/submit_local.sh",
-        lammps_inps_path: "/home/edoardo/repos/POTline/src/potline/lammps_analysis/pot_testing/lmps_inputs/",
-        pps_python_path: "/home/edoardo/repos/POTline/src/potline/lammps_analysis/pot_testing/py_pps/",
-        ref_data_path: "/home/edoardo/repos/POTline/src/potline/lammps_analysis/pot_testing/REF_DATA/",
+        submit_template_path: "./src/potline/lammps_analysis/template/submit_local.sh",
+        lammps_inps_path: "./src/potline/lammps_analysis/pot_testing/lmps_inputs/",
+        pps_python_path: "./src/potline/lammps_analysis/pot_testing/py_pps/",
+        ref_data_path: "./src/potline/lammps_analysis/pot_testing/REF_DATA/",
     }
     optimizer: {
         "xpot": {
@@ -30,7 +30,7 @@
             "purpose": "Potential fit"
             },
         "data": {
-            "filename": "/home/edoardo/repos/ACEline/src/data/ogata_extended.xyz",
+            "filename": "./src/data/ogata_extended.xyz",
             "test_size": 0.10
         },
         "potential": {

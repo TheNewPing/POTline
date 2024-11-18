@@ -16,7 +16,7 @@ if __name__ == '__main__':
         parser.add_argument('--conversion', action='store_true', help='Enable yace conversion')
         parser.add_argument('--inference', action='store_true', help='Enable inference benchmark')
         parser.add_argument('--properties', action='store_true', help='Enable properties simulation')
-        parser.add_argument('--fitted', type=str, help='Path to the fitted potential')
+        parser.add_argument('--fitted', type=str, default=None, help='Path to the fitted potential')
         return parser.parse_args()
 
     args: Namespace = parse_args()
