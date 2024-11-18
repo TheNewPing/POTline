@@ -32,7 +32,6 @@ def run_properties_simulation(out_path: Path,
         'pps_python_path': pps_python_path,
         'ref_data_path': ref_data_path,
         'yace_path': yace_path,
-        'out_path': yace_path.parent,
     })
     simulation_script_out_path: Path = out_path / 'submit.sh'
     gen_from_template(submit_template_path, simulation_values, simulation_script_out_path)
