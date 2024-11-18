@@ -79,7 +79,7 @@ elif [[ ${pot} = "mtp" ]]; then
 fi
 
 # Generate the interatomic potential file
-cat >./potential/potential.in <<EOF
+cat > ${out_path}/potential.in <<EOF
 # Define the interatomic potential
 pair_style ${pstyle}
 pair_coeff * * ${pcoeff} 
@@ -96,8 +96,8 @@ potential_name=`echo $(basename $fullpath)`
 # Grep the potential version and echo to results file
 echo '#**********************************' | tee -a  ./data/results.txt
 echo 'Potential basis set:' ${potential_name} | tee -a ./data/results.txt
-awk '/^pair_style*/' ./potential/potential.in | tee -a ./data/results.txt
-awk '/^pair_coeff*/' ./potential/potential.in | tee -a ./data/results.txt
+awk '/^pair_style*/' ${out_path}/potential.in | tee -a ./data/results.txt
+awk '/^pair_coeff*/' ${out_path}/potential.in | tee -a ./data/results.txt
 echo '#**********************************' | tee -a ./data/results.txt
 
 #**********************************

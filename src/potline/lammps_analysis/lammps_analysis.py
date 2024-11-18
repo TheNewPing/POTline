@@ -25,13 +25,15 @@ def run_properties_simulation(out_path: Path,
         lammps_bin_path (Path): The path to the LAMMPS binary.
         lammps_inps_path (Path): The path to the LAMMPS input files.
         pps_python_path (Path): The path to the Python script for post-processing.
+        ref_data_path (Path): The path to the reference data.
     """
     simulation_values: dict = unpatify({
         'lammps_bin_path': lammps_bin_path,
         'lammps_inps_path': lammps_inps_path,
         'pps_python_path': pps_python_path,
         'ref_data_path': ref_data_path,
-        'yace_path': yace_path
+        'yace_path': yace_path,
+        'out_path': yace_path.parent,
     })
     with submit_template_path.open('r', encoding='utf-8') as file_template:
         simulation_script_template: Template = Template(file_template.read())
