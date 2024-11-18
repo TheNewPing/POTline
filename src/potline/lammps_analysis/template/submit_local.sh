@@ -31,17 +31,17 @@
 #SBATCH --mail-user=lei.zhang@rug.nl
 
 # clear caches
-rm dump*
-rm *.csv
-rm sfe*
-rm -r ./data
-rm -r ./plots
-rm in.*
-rm *.mod
-rm *.py
-rm results.txt
-rm *.log
-rm potential/potential.in
+# # rm dump*
+# # rm *.csv
+# # rm sfe*
+# # rm -r ./data
+# # rm -r ./plots
+# # rm in.*
+# # rm *.mod
+# # rm *.py
+# # rm results.txt
+# # rm *.log
+# # rm potential/potential.in
 #**********************************
 # Customize section
 #**********************************
@@ -157,7 +157,7 @@ cp ./ts_110.csv ./data
 #**********************************
 # Execute python script to do the plots.py------------------------------
 # Plot E-V curve and Bain path
-cp -r /home1/p301616/pot_testing/REF_DATA . 
+cp -r ${ref_data_path} . 
 mkdir plots
 cd plots
 cp ${pps_python}/eos_bain.py .

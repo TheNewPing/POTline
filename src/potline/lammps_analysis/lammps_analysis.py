@@ -13,7 +13,8 @@ def run_properties_simulation(out_path: Path,
                               lammps_bin_path: Path,
                               submit_template_path: Path,
                               lammps_inps_path: Path,
-                              pps_python_path: Path):
+                              pps_python_path: Path,
+                              ref_data_path: Path):
     """
     Run the properties simulation using LAMMPS.
 
@@ -29,6 +30,7 @@ def run_properties_simulation(out_path: Path,
         'lammps_bin_path': lammps_bin_path,
         'lammps_inps_path': lammps_inps_path,
         'pps_python_path': pps_python_path,
+        'ref_data_path': ref_data_path,
         'yace_path': yace_path
     })
     with submit_template_path.open('r', encoding='utf-8') as file_template:

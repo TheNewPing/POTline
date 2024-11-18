@@ -1,21 +1,24 @@
 {
-    lammps: {
-        bin_path: "",
-        out_yace_path: "",
+    general: {
+        lammps_bin_path: "/home/edoardo/repos/lammps/build/lmp",
+        out_yace_path: "/home/edoardo/repos/POTline/out/",
+        model_name: pacemaker
     }
     inference: {
         prerun_steps: 10,
         max_steps: 100,
         n_cpu: 1,
+        lammps_inps_template_path: "/home/edoardo/repos/POTline/src/potline/lammps_runner/template/bench.in",
+        bench_script_template_path: "/home/edoardo/repos/POTline/src/potline/lammps_runner/template/run.sh",
     }
     data_analysis: {
-        submit_template_path: "",
-        lammps_inps_path: "",
-        pps_python_path: "",
+        submit_template_path: "/home/edoardo/repos/POTline/src/potline/lammps_analysis/template/submit_local.sh",
+        lammps_inps_path: "/home/edoardo/repos/POTline/src/potline/lammps_analysis/pot_testing/lmps_inputs/",
+        pps_python_path: "/home/edoardo/repos/POTline/src/potline/lammps_analysis/pot_testing/py_pps/",
+        ref_data_path: "/home/edoardo/repos/POTline/src/potline/lammps_analysis/pot_testing/REF_DATA/",
     }
     optimizer: {
         "xpot": {
-            fitting_executable: pacemaker
             project_name: first_test
             sweep_name: test_ace
             error_method: rmse
@@ -27,7 +30,7 @@
             "purpose": "Potential fit"
             },
         "data": {
-            "filename": "/home/edoardo/repos/ACEline/data/ogata_extended.xyz",
+            "filename": "/home/edoardo/repos/ACEline/src/data/ogata_extended.xyz",
             "test_size": 0.10
         },
         "potential": {
@@ -94,7 +97,7 @@
             // },
             "optimizer": "BFGS",
             "options": "",
-            "maxiter": 10,
+            "maxiter": 1,
             "repulsion": "auto",
             "trainable_parameters": "ALL",
             "fit_cycles": "",
