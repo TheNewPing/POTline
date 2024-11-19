@@ -27,7 +27,7 @@
             "purpose": "Potential fit"
             },
         "data": {
-            "filename": "./src/data/ogata_extended.xyz",
+            "filename": "./src/data/Ogata_DB.pckl.gzip",
             "test_size": 0.10
         },
         "potential": {
