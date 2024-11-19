@@ -38,9 +38,8 @@ class XpotAdapter(Optimizer):
 
         # Move the sweep directory to the fitting directory
         sweep_path: Path = self.model.get_sweep_path()
-        fitted_dirs: list[Path] = [item for item in sweep_path.iterdir() if item.is_dir()]
+        all_items: list[Path] = list(sweep_path.iterdir())
         fitting_dir: Path = sweep_path / FITTING_DIR_NAME
         fitting_dir.mkdir(exist_ok=True)
-        for f_dir in fitted_dirs:
-            if f_dir.is_dir():
-                shutil.move(f_dir, fitting_dir / f_dir.name)
+        for item in all_items:
+            shutil.move(item, fitting_dir / item.name)
