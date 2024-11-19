@@ -47,8 +47,7 @@ def XpotModelFactory(config_path: Path) -> XpotModel:
         config_data: dict = hjson.load(file)
         if config_data['xpot']['fitting_executable'] == 'pacemaker':
             return XpotPACE(config_path)
-        else:
-            raise ValueError('Model not supported.')
+        raise ValueError('Model not supported.')
 
 class XpotPACE(XpotModel):
     """
