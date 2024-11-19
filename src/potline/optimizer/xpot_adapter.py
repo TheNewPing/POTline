@@ -23,29 +23,24 @@ class XpotAdapter(Optimizer):
         "n_initial_points": 5,
         }
         self.model: XpotModel = XpotModelFactory(config_path)
-        self.optimizer = NamedOptimiser(self.model.get_optimization_space(),
+        self.optimizer: NamedOptimiser = NamedOptimiser(self.model.get_optimization_space(),
                                         self.model.get_sweep_path(), kwargs)
 
     def optimize(self, max_iter: int):
-        """
-        Optimizes the potential using the XPOT optimizer.
-
-        Args:
-            max_iter (int): The maximum number of iterations.
-        """
         while self.optimizer.iter <= max_iter:
             self.optimizer.run_optimisation(self.model.fit, path=self.model.get_sweep_path())
-
-        # Move the sweep directory to the fitting directory
-        sweep_path = self.model.get_sweep_path()
-        fitting_dir = sweep_path / FITTING_DIR_NAME
-        fitting_dir.mkdir(exist_ok=True)
-        for item in sweep_path.iterdir():
-            if item.is_dir():
-                shutil.move(item, fitting_dir / item.name)
 
     def get_sweep_path(self) -> Path:
         return self.model.get_sweep_path()
 
-    def get_final_results(self):
+    def get_final_results(self) -> None:
         self.optimizer.tabulate_final_results(self.model.get_sweep_path())
+
+        # Move the sweep directory to the fitting directory
+        sweep_path: Path = self.model.get_sweep_path()
+        fitted_dirs: list[Path] = [item for item in sweep_path.iterdir() if item.is_dir()]
+        fitting_dir: Path = sweep_path / FITTING_DIR_NAME
+        fitting_dir.mkdir(exist_ok=True)
+        for f_dir in fitted_dirs:
+            if f_dir.is_dir():
+                shutil.move(f_dir, fitting_dir / f_dir.name)
