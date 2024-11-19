@@ -9,13 +9,17 @@ from potline import PotLine
 
 if __name__ == '__main__':
     def parse_args() -> Namespace:
+        """
+        Parse the command line arguments.
+        """
         parser: ArgumentParser = ArgumentParser(description='Process some parameters.')
-        parser.add_argument('--config', type=str, required=True, help='Path to the config file')
+        parser.add_argument('--config', type=str, default='src/data/config.hjson',
+                            help='Path to the config file')
         parser.add_argument('--iterations', type=int, default=1, help='Number of iterations')
-        parser.add_argument('--fitting', action='store_true', help='Enable potential fitting')
-        parser.add_argument('--conversion', action='store_true', help='Enable yace conversion')
-        parser.add_argument('--inference', action='store_true', help='Enable inference benchmark')
-        parser.add_argument('--properties', action='store_true', help='Enable properties simulation')
+        parser.add_argument('--nofitting', action='store_false', help='Disable potential fitting')
+        parser.add_argument('--noconversion', action='store_false', help='Disable yace conversion')
+        parser.add_argument('--noinference', action='store_false', help='Disable inference benchmark')
+        parser.add_argument('--noproperties', action='store_false', help='Disable properties simulation')
         parser.add_argument('--fitted', type=str, default=None, help='Path to the fitted potential')
         return parser.parse_args()
 
@@ -23,9 +27,9 @@ if __name__ == '__main__':
 
     potline = PotLine(Path(args.config),
                       args.iterations,
-                      args.fitting,
-                      args.conversion,
-                      args.inference,
-                      args.properties,
+                      args.nofitting,
+                      args.noconversion,
+                      args.noinference,
+                      args.noproperties,
                       Path(args.fitted) if args.fitted else None)
     potline.run()

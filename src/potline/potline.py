@@ -7,7 +7,7 @@ from typing import Optional
 
 from .config_reader import ConfigReader
 from .optimizer import Optimizer
-from .optimizer.model import convert_yace
+from .optimizer.model import convert_yace, create_potential
 from .lammps_runner import run_benchmark
 from .lammps_analysis import run_properties_simulation
 
@@ -70,12 +70,15 @@ class PotLine():
         else:
             yace_list = get_yaces(self.out_yace_path)
 
+        for yace_path in yace_list:
+            create_potential(self.model_name, yace_path, yace_path.parent)
+
         if self.with_inference:
             inf_config: dict = self.config_reader.get_inf_benchmark_config()
             for yace_path in yace_list:
-                run_benchmark(yace_path.parent, yace_path, self.lammps_bin_path, **inf_config)
+                run_benchmark(yace_path.parent, self.lammps_bin_path, **inf_config)
 
         if self.with_data_analysis:
             data_config: dict = self.config_reader.get_data_analysis_config()
             for yace_path in yace_list:
-                run_properties_simulation(yace_path.parent, yace_path, self.lammps_bin_path, **data_config)
+                run_properties_simulation(yace_path.parent, self.lammps_bin_path, **data_config)

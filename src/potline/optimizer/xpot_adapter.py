@@ -3,10 +3,11 @@ XPOT adapter for the optimization pipeline.
 """
 
 from pathlib import Path
+import shutil
 
 from xpot.optimiser import NamedOptimiser # type: ignore
 
-from .optimizer import Optimizer
+from .optimizer import Optimizer, FITTING_DIR_NAME
 from .model import XpotModel, XpotModelFactory
 
 class XpotAdapter(Optimizer):
@@ -33,7 +34,15 @@ class XpotAdapter(Optimizer):
             max_iter (int): The maximum number of iterations.
         """
         while self.optimizer.iter <= max_iter:
-            self.optimizer.run_optimisation(self.model.fit, path = self.model.get_sweep_path())
+            self.optimizer.run_optimisation(self.model.fit, path=self.model.get_sweep_path())
+
+        # Move the sweep directory to the fitting directory
+        sweep_path = self.model.get_sweep_path()
+        fitting_dir = sweep_path / FITTING_DIR_NAME
+        fitting_dir.mkdir(exist_ok=True)
+        for item in sweep_path.iterdir():
+            if item.is_dir():
+                shutil.move(item, fitting_dir / item.name)
 
     def get_sweep_path(self) -> Path:
         return self.model.get_sweep_path()

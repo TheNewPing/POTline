@@ -60,30 +60,33 @@ pot="ace"
 # input the potential file name
 # # potfilename=`ls ${PWD}/potential/`
 
+# Change to the output directory
+cd ${out_path}
+
 # For GAP, one need to define the right coeff
-if [[ ${pot} = "ace" ]]; then
-	pstyle="pace"
-	pcoeff="${yace_path} Fe"
-elif [[ ${pot} = "gap" ]]; then
-	pstyle="quip"
-	pcoeff="${PWD}/potential/${potfilename} 'IP GAP' 26"
-elif [[ ${pot} = "n2p2" ]]; then
-	pstyle="hdnnp 6.5 dir ${PWD}/potential showew no showewsum 1000 resetew yes maxew 1000000 cflength 1 cfenergy 1"
-	pcoeff="Fe"
-elif [[ ${pot} = "ann" ]]; then
-	pstyle="aenet"
-	pcoeff="v-1 Fe 15tw-15tw.nn Fe"
-elif [[ ${pot} = "mtp" ]]; then
-	pstyle="mlip ${PWD}/potential/mlip.ini"
-	poceff=""
-fi
+# if [[ ${pot} = "ace" ]]; then
+# 	pstyle="pace"
+# 	pcoeff="../potential.in Fe"
+# elif [[ ${pot} = "gap" ]]; then
+# 	pstyle="quip"
+# 	pcoeff="${PWD}/potential/${potfilename} 'IP GAP' 26"
+# elif [[ ${pot} = "n2p2" ]]; then
+# 	pstyle="hdnnp 6.5 dir ${PWD}/potential showew no showewsum 1000 resetew yes maxew 1000000 cflength 1 cfenergy 1"
+# 	pcoeff="Fe"
+# elif [[ ${pot} = "ann" ]]; then
+# 	pstyle="aenet"
+# 	pcoeff="v-1 Fe 15tw-15tw.nn Fe"
+# elif [[ ${pot} = "mtp" ]]; then
+# 	pstyle="mlip ${PWD}/potential/mlip.ini"
+# 	poceff=""
+# fi
 
 # Generate the interatomic potential file
-cat > ./potential/potential.in <<EOF
-# Define the interatomic potential
-pair_style ${pstyle}
-pair_coeff * * ${pcoeff} 
-EOF
+# cat > ./potential/potential.in <<EOF
+# # Define the interatomic potential
+# pair_style ${pstyle}
+# pair_coeff * * ${pcoeff} 
+# EOF
 # create a data folder
 mkdir data
 
@@ -96,8 +99,8 @@ potential_name=`echo $(basename $fullpath)`
 # Grep the potential version and echo to results file
 echo '#**********************************' | tee -a  ./data/results.txt
 echo 'Potential basis set:' ${potential_name} | tee -a ./data/results.txt
-awk '/^pair_style*/' ./potential/potential.in | tee -a ./data/results.txt
-awk '/^pair_coeff*/' ./potential/potential.in | tee -a ./data/results.txt
+awk '/^pair_style*/' ./potential.in | tee -a ./data/results.txt
+awk '/^pair_coeff*/' ./potential.in | tee -a ./data/results.txt
 echo '#**********************************' | tee -a ./data/results.txt
 
 #**********************************

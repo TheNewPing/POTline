@@ -19,7 +19,7 @@ create_atoms	1 box
 mass            1 55.845
 
 pair_style pace
-pair_coeff * * ${yace_path} Fe
+pair_coeff * * ../potential.in Fe
 
 velocity	all create 300.0 376847 loop geom
 

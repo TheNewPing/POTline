@@ -23,12 +23,12 @@ def unpatify(config_dict: dict[str, str | int | float | Path]) -> dict[str, str 
             config_dict[key] = str(value)
     return config_dict
 
-def gen_from_template(template_path: Path, values: dict[str, str | int | float | Path], out_path: Path):
+def gen_from_template(template_path: Path, values: dict[str, str | int | float | Path], out_filepath: Path):
     """
     Generate a file from a template file.
     """
     with template_path.open('r', encoding='utf-8') as file_template:
         template: Template = Template(file_template.read())
         content: str = template.safe_substitute(values)
-        with out_path.open('w', encoding='utf-8') as file_out:
+        with out_filepath.open('w', encoding='utf-8') as file_out:
             file_out.write(content)
