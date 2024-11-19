@@ -39,13 +39,10 @@ def run_benchmark(out_path: Path,
         'max_steps': max_steps,
         'n_cpu': n_cpu,
         'lammps_bin_path': lammps_bin_path,
-        'bench_potential_in_path': lammps_in_out_path
+        'bench_potential_in_path': lammps_in_out_path,
+        'out_path': out_path
     })
     bench_script_out_path: Path = out_path / 'bench.sh'
     gen_from_template(bench_script_template_path, bench_script_values, bench_script_out_path)
 
-    result = subprocess.run(['bash', bench_script_out_path], check=True, capture_output=True, text=True)
-    output_lines = result.stdout.splitlines()
-    runtime3 = output_lines[-2]  # Assuming runtime3 is the second last line
-
-    print(f"runtime3: {runtime3}")
+    subprocess.run(['bash', bench_script_out_path], check=True, capture_output=True, text=True)
