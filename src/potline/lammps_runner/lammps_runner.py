@@ -5,7 +5,7 @@ This module is responsible for running LAMMPS benchmarks.
 import subprocess
 from pathlib import Path
 
-from ..config_reader import unpatify, gen_from_template
+from ..utils import unpatify, gen_from_template
 
 INFERENCE_BENCH_DIR_NAME: str = 'inference_bench'
 LAMMPS_IN_NAME: str = 'bench.in'

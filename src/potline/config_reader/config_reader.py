@@ -5,9 +5,9 @@ from pathlib import Path
 
 import hjson # type: ignore
 
-from .path_utils import patify
+from ..utils import patify
 from ..optimizer import Optimizer
-from ..optimizer import XpotAdapter
+from ..optimizer.xpot_adapter import XpotAdapter
 
 class ConfigReader():
     """

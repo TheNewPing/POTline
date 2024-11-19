@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 
 from ..optimizer import FITTING_DIR_NAME, BEST_POTENTIAL_NAME
-from ...config_reader import unpatify, gen_from_template
+from ...utils import unpatify, gen_from_template
 
 YACE_NAME: str = 'pace.yace'
 POTENTIAL_NAME: str = 'potential.in'

@@ -5,7 +5,7 @@ Data analysis for LAMMPS simulations.
 import subprocess
 from pathlib import Path
 
-from ..config_reader import unpatify, gen_from_template
+from ..utils import unpatify, gen_from_template
 
 PROPERTIES_BENCH_DIR_NAME: str = 'properties_bench'
 SUBMIT_TEMPLATE_NAME: str = 'submit_local.sh'

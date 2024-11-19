@@ -66,7 +66,7 @@ class PotLine():
             self.optimizer.get_final_results()
 
         if self.with_conversion:
-            yace_list = convert_yace(self.model_name, self.fitted_path, self.out_yace_path)
+            yace_list = convert_yace(self.model_name, self.fitted_path)
         else:
             yace_list = get_yaces(self.out_yace_path)
 
