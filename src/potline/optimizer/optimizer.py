@@ -5,7 +5,6 @@ Optimizer interface for the optimization pipeline.
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-FITTING_DIR_NAME: str = 'fitting'
 BEST_POTENTIAL_NAME: str = 'interim_potential_best_cycle.yaml'
 
 class Optimizer(ABC):
