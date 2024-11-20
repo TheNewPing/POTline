@@ -44,7 +44,7 @@
 #
 
 include init.mod
-include ./potential/potential.in
+include ../potential.in
 include neigh.mod
 
 # Compute initial state

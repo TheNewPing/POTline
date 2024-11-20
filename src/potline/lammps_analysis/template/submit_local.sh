@@ -83,7 +83,7 @@ pot="ace"
 # fi
 
 # Generate the interatomic potential file
-# cat > ./potential/potential.in <<EOF
+# cat > ../potential.in <<EOF
 # # Define the interatomic potential
 # pair_style ${pstyle}
 # pair_coeff * * ${pcoeff} 
@@ -96,7 +96,6 @@ mkdir data
 #**********************************
 ## locate the folder and grep the folder name
 fullpath=${PWD}
-printf "SAAAAAAAAAS The full path of the folder is: %s\n" ${fullpath}
 potential_name=`echo $(basename $fullpath)`
 # Grep the potential version and echo to results file
 echo '#**********************************' | tee -a  ./data/results.txt
