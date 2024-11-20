@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 
 from ..utils import unpatify, gen_from_template
+from ..optimizer.model import POTENTIAL_NAME
 
 INFERENCE_BENCH_DIR_NAME: str = 'inference_bench'
 LAMMPS_IN_NAME: str = 'bench.in'
@@ -32,7 +33,9 @@ def run_benchmark(out_path: Path,
     inf_bench_dir: Path = out_path / INFERENCE_BENCH_DIR_NAME
     inf_bench_dir.mkdir(exist_ok=True)
 
-    lammps_in_values: dict = unpatify({})
+    lammps_in_values: dict = unpatify({
+        'pot_path': out_path / POTENTIAL_NAME,
+    })
     lammps_in_out_path: Path = inf_bench_dir / LAMMPS_IN_NAME
     gen_from_template(LAMMPS_IN_TEMPLATE_PATH, lammps_in_values, lammps_in_out_path)
 

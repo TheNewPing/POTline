@@ -18,7 +18,7 @@ create_atoms	1 box
 
 mass            1 55.845
 
-include         ../potential.in
+include         ${pot_path}
 
 velocity	all create 300.0 376847 loop geom
 
