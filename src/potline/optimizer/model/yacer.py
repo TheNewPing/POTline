@@ -25,7 +25,7 @@ def run_yacer(model_name: str, pot_path: Path, out_path: Path) -> Path:
         Path: The path to the YACE file.
     """
     if model_name == 'pacemaker':
-        subprocess.run(['pace_yaml2yace', '-o', out_path, pot_path], check=True)
+        subprocess.run(['pace_yaml2yace', '-o', str(out_path), str(pot_path)], check=True)
     else:
         raise ValueError(f'Unknown model name: {model_name}')
     return out_path

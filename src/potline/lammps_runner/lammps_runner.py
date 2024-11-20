@@ -47,4 +47,4 @@ def run_benchmark(out_path: Path,
     bench_script_out_path: Path = inf_bench_dir / BENCH_SCRIPT_NAME
     gen_from_template(BENCH_SCRIPT_TEMPLATE_PATH, bench_script_values, bench_script_out_path)
 
-    subprocess.run(['bash', bench_script_out_path], check=True)
+    subprocess.run(['bash', str(bench_script_out_path)], check=True)

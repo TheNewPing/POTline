@@ -2,7 +2,6 @@
 XpotModel interface and factory function.
 """
 
-import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -28,10 +27,6 @@ class XpotModel(ABC):
         iteration: int,
         filename: str
     ) -> float:
-        pass
-
-    @abstractmethod
-    def convert_yace(self, pot_path: Path, out_path: Path) -> Path:
         pass
 
     @abstractmethod
@@ -66,10 +61,6 @@ class XpotPACE(XpotModel):
         filename: str = 'xpot-ace.yaml'
     ) -> float:
         return self.model.fit(opt_values, iteration, filename)
-
-    def convert_yace(self, pot_path: Path, out_path: Path) -> Path:
-        subprocess.run(['pace_yaml2yace', '-o', out_path, pot_path], check=True)
-        return out_path
 
     def get_optimization_space(self) -> dict[tuple[str, ...], Dimension]:
         return self.model.optimisation_space
