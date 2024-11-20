@@ -30,6 +30,9 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=lei.zhang@rug.nl
 
+# Change to the output directory
+cd ${out_path}
+
 # clear caches
 rm dump*
 rm *.csv
@@ -60,8 +63,6 @@ pot="ace"
 # input the potential file name
 # # potfilename=`ls ${PWD}/potential/`
 
-# Change to the output directory
-cd ${out_path}
 
 # For GAP, one need to define the right coeff
 # if [[ ${pot} = "ace" ]]; then
@@ -95,6 +96,7 @@ mkdir data
 #**********************************
 ## locate the folder and grep the folder name
 fullpath=${PWD}
+printf "SAAAAAAAAAS The full path of the folder is: %s\n" ${fullpath}
 potential_name=`echo $(basename $fullpath)`
 # Grep the potential version and echo to results file
 echo '#**********************************' | tee -a  ./data/results.txt
