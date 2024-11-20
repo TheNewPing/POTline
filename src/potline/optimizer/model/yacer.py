@@ -30,24 +30,25 @@ def run_yacer(model_name: str, pot_path: Path, out_path: Path) -> Path:
         raise ValueError(f'Unknown model name: {model_name}')
     return out_path
 
-def convert_yace(model_name: str, fitted_path: Path) -> list[Path]:
+def convert_yace(model_name: str, sweep_path: Path) -> list[Path]:
     """
     Converts the best potentials to YACE format.
 
     Args:
-        fitted_path (Path): The path to the sweep directory.
+        sweep_path (Path): The path to the sweep directory.
 
     Returns:
         list[Path]: List of paths to the YACE files.
     """
     # Convert the best potentials to YACE format
     yace_list: list[Path] = []
-    model_dirs = [d for d in fitted_path.iterdir() if d.is_dir()]
+    fitted_path: Path = sweep_path / FITTING_DIR_NAME
+    model_dirs: list[Path] = [d for d in fitted_path.iterdir() if d.is_dir()]
     for model_dir in model_dirs:
         # Convert the best cycle to YACE format
         yace_list.append(run_yacer(
             model_name,
-            model_dir.resolve() / FITTING_DIR_NAME / BEST_POTENTIAL_NAME,
+            model_dir.resolve() / BEST_POTENTIAL_NAME,
             model_dir.resolve() / YACE_NAME))
     return yace_list
 
