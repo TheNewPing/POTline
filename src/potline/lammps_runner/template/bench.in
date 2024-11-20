@@ -12,7 +12,7 @@ units		metal
 atom_style	atomic
 
 lattice		bcc 2.830
-region		box block 0 ${{xx}} 0 ${{yy}} 0 ${{zz}}
+region		box block 0 $xx 0 $yy 0 $zz
 create_box	1 box
 create_atoms	1 box
 
