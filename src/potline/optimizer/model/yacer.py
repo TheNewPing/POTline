@@ -5,7 +5,7 @@ Model YAML to YACE converter.
 import subprocess
 from pathlib import Path
 
-from ..optimizer import FITTING_DIR_NAME, BEST_POTENTIAL_NAME
+from ..optimizer import BEST_POTENTIAL_NAME
 from ...utils import unpatify, gen_from_template
 
 YACE_NAME: str = 'pace.yace'
@@ -42,8 +42,7 @@ def convert_yace(model_name: str, sweep_path: Path) -> list[Path]:
     """
     # Convert the best potentials to YACE format
     yace_list: list[Path] = []
-    fitted_path: Path = sweep_path / FITTING_DIR_NAME
-    model_dirs: list[Path] = [d for d in fitted_path.iterdir() if d.is_dir()]
+    model_dirs: list[Path] = [d for d in sweep_path.iterdir() if d.is_dir()]
     for model_dir in model_dirs:
         # Convert the best cycle to YACE format
         yace_list.append(run_yacer(
