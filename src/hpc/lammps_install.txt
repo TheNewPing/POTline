@@ -1,6 +1,6 @@
 #!/bin/bash
 
-module load 2023.01
+module load 2023
 module load StdEnv
 module load OpenMPI
 module load CMake
