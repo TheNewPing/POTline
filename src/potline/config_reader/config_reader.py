@@ -65,3 +65,8 @@ class ConfigReader():
         if 'general' not in self.config_data or 'model_name' not in self.config_data['general']:
             raise ValueError('No model name found in the config file.')
         return self.config_data['general']['model_name']
+
+    def get_best_n_models(self) -> int:
+        if 'general' not in self.config_data or 'best_n_models' not in self.config_data['general']:
+            raise ValueError('No best n models found in the config file.')
+        return self.config_data['general']['best_n_models']

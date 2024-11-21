@@ -20,6 +20,7 @@ if __name__ == '__main__':
         parser.add_argument('--noconversion', action='store_false', help='Disable yace conversion')
         parser.add_argument('--noinference', action='store_false', help='Disable inference benchmark')
         parser.add_argument('--noproperties', action='store_false', help='Disable properties simulation')
+        parser.add_argument('--nohpc', action='store_false', help='Disable HPC mode')
         parser.add_argument('--fitted', type=str, default=None, help='Path to the fitted potential')
         return parser.parse_args()
 
@@ -31,5 +32,7 @@ if __name__ == '__main__':
                       args.noconversion,
                       args.noinference,
                       args.noproperties,
+                      args.nohpc,
                       Path(args.fitted) if args.fitted else None)
-    potline.run()
+
+    potline.run_local()

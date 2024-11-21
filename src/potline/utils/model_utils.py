@@ -1,14 +1,17 @@
 """
-Model YAML to YACE converter.
+Model utilities.
 """
 
 import subprocess
 from pathlib import Path
 
+import pandas as pd
+
 from ..optimizer import BEST_POTENTIAL_NAME
-from ...utils import unpatify, gen_from_template
+from .path_utils import unpatify, gen_from_template
 
 YACE_NAME: str = 'pace.yace'
+FINAL_REPORT_NAME: str = 'parameters.csv'
 POTENTIAL_NAME: str = 'potential.in'
 POTENTIAL_TEMPLATE_PATH: Path = Path(__file__).parent / 'template' / POTENTIAL_NAME
 
@@ -76,3 +79,8 @@ def create_potential(model_name: str, yace_path: Path, out_path: Path) -> Path:
     gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, potential_file)
 
     return out_path
+
+def get_best_models(sweep_path: Path, yace_list: list[Path], max_n: int) -> list[Path]:
+    df = pd.read_csv(sweep_path / FINAL_REPORT_NAME)
+    best_iterations = df.nsmallest(max_n, 'loss')['iteration']
+    return [yace for yace in yace_list if int(yace.parent.name) in best_iterations]

@@ -3,6 +3,7 @@
         lammps_bin_path: "/media/HDD/erodaro/lammps/build/lmp",
         out_yace_path: "./out/",
         model_name: pacemaker
+        best_n_models: 5
     }
     inference: {
         prerun_steps: 10,

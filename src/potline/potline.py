@@ -7,9 +7,9 @@ from typing import Optional
 
 from .config_reader import ConfigReader
 from .optimizer import Optimizer
-from .optimizer.model import convert_yace, create_potential
 from .lammps_runner import run_benchmark
 from .lammps_analysis import run_properties_simulation
+from .utils import get_best_models, convert_yace, create_potential
 
 def get_yaces(out_yace_path: Path) -> list[Path]:
     """
@@ -39,6 +39,7 @@ class PotLine():
                  with_conversion: bool,
                  with_inference: bool,
                  with_data_analysis: bool,
+                 hpc: bool,
                  fitted_path: Optional[Path] = None):
 
         self.config_reader = ConfigReader(config_path)
@@ -47,14 +48,16 @@ class PotLine():
         self.with_conversion: bool = with_conversion
         self.with_inference: bool = with_inference
         self.with_data_analysis: bool = with_data_analysis
+        self.hpc: bool = hpc
         self.lammps_bin_path: Path = self.config_reader.get_lammps_bin_path()
         self.out_yace_path: Path = self.config_reader.get_out_yace_path()
         self.model_name: str = self.config_reader.get_model_name()
+        self.best_n_models: int = self.config_reader.get_best_n_models()
         if self.with_fitting:
             self.optimizer: Optimizer = self.config_reader.create_optimizer()
         self.fitted_path: Path = fitted_path if fitted_path else self.optimizer.get_sweep_path()
 
-    def run(self) -> None:
+    def run_local(self) -> None:
         """
         Run the optimization pipeline.
         1. Optimize the potential, convert the results to yace format, print the final results.
@@ -70,15 +73,17 @@ class PotLine():
         else:
             yace_list = get_yaces(self.out_yace_path)
 
+        yace_list = get_best_models(self.fitted_path, yace_list, self.best_n_models)
+
         for yace_path in yace_list:
             create_potential(self.model_name, yace_path, yace_path.parent)
 
         if self.with_inference:
             inf_config: dict = self.config_reader.get_inf_benchmark_config()
             for yace_path in yace_list:
-                run_benchmark(yace_path.parent, self.lammps_bin_path, **inf_config)
+                run_benchmark(yace_path.parent, self.lammps_bin_path, hpc=self.hpc, **inf_config)
 
         if self.with_data_analysis:
             data_config: dict = self.config_reader.get_data_analysis_config()
             for yace_path in yace_list:
-                run_properties_simulation(yace_path.parent, self.lammps_bin_path, **data_config)
+                run_properties_simulation(yace_path.parent, self.lammps_bin_path, hpc=self.hpc, **data_config)
