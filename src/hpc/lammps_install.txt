@@ -1,0 +1,15 @@
+module load 2023.01
+module load StdEnv
+module load OpenMPI
+module load CMake
+
+cd lammps
+mkdir build
+cd build
+
+module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
+module load CMake
+
+cmake ../cmake -DLAMMPS_EXCEPTIONS=yes -DBUILD_SHARED_LIBS=yes -DPKG_MANYBODY=yes -DPKG_ML-SNAP=yes -DPKG_ML-PACE=yes -DBUILD_MPI=yes -DBUILD_OMP=yes -D DOWNLOAD_N2P2=yes -D CMAKE_INSTALL_PREFIX='/home/erodaro/lammps/lammps-install'
+
+make -j 12 .
