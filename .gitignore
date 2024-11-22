@@ -172,3 +172,6 @@ REF_DATA/*
 plots/*
 potential/*
 data/*
+*.out
+*.stdout
+*.stderr
