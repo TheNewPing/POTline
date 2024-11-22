@@ -1,6 +1,6 @@
 {
     general: {
-        lammps_bin_path: "/media/HDD/erodaro/lammps/build/lmp",
+        lammps_bin_path: "/home/erodaro/lammps/build/lmp",
         out_yace_path: "./out/",
         model_name: pacemaker
         best_n_models: 5
@@ -28,7 +28,7 @@
             "purpose": "Potential fit"
             },
         "data": {
-            "filename": "/media/HDD/erodaro/POTline/src/data/Ogata_DB.pckl.gzip",
+            "filename": "/home/erodaro/POTline/src/data/Ogata_DB.pckl.gzip",
             "test_size": 0.10
         },
         "potential": {
