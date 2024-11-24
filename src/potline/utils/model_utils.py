@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 
 import pandas as pd
+from pandas import DataFrame
 
 from ..optimizer import BEST_POTENTIAL_NAME
 from .path_utils import unpatify, gen_from_template
@@ -81,6 +82,6 @@ def create_potential(model_name: str, yace_path: Path, out_path: Path) -> Path:
     return out_path
 
 def get_best_models(sweep_path: Path, yace_list: list[Path], max_n: int) -> list[Path]:
-    df = pd.read_csv(sweep_path / FINAL_REPORT_NAME)
-    best_iterations = df.nsmallest(max_n, 'loss')['iteration']
+    df: DataFrame = pd.read_csv(sweep_path / FINAL_REPORT_NAME)
+    best_iterations: list[int] = df.nsmallest(max_n, 'loss')['iteration'].astype(int).tolist()
     return [yace for yace in yace_list if int(yace.parent.name) in best_iterations]
