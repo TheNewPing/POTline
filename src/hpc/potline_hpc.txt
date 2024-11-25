@@ -4,7 +4,7 @@
 #SBATCH -N 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 8
-#SBATCH --mem=30G
+#SBATCH --mem=20G
 #SBATCH --gpus=1
 
 module purge
@@ -19,4 +19,4 @@ module load cuDNN/8.4.1.50-CUDA-11.7.0
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate pl
 
-python src/main.py --nofitting --fitted /home/erodaro/POTline/first_test/test_ace
+python src/main.py

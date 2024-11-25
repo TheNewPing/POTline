@@ -63,8 +63,8 @@ def run_benchmark(out_path: Path,
             'n_tasks': 1,
             'n_cpu': n_cpu,
             'time_limit': '08:00:00',
-            'stderr_path': out_path / 'slurm_inf.stderr',
-            'stdout_path': out_path / 'slurm_inf.stdout',
+            'stderr_path': inf_bench_dir / 'slurm_inf.stderr',
+            'stdout_path': inf_bench_dir / 'slurm_inf.stdout',
         }))
         bench_script_out_path = inf_bench_dir / BENCH_HPC_SCRIPT_NAME
         gen_from_template(BENCH_HPC_SCRIPT_TEMPLATE_PATH, bench_script_values, bench_script_out_path)

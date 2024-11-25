@@ -176,3 +176,4 @@ data/*
 *.stdout
 *.stderr
 *_converted*
+*log.lammps

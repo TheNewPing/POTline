@@ -49,11 +49,11 @@ def run_properties_simulation(out_path: Path,
     else:
         simulation_values.update(unpatify({
             'job_name': 'lammps_prop_bench',
-            'n_tasks': 1,
-            'n_cpu': 16,
+            'n_tasks': 32,
+            'n_cpu': 1,
             'time_limit': '2:00:00',
-            'stderr_path': out_path / 'slurm_prop.stderr',
-            'stdout_path': out_path / 'slurm_prop.stdout',
+            'stderr_path': prop_bench_dir / 'slurm_prop.stderr',
+            'stdout_path': prop_bench_dir / 'slurm_prop.stdout',
             'email': 'e.rodaro@rug.nl'
         }))
         simulation_script_out_path = prop_bench_dir / SUBMIT_HPC_TEMPLATE_NAME
