@@ -11,7 +11,7 @@ def patify(config_dict: dict[str, str | int | float | Path]) -> dict[str, str | 
     """
     for key, value in config_dict.items():
         if key.endswith('_path') and isinstance(value, str):
-            config_dict[key] = Path(value).resolve()
+            config_dict[key] = Path(value)
     return config_dict
 
 def unpatify(config_dict: dict[str, str | int | float | Path]) -> dict[str, str | int | float | str | Path]:

@@ -168,6 +168,8 @@ cython_debug/
 # output
 out/*
 first_test/*
+baseline/*
+prototype/*
 REF_DATA/*
 plots/*
 potential/*

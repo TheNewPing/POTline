@@ -6,18 +6,18 @@
         best_n_models: 10
     }
     inference: {
-        prerun_steps: 100,
-        max_steps: 1100,
+        prerun_steps: 10,
+        max_steps: 100,
         n_cpu: 8,
     }
     data_analysis: {
-        lammps_inps_path: "./src/potline/lammps_analysis/pot_testing/lmps_inputs/",
-        pps_python_path: "./src/potline/lammps_analysis/pot_testing/py_pps/",
-        ref_data_path: "./src/potline/lammps_analysis/pot_testing/REF_DATA/",
+        lammps_inps_path: "/home/erodaro/POTline/src/potline/lammps_analysis/pot_testing/lmps_inputs",
+        pps_python_path: "/home/erodaro/POTline/src/potline/lammps_analysis/pot_testing/py_pps",
+        ref_data_path: "/home/erodaro/POTline/src/potline/lammps_analysis/pot_testing/REF_DATA",
     }
     optimizer: {
         "xpot": {
-            project_name: baseline
+            project_name: prototype
             sweep_name: pace
             error_method: rmse
             alpha: 0.7,        
@@ -95,7 +95,7 @@
             // },
             "optimizer": "BFGS",
             // "options": "",
-            "maxiter": 2000,
+            "maxiter": 20,
             "repulsion": "auto",
             "trainable_parameters": "ALL",
             // "fit_cycles": "",

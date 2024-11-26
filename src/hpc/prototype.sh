@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --time=48:00:00
+#SBATCH --time=8:00:00
 #SBATCH --partition=gpu
 #SBATCH -N 1
 #SBATCH --ntasks 1
@@ -22,4 +22,4 @@ source $(conda info --base)/etc/profile.d/conda.sh
 conda activate pl
 
 python src/hpc/tf_gpu_test.py
-python src/main.py --iterations 20
+python src/main.py --nofitting --noinference --fitted prototype/pace --config src/data/prototype.hjson
