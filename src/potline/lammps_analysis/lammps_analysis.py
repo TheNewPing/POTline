@@ -5,6 +5,8 @@ Data analysis for LAMMPS simulations.
 import subprocess
 from pathlib import Path
 
+from simple_slurm import Slurm
+
 from ..utils import unpatify, gen_from_template
 
 PROPERTIES_BENCH_DIR_NAME: str = 'properties_bench'
@@ -42,11 +44,13 @@ def run_properties_simulation(out_path: Path,
         'out_path': prop_bench_dir,
     })
 
+    command: list[str] = [str(cmd) for cmd in
+                          ['bash', prop_bench_dir, hpc, lammps_bin_path, lammps_inps_path, pps_python_path, ref_data_path]]
+
     if not hpc:
-        simulation_script_out_path: Path = prop_bench_dir / SUBMIT_TEMPLATE_NAME
-        gen_from_template(SUBMIT_TEMPLATE_PATH, simulation_values, simulation_script_out_path)
-        subprocess.run(['bash', str(simulation_script_out_path)], check=True)
+        subprocess.run(['bash', command], check=True)
     else:
+
         simulation_values.update(unpatify({
             'job_name': 'lammps_prop_bench',
             'n_tasks': 32,

@@ -20,15 +20,18 @@
 # - add the calculation of T-S curve
 # - add jace1x potential
 #------------------------------
-#SBATCH --job-name=IAP_test
-#SBATCH --ntasks=16
-#SBATCH --cpus-per-task=1
-#SBATCH --partition=parallelshort
-#SBATCH --time=2:00:00
-#SBATCH --error=slurm-%j.stderr
-#SBATCH --output=slurm-%j.stdout
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=lei.zhang@rug.nl
+
+# Collect the input parameters
+out_path=$1
+hpc=$2
+LMMP=$3
+lmp_inps=$4
+pps_python=$5
+ref_data_path=$6
+
+if [ "$hpc" = true ]; then
+    LMMP="srun -G0 -n1 ${LMMP}"
+fi
 
 # Change to the output directory
 cd ${out_path}
@@ -48,46 +51,7 @@ rm potential/potential.in
 #**********************************
 # Customize section
 #**********************************
-# your email address
-# # eaddress="edoardorodaro@gmail.com"
-# load the dependent modules of the cluster.
-# # module load OpenMPI/4.1.4-GCC-11.3.0
-# # module load Python/3.10.4-GCCcore-11.3.0
-# Full path to LAMMPS excutable. 
-LMMP=${lammps_bin_path}
-# the foldername of lammps input scripts (with fullpath)
-lmp_inps=${lammps_inps_path}
-pps_python=${pps_python_path}
-# Choose interatomic potential
-pot="ace"
-# input the potential file name
-# # potfilename=`ls ${PWD}/potential/`
 
-
-# For GAP, one need to define the right coeff
-# if [[ ${pot} = "ace" ]]; then
-# 	pstyle="pace"
-# 	pcoeff="../potential.in Fe"
-# elif [[ ${pot} = "gap" ]]; then
-# 	pstyle="quip"
-# 	pcoeff="${PWD}/potential/${potfilename} 'IP GAP' 26"
-# elif [[ ${pot} = "n2p2" ]]; then
-# 	pstyle="hdnnp 6.5 dir ${PWD}/potential showew no showewsum 1000 resetew yes maxew 1000000 cflength 1 cfenergy 1"
-# 	pcoeff="Fe"
-# elif [[ ${pot} = "ann" ]]; then
-# 	pstyle="aenet"
-# 	pcoeff="v-1 Fe 15tw-15tw.nn Fe"
-# elif [[ ${pot} = "mtp" ]]; then
-# 	pstyle="mlip ${PWD}/potential/mlip.ini"
-# 	poceff=""
-# fi
-
-# Generate the interatomic potential file
-# cat > ../potential.in <<EOF
-# # Define the interatomic potential
-# pair_style ${pstyle}
-# pair_coeff * * ${pcoeff} 
-# EOF
 # create a data folder
 mkdir data
 
@@ -181,7 +145,9 @@ rm *.mod
 
 # Send email of the plots as the attached file.
 # Mail the results ---------------------------------------------------
-# # mail -s "Basic Properties of iron predicted by IAP"  -a ./data/results.txt -a ./plots/eos_bp.png -a ./plots/sfe.png "${eaddress}" <<EOF
-# # Please check the performance of interatomic potential: ${potential_name}
-# # EOF
-# # echo "Mail the results successful!"
+if [ "$hpc" = true ]; then
+    mail -s "Basic Properties of iron predicted by IAP" -a ./data/results.txt -a ./plots/eos_bp.png -a ./plots/sfe.png "${eaddress}" <<EOF
+Please check the performance of interatomic potential: ${potential_name}
+EOF
+    echo "Mail the results successful!"
+fi
