@@ -1,13 +1,15 @@
 {
     general: {
         lammps_bin_path: "/home/erodaro/lammps/build/lmp",
-        out_yace_path: "./out/",
         model_name: pacemaker
         best_n_models: 10
     }
+    deep_training: {
+        deep_training_max_epochs: 1500,
+    }
     inference: {
-        prerun_steps: 10,
-        max_steps: 100,
+        prerun_steps: 100,
+        max_steps: 1100,
         n_cpu: 8,
     }
     data_analysis: {
@@ -15,14 +17,18 @@
         pps_python_path: "/home/erodaro/POTline/src/potline/lammps_analysis/pot_testing/py_pps",
         ref_data_path: "/home/erodaro/POTline/src/potline/lammps_analysis/pot_testing/REF_DATA",
     }
-    optimizer: {
+    hyper_search: {
+        initial_grid: {
+            func_levels: [100, 200, 300, 400, 500, 600],
+        }
+        hyper_search_iterations: 50,
         "xpot": {
-            project_name: prototype
+            project_name: quick_config
             sweep_name: pace
             error_method: rmse
-            alpha: 0.7,        
+            alpha: "skopt.space.Real(0.1, 0.9)",        
         }
-        "cutoff": 6,
+        "cutoff": "skopt.space.Real(5, 8)",
         "seed": 42
         "metadata": {
             "purpose": "Potential fit"
@@ -95,7 +101,7 @@
             // },
             "optimizer": "BFGS",
             // "options": "",
-            "maxiter": 20,
+            "maxiter": 100,
             "repulsion": "auto",
             "trainable_parameters": "ALL",
             // "fit_cycles": "",

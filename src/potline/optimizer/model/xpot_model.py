@@ -37,7 +37,7 @@ class XpotModel(ABC):
     def get_sweep_path(self) -> Path:
         pass
 
-def XpotModelFactory(config_path: Path) -> XpotModel:
+def create_xpot_model(config_path: Path) -> XpotModel:
     with open(config_path, 'r', encoding='utf-8') as file:
         config_data: dict = hjson.load(file)
         if config_data['xpot']['fitting_executable'] == 'pacemaker':

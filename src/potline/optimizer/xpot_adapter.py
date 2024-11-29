@@ -7,7 +7,7 @@ from pathlib import Path
 from xpot.optimiser import NamedOptimiser # type: ignore
 
 from .optimizer import Optimizer
-from .model import XpotModel, XpotModelFactory
+from .model import XpotModel, create_xpot_model
 
 class XpotAdapter(Optimizer):
     """
@@ -21,7 +21,7 @@ class XpotAdapter(Optimizer):
         kwargs = {
         "n_initial_points": 5,
         }
-        self.model: XpotModel = XpotModelFactory(config_path)
+        self.model: XpotModel = create_xpot_model(config_path)
         self.optimizer: NamedOptimiser = NamedOptimiser(self.model.get_optimization_space(),
                                         self.model.get_sweep_path(), kwargs)
 

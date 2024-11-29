@@ -5,6 +5,8 @@ This module is responsible for running LAMMPS benchmarks.
 import subprocess
 from pathlib import Path
 
+from simple_slurm import Slurm
+
 from ..utils import unpatify, gen_from_template, POTENTIAL_NAME
 
 INFERENCE_BENCH_DIR_NAME: str = 'inference_bench'
@@ -52,20 +54,20 @@ def run_benchmark(out_path: Path,
         'bench_potential_in_path': lammps_in_out_path,
         'out_path': inf_bench_dir
     })
+    bench_script_out_path: Path = inf_bench_dir / BENCH_SCRIPT_NAME
+    gen_from_template(BENCH_SCRIPT_TEMPLATE_PATH, bench_script_values, bench_script_out_path)
 
     if not hpc:
-        bench_script_out_path: Path = inf_bench_dir / BENCH_SCRIPT_NAME
-        gen_from_template(BENCH_SCRIPT_TEMPLATE_PATH, bench_script_values, bench_script_out_path)
         subprocess.run(['bash', str(bench_script_out_path)], check=True)
     else:
-        bench_script_values.update(unpatify({
-            'job_name': 'lammps_inf_bench',
-            'n_tasks': 1,
-            'n_cpu': n_cpu,
-            'time_limit': '08:00:00',
-            'stderr_path': inf_bench_dir / 'slurm_inf.stderr',
-            'stdout_path': inf_bench_dir / 'slurm_inf.stdout',
-        }))
-        bench_script_out_path = inf_bench_dir / BENCH_HPC_SCRIPT_NAME
-        gen_from_template(BENCH_HPC_SCRIPT_TEMPLATE_PATH, bench_script_values, bench_script_out_path)
-        subprocess.run(['sbatch', str(bench_script_out_path)], check=True)
+        bench_job: Slurm = Slurm(
+            job_name='lammps_inf_bench',
+            n_tasks=1,
+            n_cpu=n_cpu,
+            time_limit='03:00:00',
+            stderr_path=inf_bench_dir / 'slurm_inf.stderr',
+            stdout_path=inf_bench_dir / 'slurm_inf.stdout',
+        )
+        bench_job.add_cmd('module load 2022')
+        bench_job.add_cmd('module load OpenMPI/4.1.4-NVHPC-22.7-CUDA-11.7.0')
+        bench_job.sbatch(f'bash {bench_script_out_path}')

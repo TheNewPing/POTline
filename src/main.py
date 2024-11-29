@@ -35,4 +35,4 @@ if __name__ == '__main__':
                       args.nohpc,
                       Path(args.fitted) if args.fitted else None)
 
-    potline.run_local()
+    potline.run()

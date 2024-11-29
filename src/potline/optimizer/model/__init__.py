@@ -2,4 +2,4 @@
 Models.
 """
 
-from .xpot_model import XpotModel, XpotModelFactory
+from .xpot_model import XpotModel, create_xpot_model
