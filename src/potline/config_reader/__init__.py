@@ -4,6 +4,8 @@ This module contains the ConfigReader class which is used to read the configurat
 
 from .config_reader import (
     ConfigReader,
+    BenchConfig,
+    PropConfig,
     ConfigDict,
     GEN_NAME,
     LMP_BIN_NAME,
@@ -14,6 +16,5 @@ from .config_reader import (
     DA_NAME,
     HYP_NAME,
     FUNC_NAME,
-    HYP_ITER_NAME,
     GRID_NAME,
     )

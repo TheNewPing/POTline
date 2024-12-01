@@ -9,18 +9,7 @@ from .optimizer import Optimizer
 from .lammps_runner import run_benchmark
 from .lammps_analysis import run_properties_simulation
 from .utils import get_best_models, convert_yace, create_potential, POTENTIAL_NAME
-from .config_reader import (
-    ConfigReader,
-    ConfigDict,
-    GEN_NAME,
-    LMP_BIN_NAME,
-    MODEL_NAME,
-    BEST_N_NAME,
-    INF_NAME,
-    DA_NAME,
-    HYP_NAME,
-    HYP_ITER_NAME,
-    )
+from .config_reader import ConfigReader, GEN_NAME, MODEL_NAME, BEST_N_NAME
 
 class PotLine():
     """
@@ -49,12 +38,8 @@ class PotLine():
         self.with_inference: bool = with_inference
         self.with_data_analysis: bool = with_data_analysis
         self.hpc: bool = hpc
-        self.hyper_search_iterations: int = self.config_reader.get_config_section(HYP_NAME)[HYP_ITER_NAME]
-        self.lammps_bin_path: Path = self.config_reader.get_config_section(GEN_NAME)[LMP_BIN_NAME]
-        self.model_name: str = self.config_reader.get_config_section(GEN_NAME)[MODEL_NAME]
-        self.best_n_models: int = self.config_reader.get_config_section(GEN_NAME)[BEST_N_NAME]
-        self.inf_config: ConfigDict = self.config_reader.get_config_section(INF_NAME)
-        self.data_config: ConfigDict = self.config_reader.get_config_section(DA_NAME)
+        self.model_name: str = str(self.config_reader.get_config_section(GEN_NAME)[MODEL_NAME])
+        self.best_n_models: int = int(str(self.config_reader.get_config_section(GEN_NAME)[BEST_N_NAME]))
         if self.with_hyper_search:
             self.optimizer: Optimizer = self.config_reader.create_optimizer()
         self.fitted_path: Path = fitted_path if fitted_path else self.optimizer.get_sweep_path()
@@ -67,7 +52,7 @@ class PotLine():
         3. Run the data analysis on mechanical properties
         """
         if self.with_hyper_search:
-            self.optimizer.optimize(self.hyper_search_iterations)
+            self.optimizer.optimize()
             self.optimizer.get_final_results()
 
         if self.with_conversion:
@@ -82,12 +67,12 @@ class PotLine():
 
         if self.with_inference:
             for yace_path in yace_list:
-                run_benchmark(yace_path.parent, self.lammps_bin_path, hpc=self.hpc, **self.inf_config)
+                run_benchmark(yace_path.parent, self.config_reader.get_bench_config(), hpc=self.hpc)
 
         if self.with_data_analysis:
             for yace_path in yace_list:
-                run_properties_simulation(yace_path.parent, self.lammps_bin_path,
-                                          hpc=self.hpc, **self.data_config)
+                run_properties_simulation(yace_path.parent,
+                                          self.config_reader.get_prop_config(), hpc=self.hpc)
 
 def get_yaces(out_yace_path: Path) -> list[Path]:
     """

@@ -15,7 +15,6 @@ if __name__ == '__main__':
         parser: ArgumentParser = ArgumentParser(description='Process some parameters.')
         parser.add_argument('--config', type=str, default='src/data/config.hjson',
                             help='Path to the config file')
-        parser.add_argument('--iterations', type=int, default=1, help='Number of iterations')
         parser.add_argument('--nofitting', action='store_false', help='Disable potential fitting')
         parser.add_argument('--noconversion', action='store_false', help='Disable yace conversion')
         parser.add_argument('--noinference', action='store_false', help='Disable inference benchmark')
@@ -27,7 +26,6 @@ if __name__ == '__main__':
     args: Namespace = parse_args()
 
     potline = PotLine(Path(args.config),
-                      args.iterations,
                       args.nofitting,
                       args.noconversion,
                       args.noinference,

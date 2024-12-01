@@ -1,52 +1,60 @@
+"""
+Custom optimizer class for XPOT, based on the skopt.Optimizer class.
+"""
+
 from __future__ import annotations
 
 import csv
 import os
 import pickle
 from pathlib import Path
-from typing import Generic, TypeVar, Union
+from typing import Generic, TypeVar, Union, Callable
 
-import skopt
+import skopt # type: ignore
+from skopt import plots # type: ignore
 from matplotlib import pyplot as plt
-from skopt import plots
 from tabulate import tabulate
+import xpot.loaders as load # type: ignore
 
-import xpot.loaders as load
-
-DictValue = str | list[str, int] | int | float
+DictValue = str | list[str | int] | int | float
 NestedDict = dict[str, Union["NestedDict", DictValue]]
 
 Key = TypeVar("Key")
 
 _exec_path = Path(os.getcwd()).resolve()
 
-
 class HPCOptimizer(Generic[Key]):
+    """
+    The HPCOptimizer class is a wrapper around the skopt.Optimizer class
+    that allows for the use of named parameters, and implements the
+    ask-tell interface, dump and load methods, and result recording.
+
+    This class can be used to initialise any optimizer to be used by XPOT
+    for optimizing hyperparameters for fitting ML potentials. This class is
+    used for all classes
+
+    Parameters
+    ----------
+    optimisable_params : dict
+        Dictionary of parameter names and skopt.space.Dimension objects.
+    sweep_path : str
+        Path of directory to save files to.
+    n_points : int, optional
+        Number of points to ask for, by default 1
+    strategy : str, optional
+        Strategy to use for the optimisation, by default "cl_min"
+    skopt_kwargs : dict, optional
+        Dictionary of keyword arguments to pass to the skopt.Optimiser
+        class, by default None. You should define any non-default parameters
+    """
     def __init__(
         self,
         optimisable_params: dict[Key, skopt.space.Dimension],
         sweep_path: str,
         n_points: int = 1,
         strategy: str = "cl_min",
-        skopt_kwargs: dict[str, str | int | float] = None,
+        skopt_kwargs: dict[str, str | int | float] | None = None,
     ):
-        """
-        The NamedOptimiser class is a wrapper around the skopt.Optimiser class
-        that allows for the use of named parameters, and implements the
-        ask-tell interface, dump and load methods, and result recording.
-
-        This class can be used to initialise any optimiser to be used by XPOT
-        for optimising hyperparameters for fitting ML potentials. This class is
-        used for all classes
-
-        Parameters
-        ----------
-        optimisable_params : dict
-            Dictionary of parameter names and skopt.space.Dimension objects.
-        skopt_kwargs : dict, optional
-            Dictionary of keyword arguments to pass to the skopt.Optimiser
-            class, by default None. You should define any non-default parameters
-        """
         self._optimiser = skopt.Optimizer(
             dimensions=list(optimisable_params.values()),
             random_state=42,
@@ -56,9 +64,10 @@ class HPCOptimizer(Generic[Key]):
         self.n_points = n_points
         self.strategy = strategy
         self._optimisable_params = optimisable_params
-        keys = [" ".join(i[0]) for i in self._optimisable_params]
+        keys = [" ".join(i[0]) for i in self._optimisable_params] # type: ignore
         load.initialise_csvs(sweep_path, keys)
         self.iter = 1
+        self.subiter = 1
 
     def ask(self) -> list[dict[Key, DictValue]]:
         """
@@ -70,13 +79,10 @@ class HPCOptimizer(Generic[Key]):
         dict
             Dictionary of parameter names and values.
         """
-        param_values_list: list[list[float | int | str]] = self._optimiser.ask(self.n_points, self.strategy)  # type: ignore
-        return [{
-            name: value
-            for name, value in zip(
-                self._optimisable_params.keys(), param_values
-            )
-        } for param_values in param_values_list]
+        param_values_list: list[list[float | int | str]] = \
+            self._optimiser.ask(self.n_points, self.strategy)  # type: ignore
+        return [dict(zip(self._optimisable_params.keys(), param_values))
+                for param_values in param_values_list]
 
     def tell(self, params_list: list[dict[Key, DictValue]], results_list: list[float]) -> None:
         """
@@ -130,10 +136,18 @@ class HPCOptimizer(Generic[Key]):
             )
 
     def initialise_csvs(self, path: str) -> None:
-        keys = [" ".join(i[0]) for i in self._optimisable_params]
-        with open(f"{path}/parameters.csv", "w+") as f:
+        """
+        Initialise the CSV files for the optimisation.
+
+        Parameters
+        ----------
+        path : str
+            Path of directory to save files to.
+        """
+        keys = [" ".join(i[0]) for i in self._optimisable_params] # type: ignore
+        with open(f"{path}/parameters.csv", "w+", encoding='utf-8') as f:
             f.write("iteration,loss," + ",".join(map(str, keys)) + "\n")
-        with open(f"{path}/atomistic_errors.csv", "w+") as f:
+        with open(f"{path}/atomistic_errors.csv", "w+", encoding='utf-8') as f:
             f.write(
                 "Iteration,"
                 + "Train Δ Energy,"
@@ -142,7 +156,7 @@ class HPCOptimizer(Generic[Key]):
                 + "Test Δ Force"
                 + "\n"
             )
-        with open(f"{path}/loss_function_errors.csv", "w+") as f:
+        with open(f"{path}/loss_function_errors.csv", "w+", encoding='utf-8') as f:
             f.write(
                 "Iteration,"
                 + "Train Δ Energy,"
@@ -178,7 +192,7 @@ class HPCOptimizer(Generic[Key]):
             raise FileNotFoundError(
                 f"parameters.csv file does not exist at {path}"
             )
-        with open(f"{path}/parameters.csv", "a") as f:
+        with open(f"{path}/parameters.csv", "a", encoding='utf-8') as f:
             for i in range(self.n_points):
                 f.write(
                     f"{iteration},"
@@ -203,23 +217,24 @@ class HPCOptimizer(Generic[Key]):
         """
 
         def tabulate_csv(file):
-            with open(f"{file}.csv") as csv_file:
+            with open(f"{file}.csv", encoding='utf-8') as csv_file:
                 reader = csv.reader(csv_file)
-                rows = [row for row in reader]
+                rows = list(reader)
                 table = tabulate(rows, headers="firstrow", tablefmt="github")
-            with open(f"{file}_final", "a+") as f:
+            with open(f"{file}_final", "a+", encoding='utf-8') as f:
                 f.write(table)
 
         tabulate_csv(f"{path}/parameters")
         tabulate_csv(f"{path}/atomistic_errors")
         tabulate_csv(f"{path}/loss_function_errors")
 
-    def run_optimisation(
+    def run_hpc_optimization(
         self,
-        objective: callable,
+        dispatcher: Callable,
+        collector: Callable,
         path=_exec_path,
         **kwargs,
-    ) -> float:
+    ) -> None:
         """
         Function for running optimisation sweep.
 
@@ -238,12 +253,20 @@ class HPCOptimizer(Generic[Key]):
         loss
             Loss value of the current iteration.
         """
-        next_params = self.ask()
-        loss = objective(next_params, iteration=self.iter, **kwargs)
-        self.tell(next_params, loss)
+        next_params_list: list[dict[Key, DictValue]] = self.ask()
+        fit_trackers: list[FitJobTracker] = []
+        for next_params in next_params_list:
+            fit_trackers.append(FitJobTracker(
+                job_id=dispatcher(next_params, iteration=self.iter, subiter=self.subiter,**kwargs),
+                iteration=self.iter, subiter=self.subiter, params=next_params, loss=0.0))
+            self.subiter += 1
+        for fit_tr in fit_trackers:
+            fit_tr.loss = collector(fit_tr.job_id, fit_tr.iteration, fit_tr.subiter)
+
+        self.tell([fit_tr.params for fit_tr in fit_trackers], [fit_tr.loss for fit_tr in fit_trackers])
         self.write_param_result(path, self.iter)
+        self.subiter = 1
         self.iter += 1
-        return loss
 
     def plot_results(self, path: str) -> None:
         """
@@ -261,3 +284,12 @@ class HPCOptimizer(Generic[Key]):
 
         b = plots.plot_evaluations(data)
         b.figure.savefig(f"{path}/evaluations.pdf")
+
+class FitJobTracker(Generic[Key]):
+    def __init__(self, job_id: int, iteration: int, subiter: int,
+                 params: dict[Key, DictValue], loss: float) -> None:
+        self.job_id = job_id
+        self.iteration = iteration
+        self.subiter = subiter
+        self.params = params
+        self.loss = loss

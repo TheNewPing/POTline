@@ -2,4 +2,6 @@
 Models.
 """
 
-from .xpot_model import XpotModel, create_xpot_model
+from .hpc_mlp import HPCMLP
+from .hpc_pace import HPCPACE
+from .model_factory import create_xpot_model

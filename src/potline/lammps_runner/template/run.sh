@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Collect arguments
+n_cpu=$1
+hpc=$2
+lammps_bin_path=$3
+bench_potential_in_path=$4
+prerun_steps=$5
+max_steps=$6
+out_path=$7
+
+# Load modules
+if [ "$hpc" = true ]; then
+    module load 2022
+    module load OpenMPI/4.1.4-NVHPC-22.7-CUDA-11.7.0
+fi
+
 export OMP_NUM_THREADS=${n_cpu}
 
 echo "start"

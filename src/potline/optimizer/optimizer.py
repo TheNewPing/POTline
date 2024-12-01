@@ -20,7 +20,7 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def optimize(self, max_iter: int):
+    def optimize(self):
         pass
 
     @abstractmethod

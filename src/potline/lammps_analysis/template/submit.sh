@@ -28,9 +28,14 @@ LMMP=$3
 lmp_inps=$4
 pps_python=$5
 ref_data_path=$6
+eaddress=$7
 
 if [ "$hpc" = true ]; then
     LMMP="srun -G0 -n1 ${LMMP}"
+    module load 2024
+    module load Miniconda3/24.7.1-0
+    module load 2022
+    module load OpenMPI/4.1.4-NVHPC-22.7-CUDA-11.7.0
 fi
 
 # Change to the output directory
@@ -48,9 +53,6 @@ rm *.py
 rm results.txt
 rm *.log
 rm potential/potential.in
-#**********************************
-# Customize section
-#**********************************
 
 # create a data folder
 mkdir data
