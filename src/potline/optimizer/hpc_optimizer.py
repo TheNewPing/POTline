@@ -14,7 +14,6 @@ import skopt # type: ignore
 from skopt import plots # type: ignore
 from matplotlib import pyplot as plt
 from tabulate import tabulate
-import xpot.loaders as load # type: ignore
 
 DictValue = str | list[str | int] | int | float
 NestedDict = dict[str, Union["NestedDict", DictValue]]
@@ -64,8 +63,7 @@ class HPCOptimizer(Generic[Key]):
         self.n_points = n_points
         self.strategy = strategy
         self._optimisable_params = optimisable_params
-        keys = [" ".join(i[0]) for i in self._optimisable_params] # type: ignore
-        load.initialise_csvs(sweep_path, keys)
+        self.initialise_csvs(sweep_path)
         self.iter = 1
         self.subiter = 1
 
@@ -146,10 +144,11 @@ class HPCOptimizer(Generic[Key]):
         """
         keys = [" ".join(i[0]) for i in self._optimisable_params] # type: ignore
         with open(f"{path}/parameters.csv", "w+", encoding='utf-8') as f:
-            f.write("iteration,loss," + ",".join(map(str, keys)) + "\n")
+            f.write("iteration,subiteration,loss," + ",".join(map(str, keys)) + "\n")
         with open(f"{path}/atomistic_errors.csv", "w+", encoding='utf-8') as f:
             f.write(
                 "Iteration,"
+                + "Subiteration,"
                 + "Train Δ Energy,"
                 + "Test Δ Energy,"
                 + "Train Δ Force,"
@@ -159,6 +158,7 @@ class HPCOptimizer(Generic[Key]):
         with open(f"{path}/loss_function_errors.csv", "w+", encoding='utf-8') as f:
             f.write(
                 "Iteration,"
+                + "Subiteration,"
                 + "Train Δ Energy,"
                 + "Test Δ Energy,"
                 + "Train Δ Force,"
@@ -171,6 +171,7 @@ class HPCOptimizer(Generic[Key]):
         self,
         path: str,
         iteration: int,
+        subiteration: int,
     ) -> None:
         """
         Write the current iteration and loss to the parameters.csv file.
@@ -192,15 +193,16 @@ class HPCOptimizer(Generic[Key]):
             raise FileNotFoundError(
                 f"parameters.csv file does not exist at {path}"
             )
+        i: int = self.n_points - subiteration + 1
         with open(f"{path}/parameters.csv", "a", encoding='utf-8') as f:
-            for i in range(self.n_points):
-                f.write(
-                    f"{iteration},"
-                    + f"{self._optimiser.yi[-i]},"
-                    + ",".join([str(i) for i in self._optimiser.Xi[-i]])
-                    + "\n"
-                )
-        print(f"Iteration {iteration} written to parameters.csv")
+            f.write(
+                f"{iteration},"
+                + f"{subiteration},"
+                + f"{self._optimiser.yi[-i]},"
+                + ",".join([str(i) for i in self._optimiser.Xi[-i]])
+                + "\n"
+            )
+        print(f"Iteration {iteration}.{subiteration} written to parameters.csv")
 
     def tabulate_final_results(
         self,
@@ -264,7 +266,9 @@ class HPCOptimizer(Generic[Key]):
             fit_tr.loss = collector(fit_tr.job_id, fit_tr.iteration, fit_tr.subiter)
 
         self.tell([fit_tr.params for fit_tr in fit_trackers], [fit_tr.loss for fit_tr in fit_trackers])
-        self.write_param_result(path, self.iter)
+        for fit_tr in fit_trackers:
+            self.write_param_result(path, fit_tr.iteration, fit_tr.subiter)
+
         self.subiter = 1
         self.iter += 1
 

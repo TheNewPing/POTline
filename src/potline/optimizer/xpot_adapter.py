@@ -7,6 +7,7 @@ from pathlib import Path
 from .optimizer import Optimizer
 from .model import HPCMLP, create_xpot_model
 from .hpc_optimizer import HPCOptimizer
+from ..config_reader import HyperConfig
 
 class XpotAdapter(Optimizer):
     """
@@ -16,11 +17,12 @@ class XpotAdapter(Optimizer):
         config_path (Path): The path to the configuration file.
         **kwargs: Additional keyword arguments
     """
-    def __init__(self, config_path: Path, max_iter: int,  **kwargs):
+    def __init__(self, config_path: Path, config: HyperConfig):
         self.model: HPCMLP = create_xpot_model(config_path)
-        self.max_iter: int = max_iter
+        self.max_iter: int = config.max_iter
         self.optimizer: HPCOptimizer = HPCOptimizer(self.model.optimisation_space,
-                                        self.model.sweep_path, kwargs)
+                                        self.model.sweep_path, config.n_points, config.strategy,
+                                        {"n_initial_points": config.n_initial_points})
 
     def optimize(self):
         while self.optimizer.iter <= self.max_iter:

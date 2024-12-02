@@ -2,14 +2,14 @@
     general: {
         lammps_bin_path: "/home/erodaro/lammps/build/lmp",
         model_name: pacemaker
-        best_n_models: 10
+        best_n_models: 3
     }
     deep_training: {
         deep_training_max_epochs: 1500,
     }
     inference: {
-        prerun_steps: 100,
-        max_steps: 1100,
+        prerun_steps: 10,
+        max_steps: 110,
         n_cpu: 8,
     }
     data_analysis: {
@@ -18,9 +18,9 @@
         ref_data_path: "/home/erodaro/POTline/src/potline/lammps_analysis/pot_testing/REF_DATA",
     }
     hyper_search: {
-        max_iter: 20,
+        max_iter: 2,
         n_initial_points: 5
-        n_points: 10
+        n_points: 3
         strategy: "cl_min"
         "xpot": {
             project_name: quick_config
@@ -28,7 +28,8 @@
             error_method: rmse
             alpha: 0.7,        
         }
-        "cutoff": "skopt.space.Real(5, 8)",
+        "cutoff": 7,
+        // "cutoff": "skopt.space.Real(5, 8)",
         "seed": 42
         "metadata": {
             "purpose": "Potential fit"
@@ -63,7 +64,8 @@
                 }
             },
             "functions": {
-                "number_of_functions_per_element": "skopt.space.Integer(100,400)",
+                "number_of_functions_per_element": 200,
+                // "number_of_functions_per_element": "skopt.space.Integer(100,400)",
                 "ALL": {
                     "nradmax_by_orders": [15,6,4,3,2,2],
                     "lmax_by_orders": [0,4,3,2,1,0],
@@ -101,7 +103,7 @@
             // },
             "optimizer": "BFGS",
             // "options": "",
-            "maxiter": 100,
+            "maxiter": 2,
             "repulsion": "auto",
             "trainable_parameters": "ALL",
             // "fit_cycles": "",

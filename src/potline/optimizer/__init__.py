@@ -2,4 +2,5 @@
 Optimizer module.
 """
 
-from .optimizer import Optimizer, BEST_POTENTIAL_NAME
+from .optimizer import Optimizer
+from .xpot_adapter import XpotAdapter

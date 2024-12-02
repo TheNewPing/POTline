@@ -30,12 +30,15 @@ pps_python=$5
 ref_data_path=$6
 eaddress=$7
 
-if [ "$hpc" = true ]; then
+if [ "$hpc" = "True" ]; then
     LMMP="srun -G0 -n1 ${LMMP}"
     module load 2024
     module load Miniconda3/24.7.1-0
     module load 2022
     module load OpenMPI/4.1.4-NVHPC-22.7-CUDA-11.7.0
+    # Initialize Conda
+    source $(conda info --base)/etc/profile.d/conda.sh
+    conda activate pl
 fi
 
 # Change to the output directory
@@ -147,7 +150,7 @@ rm *.mod
 
 # Send email of the plots as the attached file.
 # Mail the results ---------------------------------------------------
-if [ "$hpc" = true ]; then
+if [ "$hpc" = "True" ]; then
     mail -s "Basic Properties of iron predicted by IAP" -a ./data/results.txt -a ./plots/eos_bp.png -a ./plots/sfe.png "${eaddress}" <<EOF
 Please check the performance of interatomic potential: ${potential_name}
 EOF

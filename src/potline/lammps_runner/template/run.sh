@@ -10,19 +10,23 @@ max_steps=$6
 out_path=$7
 
 # Load modules
-if [ "$hpc" = true ]; then
+if [ "$hpc" = "True" ]; then
     module load 2022
     module load OpenMPI/4.1.4-NVHPC-22.7-CUDA-11.7.0
 fi
 
+# Change to the output directory
+cd ${out_path}
+
 export OMP_NUM_THREADS=${n_cpu}
+cp ${bench_potential_in_path} ${out_path}
 
 echo "start"
 start_time=`date +%s`
-mpirun --oversubscribe -np ${n_cpu} ${lammps_bin_path} -in ${bench_potential_in_path} -v steps ${prerun_steps}
+mpirun --oversubscribe -np ${n_cpu} ${lammps_bin_path} -in "${out_path}/bench.in" -v steps ${prerun_steps}
 echo "prerun done"
 mid_time=`date +%s`
-mpirun --oversubscribe -np ${n_cpu} ${lammps_bin_path} -in ${bench_potential_in_path} -v steps ${max_steps}
+mpirun --oversubscribe -np ${n_cpu} ${lammps_bin_path} -in "${out_path}/bench.in" -v steps ${max_steps}
 end_time=`date +%s`
 echo "finished"
 

@@ -6,6 +6,7 @@ from .config_reader import (
     ConfigReader,
     BenchConfig,
     PropConfig,
+    HyperConfig,
     ConfigDict,
     GEN_NAME,
     LMP_BIN_NAME,

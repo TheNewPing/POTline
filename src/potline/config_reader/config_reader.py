@@ -6,8 +6,6 @@ from pathlib import Path
 import hjson # type: ignore
 
 from ..utils import patify
-from ..optimizer import Optimizer
-from ..optimizer.xpot_adapter import XpotAdapter
 
 GEN_NAME: str = 'general'
 LMP_BIN_NAME: str = 'lammps_bin_path'
@@ -62,6 +60,19 @@ class PropConfig():
         self.pps_python_path: Path = pps_python_path
         self.ref_data_path: Path = ref_data_path
 
+class HyperConfig():
+    """
+    Configuration class for the hyperparameter search.
+    """
+    def __init__(self, max_iter: int,
+                 n_initial_points: int,
+                 n_points: int,
+                 strategy: str):
+        self.max_iter: int = max_iter
+        self.n_initial_points: int = n_initial_points
+        self.n_points: int = n_points
+        self.strategy: str = strategy
+
 class ConfigReader():
     """
     Class for reading and converting configuration files.
@@ -77,7 +88,7 @@ class ConfigReader():
         with open(file_path, 'r', encoding='utf-8') as file:
             self.config_data: dict = hjson.load(file)
 
-    def create_optimizer(self) -> Optimizer:
+    def get_optimizer_config(self) -> tuple[Path, HyperConfig]:
         """
         Convert the configuration file to the XPOT format and create an optimizer.
         """
@@ -92,16 +103,17 @@ class ConfigReader():
         hyper_config['xpot']['fitting_executable'] = \
             self.config_data['general']['model_name']
 
-        kwargs = {
-            N_INIT_PTS_NAME: hyper_config.pop(N_INIT_PTS_NAME),
-            N_PTS_NAME: hyper_config.pop(N_PTS_NAME),
-            STRAT_NAME: hyper_config.pop(STRAT_NAME),
-        }
-        max_iter: int = hyper_config.pop(MAX_ITER_NAME)
+        hyp_config: HyperConfig = HyperConfig(
+            hyper_config.pop(MAX_ITER_NAME),
+            hyper_config.pop(N_INIT_PTS_NAME),
+            hyper_config.pop(N_PTS_NAME),
+            hyper_config.pop(STRAT_NAME)
+        )
 
         with open(converted_file_path, 'w', encoding='utf-8') as converted_file:
             hjson.dump(hyper_config, converted_file)
-        return XpotAdapter(converted_file_path, max_iter, **kwargs)
+
+        return (converted_file_path, hyp_config)
 
     def get_config_section(self, section_name: str) -> ConfigDict:
         if section_name not in self.config_data:

@@ -170,6 +170,7 @@ out/*
 first_test/*
 baseline/*
 prototype/*
+quick_config/*
 REF_DATA/*
 plots/*
 potential/*

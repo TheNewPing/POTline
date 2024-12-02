@@ -5,7 +5,7 @@ Potential optimization pipeline API.
 from pathlib import Path
 from typing import Optional
 
-from .optimizer import Optimizer
+from .optimizer import Optimizer, XpotAdapter
 from .lammps_runner import run_benchmark
 from .lammps_analysis import run_properties_simulation
 from .utils import get_best_models, convert_yace, create_potential, POTENTIAL_NAME
@@ -41,7 +41,7 @@ class PotLine():
         self.model_name: str = str(self.config_reader.get_config_section(GEN_NAME)[MODEL_NAME])
         self.best_n_models: int = int(str(self.config_reader.get_config_section(GEN_NAME)[BEST_N_NAME]))
         if self.with_hyper_search:
-            self.optimizer: Optimizer = self.config_reader.create_optimizer()
+            self.optimizer: Optimizer = XpotAdapter(*self.config_reader.get_optimizer_config())
         self.fitted_path: Path = fitted_path if fitted_path else self.optimizer.get_sweep_path()
 
     def run(self) -> None:

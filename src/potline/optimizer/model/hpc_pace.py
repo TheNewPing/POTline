@@ -79,7 +79,7 @@ class HPCPACE(HPCMLP):
         self.write_input_file(filename)
 
         fit_job = Slurm(
-            name="fit_pace",
+            job_name="fit_pace",
             output=f"{self.iter_path}/fit_%j.out",
             error=f"{self.iter_path}/fit_%j.err",
             time="48:00:00",
@@ -90,6 +90,13 @@ class HPCPACE(HPCMLP):
             cpus_per_task=16,
             gpus=1,
         )
+        fit_job.add_cmd("module load 2024")
+        fit_job.add_cmd("module load Miniconda3/24.7.1-0")
+        fit_job.add_cmd("module load 2022")
+        fit_job.add_cmd("module load cuDNN/8.4.1.50-CUDA-11.7.0")
+        fit_job.add_cmd("export LD_LIBRARY_PATH=/home/erodaro/.conda/envs/pl/lib/:$LD_LIBRARY_PATH")
+        fit_job.add_cmd("source $(conda info --base)/etc/profile.d/conda.sh")
+        fit_job.add_cmd("conda activate pl")
         return fit_job.sbatch(f"pacemaker {filename}")
 
     def collect_loss(self, wait_id: int, iteration: int, subiter: int) -> float:
