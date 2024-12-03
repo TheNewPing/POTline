@@ -18,9 +18,8 @@ class DeepTrainer(ABC):
     Abstract class for training after hyperparameter search.
 
     Args:
-    - max_epochs: maximum number of epochs for training.
-    - config_filepath: path to the configuration file.
-    - potential_filepath: path to the potential file.
+        - max_epochs: maximum number of epochs for training.
+        - out_path: path to the output directory.
     """
     def __init__(self, max_epochs: int, out_path: Path):
         self.max_epochs = max_epochs
@@ -29,28 +28,22 @@ class DeepTrainer(ABC):
 
     @abstractmethod
     def setup_config(self) -> Path:
-        """
-        Update the configuration file with the maximum number of epochs.
-        """
+        pass
 
     @abstractmethod
     def dispatch_train(self) -> int:
-        """
-        Train the model.
-        """
+        pass
 
 def create_deep_trainer(config: DeepTrainConfig, out_path: Path) -> DeepTrainer:
     """
-    Create a DeepTrainer object based on the desired model.
+    Factory function for creating a DeepTrainer object.
 
     Args:
-    - modelname: name of the model (pacemaker, ...).
-    - max_epochs: maximum number of epochs for training.
-    - config_filepath: path to the configuration file.
-    - potential_filepath: path to the potential file.
+        - config: configuration for the deep training.
+        - out_path: path to the output directory.
 
     Returns:
-    - DeepTrainer object.
+        DeepTrainer: the DeepTrainer object.
     """
     if config.model_name == 'pacemaker':
         return PACEHPCDeepTrainer(config.max_epochs, out_path)
@@ -59,6 +52,7 @@ def create_deep_trainer(config: DeepTrainConfig, out_path: Path) -> DeepTrainer:
 class PACEHPCDeepTrainer(DeepTrainer):
     """
     DeepTrainer class for the PACEMAKER model.
+    Requires Slurm.
     """
     def setup_config(self):
         os.chdir(self.config_filepath.parent)

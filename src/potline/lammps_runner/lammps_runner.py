@@ -21,12 +21,9 @@ def run_benchmark(fitted_path: Path, config: BenchConfig, hpc: bool = False) -> 
     Run the LAMMPS benchmark.
 
     Args:
-        fitted_path: Path to the fitted potential.
-        lammps_bin_path: Path to the LAMMPS binary.
-        prerun_steps: Number of steps for the prerun.
-        max_steps: Number of steps for the benchmark.
-        n_cpu: Number of CPUs to use.
-        hpc: Whether to run the benchmark on the HPC.
+        - fitted_path: path to the directory with the fitted models.
+        - config: configuration for the inference benchmark.
+        - hpc: flag to run the simulations on HPC.
 
     Returns:
         int: 0 if the benchmark is run locally, the job id if it is run on the HPC.

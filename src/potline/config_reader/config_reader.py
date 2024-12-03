@@ -87,11 +87,11 @@ class ConfigReader():
     """
     Class for reading and converting configuration files.
     A config file is written in hjson format and should have the following main sections:
-    - hyper_search: contains the configuration for the optimizer, uses the XPOT format.
-    - deep_train: contains the configuration for the deep training after the hyperparameter search.
-    - inference: contains the configuration for the inference benchmark with LAMMPS.
-    - data_analysis: contains the configuration for the data analysis on mechanical properties with LAMMPS.
-    - lammps: contains the configuration for the LAMMPS simulation.
+    - general: general configuration for the pipeline.
+    - hyper_search: configuration for the optimizer, uses the XPOT format.
+    - deep_training: configuration for the deep training after the hyperparameter search.
+    - inference: configuration for the inference benchmark with LAMMPS.
+    - data_analysis: configuration for the data analysis on mechanical properties with LAMMPS.
     """
     def __init__(self, file_path: Path):
         self.file_path: Path = file_path
@@ -100,7 +100,11 @@ class ConfigReader():
 
     def get_optimizer_config(self) -> tuple[Path, HyperConfig]:
         """
-        Convert the configuration file to the XPOT format and create an optimizer.
+        Convert the configuration file to the XPOT format.
+
+        Returns:
+            tuple[Path, HyperConfig]: the path to the converted file and
+                the hyperparameter search configuration.
         """
         converted_file_path: Path = self.file_path.with_stem(self.file_path.stem + '_converted')
         if 'hyper_search' not in self.config_data:
@@ -126,6 +130,15 @@ class ConfigReader():
         return (converted_file_path, hyp_config)
 
     def get_config_section(self, section_name: str) -> ConfigDict:
+        """
+        Get a specific section from the configuration file.
+
+        Args:
+            section_name: the name of the section to retrieve.
+
+        Returns:
+            ConfigDict: the configuration section.
+        """
         if section_name not in self.config_data:
             raise ValueError(f'No {section_name} configuration found in the config file.')
         return patify(self.config_data[section_name])

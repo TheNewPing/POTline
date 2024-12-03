@@ -20,12 +20,9 @@ def run_properties_simulation(fitted_path: Path, config: PropConfig, hpc: bool =
     Run the properties simulation using LAMMPS.
 
     Args:
-        fitted_path: Path to the fitted potential.
-        lammps_bin_path: Path to the LAMMPS binary.
-        lammps_inps_path: Path to the LAMMPS input files.
-        pps_python_path: Path to the python script for the post-processing.
-        ref_data_path: Path to the reference data.
-        hpc: Whether to run the simulation on the HPC.
+        - fitted_path: path to the directory with the fitted models.
+        - config: configuration for the data analysis.
+        - hpc: flag to run the simulations on HPC.
 
     Returns:
         int: 0 if the simulation is run locally, the job id if it is run on the HPC.

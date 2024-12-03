@@ -22,7 +22,8 @@ _exec_path = Path(os.getcwd()).resolve()
 
 class HPCPACE(HPCMLP):
     """
-    Class for optimizing ACE potentials using XPOT, for use with pacemaker.
+    Class for optimizing ACE potentials using XPOT.
+    Requires Slurm and Pacemaker.
 
     Parameters
     ----------
@@ -67,13 +68,19 @@ class HPCPACE(HPCMLP):
 
         Parameters
         ----------
+        opt_values : dict
+            The hyperparameters to be used in the fitting process.
+        iteration : int
+            The iteration number.
+        subiter : int
+            The subiteration number.
         filename : str
             Path/Name for the input file to be written to.
 
         Returns
         -------
-        float
-            The loss value.
+        int
+            The job ID of the fitting process.
         """
         self.prep_fit(opt_values, iteration, subiter)
         self.write_input_file(filename)
@@ -102,6 +109,14 @@ class HPCPACE(HPCMLP):
     def collect_loss(self, wait_id: int, iteration: int, subiter: int) -> float:
         """
         Collect the loss from the fitting process.
+
+        Parameters
+        ----------
+        wait_id : int
+            The job ID to wait for.
+        iteration : int
+            The iteration number.
+        subiter : int
 
         Returns
         -------

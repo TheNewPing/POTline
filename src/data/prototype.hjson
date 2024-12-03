@@ -2,10 +2,10 @@
     general: {
         lammps_bin_path: "/home/erodaro/lammps/build/lmp",
         model_name: pacemaker
-        best_n_models: 3
+        best_n_models: 10
     }
     deep_training: {
-        max_epochs: 1,
+        max_epochs: 20,
     }
     inference: {
         prerun_steps: 10,
@@ -18,9 +18,9 @@
         ref_data_path: "/home/erodaro/POTline/src/potline/lammps_analysis/pot_testing/REF_DATA",
     }
     hyper_search: {
-        max_iter: 1,
+        max_iter: 3,
         n_initial_points: 5
-        n_points: 3
+        n_points: 20
         strategy: "cl_min"
         "xpot": {
             project_name: quick_config
@@ -82,7 +82,7 @@
                 "w_orth": "skopt.space.Real(0,1e-7)"
             },
             "optimizer": "BFGS",
-            "maxiter": 1,
+            "maxiter": 20,
             "repulsion": "skopt.space.Categorical(categories=['auto', 'none'])",
             "trainable_parameters": "ALL",
             min_relative_train_loss_per_iter: 5e-5

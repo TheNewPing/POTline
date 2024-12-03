@@ -8,10 +8,6 @@ from pathlib import Path
 class Optimizer(ABC):
     """
     Interface for the optimizer.
-
-    Args:
-        config_path (Path): The path to the configuration
-        **kwargs: Additional keyword arguments
     """
     @abstractmethod
     def __init__(self, config_path: Path, **kwargs):

@@ -83,6 +83,17 @@ def create_potential(model_name: str, yace_path: Path, out_path: Path) -> Path:
     return out_path
 
 def get_best_models(sweep_path: Path, yace_list: list[Path], max_n: int) -> list[Path]:
+    """
+    Get the best models based on the final report.
+
+    Args:
+        sweep_path (Path): The path to the sweep directory.
+        yace_list (list[Path]): List of paths to filter.
+        max_n (int): The maximum number of paths to return.
+
+    Returns:
+        list[Path]: List of paths to the best models.
+    """
     df: DataFrame = pd.read_csv(sweep_path / FINAL_REPORT_NAME)
     best_iterations_rows: DataFrame = df.nsmallest(max_n, 'loss')[['iteration', 'subiteration']]
     best_iterations: list[tuple[int, int]] = [(int(row['iteration']), int(row['subiteration']))

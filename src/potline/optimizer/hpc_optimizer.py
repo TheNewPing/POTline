@@ -78,7 +78,7 @@ class HPCOptimizer(Generic[Key]):
             Dictionary of parameter names and values.
         """
         param_values_list: list[list[float | int | str]] = \
-            self._optimiser.ask(self.n_points, self.strategy)  # type: ignore
+            self._optimiser.ask(self.n_points, self.strategy)
         return [dict(zip(self._optimisable_params.keys(), param_values))
                 for param_values in param_values_list]
 
@@ -89,12 +89,11 @@ class HPCOptimizer(Generic[Key]):
 
         Parameters
         ----------
-        params : dict
-            Dictionary of parameter names and values.
-        result : float
-            Result (loss value) of the last iteration.
+        params_list : list
+            List of dictionaries of parameter names and values.
+        results_list : list
+            List of results from the last iteration.
         """
-
         # 1. make sure that we get the order correct
         locations_list = [[params[name] for name in self._optimisable_params] for params in params_list]
         # 2. tell the optimiser
@@ -290,6 +289,22 @@ class HPCOptimizer(Generic[Key]):
         b.figure.savefig(f"{path}/evaluations.pdf")
 
 class FitJobTracker(Generic[Key]):
+    """
+    Class to track the progress of a job in the optimisation sweep.
+
+    Parameters
+    ----------
+    job_id : int
+        Job ID of the current job.
+    iteration : int
+        Current iteration.
+    subiter : int
+        Current subiteration.
+    params : dict
+        Dictionary of parameter names and values.
+    loss : float
+        Loss value of the current iteration.
+    """
     def __init__(self, job_id: int, iteration: int, subiter: int,
                  params: dict[Key, DictValue], loss: float) -> None:
         self.job_id = job_id

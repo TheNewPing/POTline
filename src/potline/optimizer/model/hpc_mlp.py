@@ -24,6 +24,7 @@ CONFIG_NAME: str = "xpot-ace.yaml"
 class HPCMLP(ABC):
     """
     Parent class for all MLPs
+    Requires Slurm.
 
     Parameters
     ----------
@@ -83,7 +84,7 @@ class HPCMLP(ABC):
         subiter: int,
     ) -> None:
         """
-        Call the relevant fitting routine for the MLP architecture required.
+        Prepare hyperparameters for the model fitting.
 
         Parameters
         ----------

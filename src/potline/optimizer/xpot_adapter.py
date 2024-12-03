@@ -14,8 +14,8 @@ class XpotAdapter(Optimizer):
     XPOT adapter for the optimization pipeline.
 
     Args:
-        config_path (Path): The path to the configuration file.
-        **kwargs: Additional keyword arguments
+        - config_path: path to the configuration file.
+        - config: hyperparameter search configuration.
     """
     def __init__(self, config_path: Path, config: HyperConfig):
         self.model: HPCMLP = create_xpot_model(config_path)
