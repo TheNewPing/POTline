@@ -8,11 +8,11 @@ from pathlib import Path
 import pandas as pd
 from pandas import DataFrame
 
-from ..optimizer import BEST_POTENTIAL_NAME
 from .path_utils import unpatify, gen_from_template
 
 YACE_NAME: str = 'pace.yace'
 FINAL_REPORT_NAME: str = 'parameters.csv'
+LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
 POTENTIAL_NAME: str = 'potential.in'
 POTENTIAL_TEMPLATE_PATH: Path = Path(__file__).parent / 'template' / POTENTIAL_NAME
 
@@ -46,12 +46,13 @@ def convert_yace(model_name: str, sweep_path: Path) -> list[Path]:
     """
     # Convert the best potentials to YACE format
     yace_list: list[Path] = []
-    model_dirs: list[Path] = [d for d in sweep_path.iterdir() if d.is_dir()]
+    model_dirs: list[Path] = [d for iter_dir in sweep_path.iterdir() if iter_dir.is_dir()
+                              for d in iter_dir.iterdir() if d.is_dir() ]
     for model_dir in model_dirs:
         # Convert the best cycle to YACE format
         yace_list.append(run_yacer(
             model_name,
-            model_dir.resolve() / BEST_POTENTIAL_NAME,
+            model_dir.resolve() / LAST_POTENTIAL_NAME,
             model_dir.resolve() / YACE_NAME))
     return yace_list
 
@@ -82,6 +83,20 @@ def create_potential(model_name: str, yace_path: Path, out_path: Path) -> Path:
     return out_path
 
 def get_best_models(sweep_path: Path, yace_list: list[Path], max_n: int) -> list[Path]:
+    """
+    Get the best models based on the final report.
+
+    Args:
+        sweep_path (Path): The path to the sweep directory.
+        yace_list (list[Path]): List of paths to filter.
+        max_n (int): The maximum number of paths to return.
+
+    Returns:
+        list[Path]: List of paths to the best models.
+    """
     df: DataFrame = pd.read_csv(sweep_path / FINAL_REPORT_NAME)
-    best_iterations: list[int] = df.nsmallest(max_n, 'loss')['iteration'].astype(int).tolist()
-    return [yace for yace in yace_list if int(yace.parent.name) in best_iterations]
+    best_iterations_rows: DataFrame = df.nsmallest(max_n, 'loss')[['iteration', 'subiteration']]
+    best_iterations: list[tuple[int, int]] = [(int(row['iteration']), int(row['subiteration']))
+                                              for _, row in best_iterations_rows.iterrows()]
+    return [yace for yace in yace_list if
+            (int(yace.parent.parent.name), int(yace.parent.name)) in best_iterations]

@@ -22,4 +22,4 @@ source $(conda info --base)/etc/profile.d/conda.sh
 conda activate pl
 
 python src/hpc/tf_gpu_test.py
-python src/main.py --iterations 20
+python src/main.py

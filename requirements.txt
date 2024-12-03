@@ -6,3 +6,4 @@ protobuf==3.20
 scikit-optimize
 scikit-learn
 tabulate
+simple_slurm

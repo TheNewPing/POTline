@@ -6,7 +6,7 @@ This Python framework is designed to run a pipeline to train Machine Learning In
 
 - Train MLIAP models
 - Benchmark inference time
-- Evaluate accuracy on mechanical properties in LAMMPS
+- Evaluate accuracy on mechanical properties in LAMMPS (using [Potential_benchmark_iron](https://github.com/leiapple/Potential_benchmark_iron))
 
 ## Installation
 
@@ -27,9 +27,10 @@ To install the framework and its dependencies, follow these steps:
     pip install -r requirements.txt
     ```
 4. Install [XPOT](https://github.com/dft-dutoit/XPOT)
-5. Install [Potential_benchmark_iron](https://github.com/leiapple/Potential_benchmark_iron)
 
 ## Usage
+CURRENTLY ONLY USAGE VIA SLURM IS SUPPORTED.
+
 To use the POTline framework, you can run the `main.py` script with various command line arguments to control its behavior. Below are the available options:
 
 ```bash
@@ -43,12 +44,13 @@ python main.py --config <path_to_config> --iterations <num_iterations> [options]
 
 ### Options
 
-- `--nofitting`: Disable potential fitting (requires `--fitted` to work)
+- `--nohyper`: Disable potential fitting (requires `--fitted` to work)
+- `--nodeep`: Disable fitting on best models from hyperparameter optimization
 - `--noconversion`: Disable LAMMPS potential conversion
 - `--noinference`: Disable inference benchmark
 - `--noproperties`: Disable properties simulation
 - `--nohpc`: Disable HPC mode
-- `--fitted`: Path to the fitted potential
+- `--fitted`: Path to the fitted potential (do not use without `--nohyper`)
 
 ### Configuration File Syntax
 
@@ -56,9 +58,11 @@ The configuration file for POTline is written in HJSON format, which is a user-f
 
 #### General
 - `lammps_bin_path`: Path to the LAMMPS binary.
-- `out_yace_path`: Directory with LAMMPS potentials (used only with `--noconversion`).
 - `model_name`: Name of the model (currently supports only `pacemaker`).
 - `best_n_models`: Number of best models to use in inference and simulation step.
+
+### Deep training
+- `max_epochs`: Max number of epochs for deeper training on best models.
 
 #### Inference
 - `prerun_steps`: Number of pre-run steps.
@@ -70,41 +74,13 @@ The configuration file for POTline is written in HJSON format, which is a user-f
 - `pps_python_path`: Path to Python scripts for post-processing (from Potential_benchmark_iron).
 - `ref_data_path`: Path to reference data (from Potential_benchmark_iron).
 
-#### Optimizer
-- `xpot`: Configuration for XPOT optimizer.
-    - `project_name`: Name of the project.
-    - `sweep_name`: Name of the sweep.
-    - `error_method`: Method to calculate error (e.g., RMSE).
-    - `alpha`: Alpha parameter for the optimizer.
-- `cutoff`: Cutoff value.
-- `seed`: Random seed.
-- `metadata`: Metadata for the optimization.
-    - `purpose`: Purpose of the optimization.
-- `data`: Data configuration.
-    - `filename`: Path to the dataset.
-    - `test_size`: Proportion of data to use for testing.
-- `potential`: Potential configuration.
-    - `deltaSplineBins`: Delta spline bins value.
-    - `elements`: List of elements.
-    - `embeddings`: Embedding configurations.
-    - `rankmax`: Maximum rank.
-    - `bonds`: Bond configurations.
-    - `functions`: Function configurations.
-- `fit`: Fit configuration.
-    - `loss`: Loss function parameters.
-    - `optimizer`: Optimizer to use.
-    - `maxiter`: Maximum number of iterations.
-    - `repulsion`: Repulsion parameter.
-    - `trainable_parameters`: Parameters that are trainable.
-- `backend`: Backend configuration.
-    - `evaluator`: Evaluator to use.
-    - `batch_size`: Batch size.
-    - `batch_size_reduction`: Whether to reduce batch size.
-    - `batch_size_reduction_factor`: Factor by which to reduce batch size.
-    - `display_step`: Step interval for displaying progress.
-    - `gpu_config`: GPU configuration.
-
-This configuration file allows you to customize various aspects of the POTline framework to suit your specific needs.
+#### Hyperparamerter optimization
+- `max_iter`: Number of iterations of ask-tell for the baesyan optimizer.
+- `n_initial_points`: Consult `skopt.Optimizer`.
+- `n_points`: Number of parameters sets asked at each iteration to the optimizer.
+- `xpot`: Consult [XPOT](https://github.com/dft-dutoit/XPOT)
+- Model-specific configuration:
+    - [pacemaker](https://pacemaker.readthedocs.io/en/latest/pacemaker/inputfile/)
 
 ### Example Usage
 
@@ -123,5 +99,8 @@ sbatch src/hpc/potline_hpc.txt
 ## TODO
 
 - ~~Implement basic pipeline with XPOT, Pacemaker, and BCC iron integration~~
+- ~~Enable parallel hyperparameter optimizaion~~
+- ~~Add another training phase on the best models from hyperparameter optimization~~
 - Add MACE support
 - Add GRACE support
+- Reintroduce Slurm-less pipeline

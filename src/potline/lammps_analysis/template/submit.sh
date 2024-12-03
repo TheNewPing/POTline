@@ -20,15 +20,26 @@
 # - add the calculation of T-S curve
 # - add jace1x potential
 #------------------------------
-#SBATCH --job-name=${job_name}
-#SBATCH --ntasks=${n_tasks}
-#SBATCH --cpus-per-task=${n_cpu}
-#SBATCH --mem=10G
-#SBATCH --time=${time_limit}
-#SBATCH --error=${stderr_path}_%j
-#SBATCH --output=${stdout_path}_%j
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=${email}
+
+# Collect the input parameters
+out_path=$1
+hpc=$2
+LMMP=$3
+lmp_inps=$4
+pps_python=$5
+ref_data_path=$6
+eaddress=$7
+
+if [ "$hpc" = "True" ]; then
+    LMMP="srun -G0 -n1 ${LMMP}"
+    module load 2024
+    module load Miniconda3/24.7.1-0
+    module load 2022
+    module load OpenMPI/4.1.4-NVHPC-22.7-CUDA-11.7.0
+    # Initialize Conda
+    source $(conda info --base)/etc/profile.d/conda.sh
+    conda activate pl
+fi
 
 # Change to the output directory
 cd ${out_path}
@@ -44,54 +55,7 @@ rm *.mod
 rm *.py
 rm results.txt
 rm *.log
-rm potential/potential.in
-#**********************************
-# Customize section
-#**********************************
-# your email address
-eaddress=${email}
-# load the dependent modules of the cluster.
-module load 2024
-module load Miniconda3/24.7.1-0
-module load 2022
-module load OpenMPI/4.1.4-NVHPC-22.7-CUDA-11.7.0
-# Initialize Conda
-source $(conda info --base)/etc/profile.d/conda.sh
-conda activate pl
-# Full path to LAMMPS excutable. 
-LMMP=${lammps_bin_path}
-# the foldername of lammps input scripts (with fullpath)
-lmp_inps=${lammps_inps_path}
-pps_python=${pps_python_path}
-# Choose interatomic potential
-pot="ace"
-# input the potential file name
-# # potfilename=`ls ${PWD}/potential/`
 
-# For GAP, one need to define the right coeff
-# if [[ ${pot} = "ace" ]]; then
-# 	pstyle="pace"
-# 	pcoeff="${PWD}/potential/${potfilename} Fe"
-# elif [[ ${pot} = "gap" ]]; then
-# 	pstyle="quip"
-# 	pcoeff="${PWD}/potential/${potfilename} 'IP GAP' 26"
-# elif [[ ${pot} = "n2p2" ]]; then
-# 	pstyle="hdnnp 6.5 dir ${PWD}/potential showew no showewsum 1000 resetew yes maxew 1000000 cflength 1 cfenergy 1"
-# 	pcoeff="Fe"
-# elif [[ ${pot} = "ann" ]]; then
-# 	pstyle="aenet"
-# 	pcoeff="v-1 Fe 15tw-15tw.nn Fe"
-# elif [[ ${pot} = "mtp" ]]; then
-# 	pstyle="mlip ${PWD}/potential/mlip.ini"
-# 	poceff=""
-# fi
-
-# Generate the interatomic potential file
-# cat >../potential.in <<EOF
-# # Define the interatomic potential
-# pair_style ${pstyle}
-# pair_coeff * * ${pcoeff} 
-# EOF
 # create a data folder
 mkdir data
 
@@ -123,23 +87,23 @@ a0=$(grep 'a0 =' ./data/results.txt | awk '{print $3}')
 
 # Vacancy formation energy
 cp ${lmp_inps}/in.vac .
-srun -G0 -n1 ${LMMP} -in in.vac -v lat ${a0}
+${LMMP} -in in.vac -v lat ${a0}
 
 # Calculation of elastic constants.--------------------------------
 cp ${lmp_inps}/in.elastic .
 cp ${lmp_inps}/*.mod .
-srun -G0 -n1 ${LMMP} -in in.elastic -v lat ${a0}
+${LMMP} -in in.elastic -v lat ${a0}
 
 # Calculation of surface energies.---------------------------------
 cp ${lmp_inps}/in.surf* .
 # (100) plane
-srun -G0 -n1 ${LMMP} -in in.surf1 -v lat ${a0}
+${LMMP} -in in.surf1 -v lat ${a0}
 # (110) plane
-srun -G0 -n1 ${LMMP} -in in.surf2 -v lat ${a0}
+${LMMP} -in in.surf2 -v lat ${a0}
 # (111) plane
-srun -G0 -n1 ${LMMP} -in in.surf3 -v lat ${a0}
+${LMMP} -in in.surf3 -v lat ${a0}
 # (112) plane
-srun -G0 -n1 ${LMMP} -in in.surf4 -v lat ${a0}
+${LMMP} -in in.surf4 -v lat ${a0}
 
 # Bain path calculation.------------------------------------------
 cp ${lmp_inps}/in.bain_path .
@@ -148,15 +112,15 @@ cp bain_path.csv ./data
 
 # Stacking fault energy---------------------------------------------
 cp ${lmp_inps}/in.sfe_* .
-srun -G0 -n1 ${LMMP} -in in.sfe_110 -v lat ${a0}
-srun -G0 -n1 ${LMMP} -in in.sfe_112 -v lat ${a0}
+${LMMP} -in in.sfe_110 -v lat ${a0}
+${LMMP} -in in.sfe_112 -v lat ${a0}
 cp ./sfe_110.csv ./data
 cp ./sfe_112.csv ./data
 
 # Traction-separatio curve------------------------------------------
 cp ${lmp_inps}/in.ts_* .
-srun -G0 -n1 ${LMMP} -in in.ts_100 -v lat ${a0}
-srun -G0 -n1 ${LMMP} -in in.ts_110 -v lat ${a0}
+${LMMP} -in in.ts_100 -v lat ${a0}
+${LMMP} -in in.ts_110 -v lat ${a0}
 cp ./ts_100.csv ./data
 cp ./ts_110.csv ./data
 
@@ -185,7 +149,9 @@ rm *.mod
 
 # Send email of the plots as the attached file.
 # Mail the results ---------------------------------------------------
-mail -s "Basic Properties of iron predicted by IAP"  -a ./data/results.txt -a ./plots/eos_bp.png -a ./plots/sfe.png "${eaddress}" <<EOF
+if [ "$hpc" = "True" ]; then
+    mail -s "Basic Properties of iron predicted by IAP" -a ./data/results.txt -a ./plots/eos_bp.png -a ./plots/sfe.png "${eaddress}" <<EOF
 Please check the performance of interatomic potential: ${potential_name}
 EOF
-echo "Mail the results successful!"
+    echo "Mail the results successful!"
+fi
