@@ -7,6 +7,7 @@ from .config_reader import (
     BenchConfig,
     PropConfig,
     HyperConfig,
+    DeepTrainConfig,
     ConfigDict,
     GEN_NAME,
     LMP_BIN_NAME,

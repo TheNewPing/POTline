@@ -12,7 +12,8 @@ LMP_BIN_NAME: str = 'lammps_bin_path'
 MODEL_NAME: str = 'model_name'
 BEST_N_NAME: str = 'best_n_models'
 
-DT_NAME: str = 'deep_train'
+DT_NAME: str = 'deep_training'
+DT_MAX_EPOCHS_NAME: str = 'max_epochs'
 
 INF_NAME: str = 'inference'
 PRE_STEPS_NAME: str = 'prerun_steps'
@@ -73,6 +74,15 @@ class HyperConfig():
         self.n_points: int = n_points
         self.strategy: str = strategy
 
+class DeepTrainConfig():
+    """
+    Configuration class for the deep training step.
+    """
+    def __init__(self, max_epochs: int,
+                 model_name: str):
+        self.max_epochs: int = max_epochs
+        self.model_name: str = model_name
+
 class ConfigReader():
     """
     Class for reading and converting configuration files.
@@ -101,7 +111,7 @@ class ConfigReader():
         hyper_config: dict = self.config_data['hyper_search']
         # add model name
         hyper_config['xpot']['fitting_executable'] = \
-            self.config_data['general']['model_name']
+            str(self.get_config_section(GEN_NAME)[MODEL_NAME])
 
         hyp_config: HyperConfig = HyperConfig(
             hyper_config.pop(MAX_ITER_NAME),
@@ -138,4 +148,12 @@ class ConfigReader():
             Path(str(self.get_config_section(DA_NAME)[LAMMPS_INPS_NAME])),
             Path(str(self.get_config_section(DA_NAME)[PPS_PYTHON_NAME])),
             Path(str(self.get_config_section(DA_NAME)[REF_DATA_NAME]))
+        )
+
+    def get_deep_train_config(self) -> DeepTrainConfig:
+        if DT_NAME not in self.config_data:
+            raise ValueError('No deep training configuration found in the config file.')
+        return DeepTrainConfig(
+            int(str(self.get_config_section(DT_NAME)[DT_MAX_EPOCHS_NAME])),
+            str(self.get_config_section(GEN_NAME)[MODEL_NAME])
         )

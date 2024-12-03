@@ -2,11 +2,16 @@
 DeepTrainer class for training after hyperparameter search.
 """
 
-import subprocess
+import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 
 import yaml
+from simple_slurm import Slurm
+
+from ..optimizer.model import CONFIG_NAME
+from ..utils import LAST_POTENTIAL_NAME
+from ..config_reader import DeepTrainConfig
 
 class DeepTrainer(ABC):
     """
@@ -17,10 +22,10 @@ class DeepTrainer(ABC):
     - config_filepath: path to the configuration file.
     - potential_filepath: path to the potential file.
     """
-    def __init__(self, max_epochs: int, config_filepath: Path, potential_filepath: Path):
+    def __init__(self, max_epochs: int, out_path: Path):
         self.max_epochs = max_epochs
-        self.config_filepath = config_filepath
-        self.potential_filepath = potential_filepath
+        self.config_filepath = out_path / CONFIG_NAME
+        self.potential_filepath = out_path / LAST_POTENTIAL_NAME
 
     @abstractmethod
     def setup_config(self) -> Path:
@@ -29,15 +34,12 @@ class DeepTrainer(ABC):
         """
 
     @abstractmethod
-    def train(self) -> None:
+    def dispatch_train(self) -> int:
         """
         Train the model.
         """
 
-def create_deep_trainer(modelname: str,
-                        max_epochs: int,
-                        config_filepath: Path,
-                        potential_filepath: Path) -> DeepTrainer:
+def create_deep_trainer(config: DeepTrainConfig, out_path: Path) -> DeepTrainer:
     """
     Create a DeepTrainer object based on the desired model.
 
@@ -50,15 +52,16 @@ def create_deep_trainer(modelname: str,
     Returns:
     - DeepTrainer object.
     """
-    if modelname == 'pacemaker':
-        return PACEDeepTrainer(max_epochs, config_filepath, potential_filepath)
+    if config.model_name == 'pacemaker':
+        return PACEHPCDeepTrainer(config.max_epochs, out_path)
     raise ValueError('Model not supported.')
 
-class PACEDeepTrainer(DeepTrainer):
+class PACEHPCDeepTrainer(DeepTrainer):
     """
     DeepTrainer class for the PACEMAKER model.
     """
     def setup_config(self):
+        os.chdir(self.config_filepath.parent)
         # Read the YAML file
         with self.config_filepath.open('r', encoding='utf-8') as file:
             config = yaml.safe_load(file)
@@ -76,6 +79,27 @@ class PACEDeepTrainer(DeepTrainer):
 
         return output_filepath
 
-    def train(self) -> None:
+    def dispatch_train(self) -> int:
         config = self.setup_config()
-        subprocess.run(['pacemaker', str(config), '-p', str(self.potential_filepath)], check=True)
+        command: list[str] = ['pacemaker', str(config), '-p', str(self.potential_filepath)]
+        out_path: Path = self.potential_filepath.parent
+        fit_job = Slurm(
+            job_name="deep_pace",
+            output=f"{out_path}/deep_%j.out",
+            error=f"{out_path}/deep_%j.err",
+            time="48:00:00",
+            mem="60G",
+            partition="gpu",
+            nodes=1,
+            ntasks=1,
+            cpus_per_task=16,
+            gpus=1,
+        )
+        fit_job.add_cmd("module load 2024")
+        fit_job.add_cmd("module load Miniconda3/24.7.1-0")
+        fit_job.add_cmd("module load 2022")
+        fit_job.add_cmd("module load cuDNN/8.4.1.50-CUDA-11.7.0")
+        fit_job.add_cmd("export LD_LIBRARY_PATH=/home/erodaro/.conda/envs/pl/lib/:$LD_LIBRARY_PATH")
+        fit_job.add_cmd("source $(conda info --base)/etc/profile.d/conda.sh")
+        fit_job.add_cmd("conda activate pl")
+        return fit_job.sbatch(' '.join(command))

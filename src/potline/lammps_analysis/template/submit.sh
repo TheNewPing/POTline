@@ -55,7 +55,6 @@ rm *.mod
 rm *.py
 rm results.txt
 rm *.log
-rm potential/potential.in
 
 # create a data folder
 mkdir data

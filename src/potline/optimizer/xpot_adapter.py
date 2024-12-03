@@ -34,4 +34,4 @@ class XpotAdapter(Optimizer):
 
     def get_final_results(self) -> None:
         self.optimizer.tabulate_final_results(self.model.sweep_path)
-        self.optimizer.plot_results(self.model.sweep_path)
+        #self.optimizer.plot_results(self.model.sweep_path)

@@ -5,7 +5,7 @@
         best_n_models: 3
     }
     deep_training: {
-        deep_training_max_epochs: 1500,
+        max_epochs: 1,
     }
     inference: {
         prerun_steps: 10,
@@ -18,7 +18,7 @@
         ref_data_path: "/home/erodaro/POTline/src/potline/lammps_analysis/pot_testing/REF_DATA",
     }
     hyper_search: {
-        max_iter: 2,
+        max_iter: 1,
         n_initial_points: 5
         n_points: 3
         strategy: "cl_min"
@@ -26,9 +26,9 @@
             project_name: quick_config
             sweep_name: pace
             error_method: rmse
-            alpha: 0.7,        
+            alpha: 0.3,        
         }
-        "cutoff": 7,
+        "cutoff": 6.0,
         // "cutoff": "skopt.space.Real(5, 8)",
         "seed": 42
         "metadata": {
@@ -46,8 +46,8 @@
                     "npot": "FinnisSinclairShiftedScaled",
                     "fs_parameters": [1,1,1,"skopt.space.Real(0.1, 2)"],
                     "ndensity": 2,
-                    "rho_core_cut": 3000,
-                    "drho_core_cut": 500
+                    "rho_core_cut": "skopt.space.Integer(1000, 6000)",
+                    "drho_core_cut": "skopt.space.Integer(100, 1000)"
                 }
             },
             "rankmax": "",
@@ -55,64 +55,39 @@
                 "ALL": {
                     "radbase": "SBessel",
                     "radparameters": ["skopt.space.Real(1,10)"],
-                    "rcut": "skopt.space.Real(4,9)",
+                    "rcut": 6.0,
                     "dcut": "skopt.space.Real(0.001, 0.1)",
-                    // "r_in": "",
-                    // "delta_in": "",
-                    // "core-repulsion": "",
                     "NameofCutoffFunction": "cos"
                 }
             },
             "functions": {
                 "number_of_functions_per_element": 200,
-                // "number_of_functions_per_element": "skopt.space.Integer(100,400)",
                 "ALL": {
                     "nradmax_by_orders": [15,6,4,3,2,2],
                     "lmax_by_orders": [0,4,3,2,1,0],
-                    // "coeffs_init": ""
+                    "coefs_init": "skopt.space.Categorical(categories=['zero', 'random'])"
                 },
-            // "initial_potential": ""
             }
         },
         "fit": {
             "loss": {
-                "kappa": "auto",
-                "L1_coeffs": 1e-8,
-                "L2_coeffs": 1e-8,
-                "w0_rad": 1e-8,
-                "w1_rad": 1e-8,
-                "w2_rad": 1e-8,
-                "w1_coeffs": 0,
-                "w2_coeffs": 0,
-                // "w_orth": ""
+                "kappa": 0.3,
+                "L1_coeffs": "skopt.space.Real(0,1e-7)",
+                "L2_coeffs": "skopt.space.Real(0,1e-7)",
+                "w0_rad": "skopt.space.Real(0,1e-7)",
+                "w1_rad": "skopt.space.Real(0,1e-7)",
+                "w2_rad": "skopt.space.Real(0,1e-7)",
+                "w1_coeffs": "skopt.space.Real(0,1e-7)",
+                "w2_coeffs": "skopt.space.Real(0,1e-7)",
+                "w_orth": "skopt.space.Real(0,1e-7)"
             },
-            // "weighting": {
-            //     "type": "EnergyBasedWeightingPolicy",
-            //     "filename": "",
-            //     "nfit": 20000,
-            //     "cutoff": "",
-            //     "DEup": 1000,
-            //     "DFup": "",
-            //     "DElow": 1.0,
-            //     "DE": 1,
-            //     "DF": 1,
-            //     "wlow": "",
-            //     "energy": "convex_hull",
-            //     "reftype": "all",
-            //     "seed": 42
-            // },
             "optimizer": "BFGS",
-            // "options": "",
-            "maxiter": 2,
-            "repulsion": "auto",
+            "maxiter": 1,
+            "repulsion": "skopt.space.Categorical(categories=['auto', 'none'])",
             "trainable_parameters": "ALL",
-            // "fit_cycles": "",
-            // "noise_relative_sigma":"",
-            // "noise_absolute_sigma":"",
-            // "randomize_func_coeffs": "",
-            //"ladder_step": 1000,
-            //"ladder_type":"power_order",
-            // "callbacks":""
+            min_relative_train_loss_per_iter: 5e-5
+            min_relative_test_loss_per_iter: 1e-5
+            early_stopping_patience: 200
         },
         "backend": {
             "evaluator": "tensorpot",

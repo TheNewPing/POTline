@@ -19,6 +19,8 @@ from xpot import maths # type: ignore
 _this_file = Path(__file__).resolve()
 _exec_path = Path(os.getcwd()).resolve()
 
+CONFIG_NAME: str = "xpot-ace.yaml"
+
 class HPCMLP(ABC):
     """
     Parent class for all MLPs
@@ -53,7 +55,7 @@ class HPCMLP(ABC):
         self.iter_path = ""
 
     @abstractmethod
-    def write_input_file(self) -> None:
+    def write_input_file(self, filename: str = CONFIG_NAME) -> None:
         pass
 
     @abstractmethod
@@ -62,7 +64,7 @@ class HPCMLP(ABC):
         opt_values: dict[str, str | int | float],
         iteration: int,
         subiter: int,
-        filename: str = "xpot-ace.yaml",
+        filename: str = CONFIG_NAME,
     ) -> int:
         pass
 

@@ -12,7 +12,7 @@ from .path_utils import unpatify, gen_from_template
 
 YACE_NAME: str = 'pace.yace'
 FINAL_REPORT_NAME: str = 'parameters.csv'
-BEST_POTENTIAL_NAME: str = 'interim_potential_best_cycle.yaml'
+LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
 POTENTIAL_NAME: str = 'potential.in'
 POTENTIAL_TEMPLATE_PATH: Path = Path(__file__).parent / 'template' / POTENTIAL_NAME
 
@@ -52,7 +52,7 @@ def convert_yace(model_name: str, sweep_path: Path) -> list[Path]:
         # Convert the best cycle to YACE format
         yace_list.append(run_yacer(
             model_name,
-            model_dir.resolve() / BEST_POTENTIAL_NAME,
+            model_dir.resolve() / LAST_POTENTIAL_NAME,
             model_dir.resolve() / YACE_NAME))
     return yace_list
 
