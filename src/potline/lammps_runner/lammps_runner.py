@@ -44,7 +44,7 @@ def run_benchmark(fitted_path: Path, config: BenchConfig, hpc: bool = False) -> 
         ntasks=1,
         cpus_per_task=config.n_cpu,
         time='03:00:00',
-        error=inf_bench_dir / 'inf_%j.stderr',
-        output=inf_bench_dir / 'inf_%j.stdout'
+        error=inf_bench_dir / 'inf_%j.err',
+        output=inf_bench_dir / 'inf_%j.out'
     )
     return bench_job.sbatch(' '.join(command))

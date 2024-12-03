@@ -2,6 +2,7 @@
 XPOT adapter for the optimization pipeline.
 """
 
+import shutil
 from pathlib import Path
 
 from .optimizer import Optimizer
@@ -19,6 +20,7 @@ class XpotAdapter(Optimizer):
     """
     def __init__(self, config_path: Path, config: HyperConfig):
         self.model: HPCMLP = create_xpot_model(config_path)
+        shutil.copy(config_path, self.model.sweep_path)
         self.max_iter: int = config.max_iter
         self.optimizer: HPCOptimizer = HPCOptimizer(self.model.optimisation_space,
                                         self.model.sweep_path, config.n_points, config.strategy,

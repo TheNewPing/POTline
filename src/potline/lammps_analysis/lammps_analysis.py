@@ -44,8 +44,8 @@ def run_properties_simulation(fitted_path: Path, config: PropConfig, hpc: bool =
         cpus_per_task=1,
         mem='10G',
         time='3:00:00',
-        error=prop_bench_dir / 'prop_%j.stderr',
-        output=prop_bench_dir / 'prop_%j.stdout',
+        error=prop_bench_dir / 'prop_%j.err',
+        output=prop_bench_dir / 'prop_%j.out',
         mail_type='ALL',
         mail_user=EMAIL
     )

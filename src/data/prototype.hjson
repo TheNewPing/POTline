@@ -5,11 +5,11 @@
         best_n_models: 10
     }
     deep_training: {
-        max_epochs: 20,
+        max_epochs: 2000,
     }
     inference: {
-        prerun_steps: 10,
-        max_steps: 110,
+        prerun_steps: 100,
+        max_steps: 1100,
         n_cpu: 8,
     }
     data_analysis: {
@@ -18,9 +18,9 @@
         ref_data_path: "/home/erodaro/POTline/src/potline/lammps_analysis/pot_testing/REF_DATA",
     }
     hyper_search: {
-        max_iter: 3,
+        max_iter: 15,
         n_initial_points: 5
-        n_points: 20
+        n_points: 100
         strategy: "cl_min"
         "xpot": {
             project_name: quick_config
@@ -29,7 +29,6 @@
             alpha: 0.3,        
         }
         "cutoff": 6.0,
-        // "cutoff": "skopt.space.Real(5, 8)",
         "seed": 42
         "metadata": {
             "purpose": "Potential fit"
@@ -82,7 +81,7 @@
                 "w_orth": "skopt.space.Real(0,1e-7)"
             },
             "optimizer": "BFGS",
-            "maxiter": 20,
+            "maxiter": 400,
             "repulsion": "skopt.space.Categorical(categories=['auto', 'none'])",
             "trainable_parameters": "ALL",
             min_relative_train_loss_per_iter: 5e-5
