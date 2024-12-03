@@ -23,7 +23,7 @@
         n_points: 100
         strategy: "cl_min"
         "xpot": {
-            project_name: quick_config
+            project_name: hyper_search
             sweep_name: pace
             error_method: rmse
             alpha: 0.3,        

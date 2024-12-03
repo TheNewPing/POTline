@@ -1,11 +1,11 @@
 #!/bin/bash
 
-#SBATCH --time=8:00:00
+#SBATCH --time=119:00:00
 #SBATCH --partition=gpu
 #SBATCH -N 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 16
-#SBATCH --mem=60G
+#SBATCH --mem=50G
 #SBATCH --gpus=1
 
 module purge
