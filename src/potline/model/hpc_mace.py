@@ -15,15 +15,15 @@ import yaml
 from xpot import maths # type: ignore
 from simple_slurm import Slurm # type: ignore
 
-from .hpc_mlp import HPCMLP
+from .model import PotModel
 
 _this_file = Path(__file__).resolve()
 _exec_path = Path(os.getcwd()).resolve()
 
-class HPCPACE(HPCMLP):
+class HPCMACE(PotModel):
     """
-    Class for optimizing ACE potentials using XPOT.
-    Requires Slurm and Pacemaker.
+    Class for optimizing MACE potentials using XPOT.
+    Requires Slurm and ACEsuite MACE.
 
     Parameters
     ----------
@@ -35,7 +35,7 @@ class HPCPACE(HPCMLP):
 
     def write_input_file(
         self,
-        filename: str = "xpot-ace.yaml",
+        filename: str = "xpot-mace.yaml",
     ) -> None:
         """
         Write the input file for the ACE potential from the hyperparameter +
@@ -54,7 +54,7 @@ class HPCPACE(HPCMLP):
         opt_values: dict[str, str | int | float],
         iteration: int,
         subiter: int,
-        filename: str = "xpot-ace.yaml",
+        filename: str = "xpot-mace.yaml",
     ) -> int:
         """
         The main fitting function for creating an ACE potential. This function
@@ -125,7 +125,7 @@ class HPCPACE(HPCMLP):
         """
         self.iteration = iteration
         self.subiter = subiter
-        self.iter_path = os.path.join(self.sweep_path, str(self.iteration), str(self.subiter))
+        self.iter_path = os.path.join(self.out_path, str(self.iteration), str(self.subiter))
 
         wait_job = Slurm()
         while True:

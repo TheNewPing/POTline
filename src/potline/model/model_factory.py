@@ -6,10 +6,10 @@ from pathlib import Path
 
 import hjson # type: ignore
 
-from .hpc_mlp import HPCMLP
-from .hpc_pace import HPCPACE
+from .model import PotModel
+from .pace import PotPACE
 
-def create_xpot_model(config_path: Path) -> HPCMLP:
+def create_xpot_model(config_path: Path) -> PotModel:
     """
     Create an XPOT model from the configuration file.
 
@@ -21,5 +21,5 @@ def create_xpot_model(config_path: Path) -> HPCMLP:
     with open(config_path, 'r', encoding='utf-8') as file:
         config_data: dict = hjson.load(file)
         if config_data['xpot']['fitting_executable'] == 'pacemaker':
-            return HPCPACE(str(config_path))
+            return PotPACE(str(config_path))
         raise ValueError('Model not supported.')

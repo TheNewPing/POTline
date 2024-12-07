@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 from simple_slurm import Slurm
 
-from ..optimizer.model import CONFIG_NAME
+from ..hyper_searcher.model import CONFIG_NAME
 from ..utils import LAST_POTENTIAL_NAME
 from ..config_reader import DeepTrainConfig
 

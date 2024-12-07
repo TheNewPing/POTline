@@ -5,13 +5,9 @@ Model utilities.
 import subprocess
 from pathlib import Path
 
-import pandas as pd
-from pandas import DataFrame
-
 from .path_utils import unpatify, gen_from_template
 
 YACE_NAME: str = 'pace.yace'
-FINAL_REPORT_NAME: str = 'parameters.csv'
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
 POTENTIAL_NAME: str = 'potential.in'
 POTENTIAL_TEMPLATE_PATH: Path = Path(__file__).parent / 'template' / POTENTIAL_NAME
@@ -81,22 +77,3 @@ def create_potential(model_name: str, yace_path: Path, out_path: Path) -> Path:
     gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, potential_file)
 
     return out_path
-
-def get_best_models(sweep_path: Path, yace_list: list[Path], max_n: int) -> list[Path]:
-    """
-    Get the best models based on the final report.
-
-    Args:
-        sweep_path (Path): The path to the sweep directory.
-        yace_list (list[Path]): List of paths to filter.
-        max_n (int): The maximum number of paths to return.
-
-    Returns:
-        list[Path]: List of paths to the best models.
-    """
-    df: DataFrame = pd.read_csv(sweep_path / FINAL_REPORT_NAME)
-    best_iterations_rows: DataFrame = df.nsmallest(max_n, 'loss')[['iteration', 'subiteration']]
-    best_iterations: list[tuple[int, int]] = [(int(row['iteration']), int(row['subiteration']))
-                                              for _, row in best_iterations_rows.iterrows()]
-    return [yace for yace in yace_list if
-            (int(yace.parent.parent.name), int(yace.parent.name)) in best_iterations]
