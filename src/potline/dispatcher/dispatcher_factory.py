@@ -2,22 +2,38 @@
 dispatcher factory
 """
 
-from .dispatcher import Dispatcher
-from .local_dispatcher import LocalDispatcher
-from .slurm_dispatcher import SlurmDispatcher
+from pathlib import Path
 
-def create_dispatcher(command: str, hpc: bool, options: dict | None = None) -> Dispatcher:
+from .dispatcher import Dispatcher, SupportedModel, JobType
+from .local import LocalDispatcher
+from .slurm import SlurmDispatcher, get_slurm_commands, get_slurm_options
+
+class DispatcherFactory():
     """
-    Create a dispatcher based on the options.
-
-    Args:
-        - command: the command to dispatch.
-        - hpc: whether to use HPC.
-        - options: dispatch settings.
-
-    Returns:
-        Dispatcher: the dispatcher to use.
+    Dispatcher factory.
     """
-    if hpc:
-        return SlurmDispatcher(command, options)
-    return LocalDispatcher(command, options)
+    def __init__(self,
+                 job_type: JobType,
+                 cluster: str | None = None):
+        self._job_type = job_type
+        self._cluster = cluster
+
+    def create_dispatcher(self, commands: list[str], out_path: Path,
+                          model: SupportedModel | None = None,
+                          n_cpu: int | None = None,
+                          email: str | None = None) -> Dispatcher:
+        """
+        Create a dispatcher based on the options.
+
+        Returns:
+            Dispatcher: the dispatcher to use.
+        """
+        if self._cluster:
+            options = get_slurm_options(self._cluster, self._job_type, out_path, model, n_cpu, email)
+            tot_cmds = get_slurm_commands(self._cluster, self._job_type, model) + commands
+        else:
+            options = None
+            tot_cmds = commands
+        if self._cluster:
+            return SlurmDispatcher(tot_cmds, options)
+        return LocalDispatcher(tot_cmds, options)

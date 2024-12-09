@@ -3,17 +3,38 @@ Command dispatcher
 """
 
 from abc import ABC, abstractmethod
+from enum import Enum
+
+class SupportedModel(Enum):
+    """
+    Supported models.
+    """
+    PACE = "pacemaker"
+    MACE = "mace"
+
+class JobType(Enum):
+    """
+    Supported job types.
+    """
+    FIT = 'fit'
+    INF = 'inf'
+    DEEP = 'deep'
+    HYP = 'hyp'
+    SIM = 'sim'
+
+class SlurmCluster(Enum):
+    """
+    Supported clusters.
+    """
+    SNELLIUS = 'snellius'
 
 class Dispatcher(ABC):
     """
     Base class for command dispatchers.
-
-    Args:
-        - command: the command to dispatch.
-        - options: dispatch settings.
     """
-    def __init__(self, command: str, options: dict | None = None):
-        self.command = command
+    def __init__(self, commands: list[str],
+                 options: dict | None = None,):
+        self.commands = commands
         self.options = options
         self.dispatched = False
 

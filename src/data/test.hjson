@@ -3,6 +3,9 @@
         lammps_bin_path: "/home/erodaro/lammps/build/lmp",
         model_name: pacemaker
         best_n_models: 10
+        hpc: true
+        cluster: 'snellius'
+        sweep_path: "/home/erodaro/POTline/test/pace"
     }
     deep_training: {
         max_epochs: 1,
@@ -22,73 +25,75 @@
         n_initial_points: 5
         n_points: 10
         strategy: "cl_min"
-        "cutoff": 6.0,
-        "seed": 42
-        "metadata": {
-            "purpose": "Potential fit"
-            },
-        "data": {
-            "filename": "/home/erodaro/POTline/src/data/Ogata_DB.pckl.gzip",
-            "test_size": 0.10
-        },
-        "potential": {
-            "deltaSplineBins": 0.001,
-            "elements": ["Fe"],
-            "embeddings": {
-                "ALL": {
-                    "npot": "FinnisSinclairShiftedScaled",
-                    "fs_parameters": [1,1,1,"skopt.space.Real(0.1, 2)"],
-                    "ndensity": 2,
-                    "rho_core_cut": "skopt.space.Integer(1000, 6000)",
-                    "drho_core_cut": "skopt.space.Integer(100, 1000)"
-                }
-            },
-            "rankmax": "",
-            "bonds": {
-                "ALL": {
-                    "radbase": "SBessel",
-                    "radparameters": ["skopt.space.Real(1,10)"],
-                    "rcut": 6.0,
-                    "dcut": "skopt.space.Real(0.001, 0.1)",
-                    "NameofCutoffFunction": "cos"
-                }
-            },
-            "functions": {
-                "number_of_functions_per_element": 200,
-                "ALL": {
-                    "nradmax_by_orders": [15,6,4,3,2,2],
-                    "lmax_by_orders": [0,4,3,2,1,0],
-                    "coefs_init": "skopt.space.Categorical(categories=['zero', 'random'])"
+        optimizer_params: {
+            "cutoff": 6.0,
+            "seed": 42
+            "metadata": {
+                "purpose": "Potential fit"
                 },
-            }
-        },
-        "fit": {
-            "loss": {
-                "kappa": 0.3,
-                "L1_coeffs": "skopt.space.Real(0,1e-7)",
-                "L2_coeffs": "skopt.space.Real(0,1e-7)",
-                "w0_rad": "skopt.space.Real(0,1e-7)",
-                "w1_rad": "skopt.space.Real(0,1e-7)",
-                "w2_rad": "skopt.space.Real(0,1e-7)",
-                "w1_coeffs": "skopt.space.Real(0,1e-7)",
-                "w2_coeffs": "skopt.space.Real(0,1e-7)",
-                "w_orth": "skopt.space.Real(0,1e-7)"
+            "data": {
+                "filename": "/home/erodaro/POTline/src/data/Ogata_DB.pckl.gzip",
+                "test_size": 0.10
             },
-            "optimizer": "BFGS",
-            "maxiter": 1,
-            "repulsion": "skopt.space.Categorical(categories=['auto', 'none'])",
-            "trainable_parameters": "ALL",
-            min_relative_train_loss_per_iter: 5e-5
-            min_relative_test_loss_per_iter: 1e-5
-            early_stopping_patience: 200
-        },
-        "backend": {
-            "evaluator": "tensorpot",
-            "batch_size": 100,
-            "batch_size_reduction": "True",
-            "batch_size_reduction_factor": 2,
-            "display_step": 50,
-            "gpu_config": {"mem_limit": 0}
+            "potential": {
+                "deltaSplineBins": 0.001,
+                "elements": ["Fe"],
+                "embeddings": {
+                    "ALL": {
+                        "npot": "FinnisSinclairShiftedScaled",
+                        "fs_parameters": [1,1,1,"skopt.space.Real(0.1, 2)"],
+                        "ndensity": 2,
+                        "rho_core_cut": "skopt.space.Integer(1000, 6000)",
+                        "drho_core_cut": "skopt.space.Integer(100, 1000)"
+                    }
+                },
+                "rankmax": "",
+                "bonds": {
+                    "ALL": {
+                        "radbase": "SBessel",
+                        "radparameters": ["skopt.space.Real(1,10)"],
+                        "rcut": 6.0,
+                        "dcut": "skopt.space.Real(0.001, 0.1)",
+                        "NameofCutoffFunction": "cos"
+                    }
+                },
+                "functions": {
+                    "number_of_functions_per_element": 200,
+                    "ALL": {
+                        "nradmax_by_orders": [15,6,4,3,2,2],
+                        "lmax_by_orders": [0,4,3,2,1,0],
+                        "coefs_init": "skopt.space.Categorical(categories=['zero', 'random'])"
+                    },
+                }
+            },
+            "fit": {
+                "loss": {
+                    "kappa": 0.3,
+                    "L1_coeffs": "skopt.space.Real(0,1e-7)",
+                    "L2_coeffs": "skopt.space.Real(0,1e-7)",
+                    "w0_rad": "skopt.space.Real(0,1e-7)",
+                    "w1_rad": "skopt.space.Real(0,1e-7)",
+                    "w2_rad": "skopt.space.Real(0,1e-7)",
+                    "w1_coeffs": "skopt.space.Real(0,1e-7)",
+                    "w2_coeffs": "skopt.space.Real(0,1e-7)",
+                    "w_orth": "skopt.space.Real(0,1e-7)"
+                },
+                "optimizer": "BFGS",
+                "maxiter": 1,
+                "repulsion": "skopt.space.Categorical(categories=['auto', 'none'])",
+                "trainable_parameters": "ALL",
+                min_relative_train_loss_per_iter: 5e-5
+                min_relative_test_loss_per_iter: 1e-5
+                early_stopping_patience: 200
+            },
+            "backend": {
+                "evaluator": "tensorpot",
+                "batch_size": 100,
+                "batch_size_reduction": "True",
+                "batch_size_reduction_factor": 2,
+                "display_step": 50,
+                "gpu_config": {"mem_limit": 0}
+            }
         }
     }
 }

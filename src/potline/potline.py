@@ -2,19 +2,15 @@
 Potential optimization pipeline API.
 """
 
-import time
 from pathlib import Path
-from typing import Optional
 
-from simple_slurm import Slurm
-import pandas as pd
-
-from .hyper_searcher import Optimizer, XpotAdapter
+from .hyper_searcher import PotOptimizer
 from .inference_bencher import run_benchmark
 from .properties_simulator import run_properties_simulation
-from .utils import get_best_models, convert_yace, create_potential, POTENTIAL_NAME
-from .config_reader import ConfigReader, GEN_NAME, MODEL_NAME, BEST_N_NAME
-from .deep_trainer import create_deep_trainer, DeepTrainer
+from .config_reader import ConfigReader
+from .deep_trainer import DeepTrainer
+from .model import ModelTracker, PotModel, POTENTIAL_NAME
+from .dispatcher import DispatcherFactory, JobType
 
 FINAL_REPORT_NAME: str = 'parameters.csv'
 LOSS_COL_KW: str = 'loss'
@@ -31,8 +27,6 @@ class PotLine():
     - with_conversion: flag to convert the results to LAMMPS format.
     - with_inference: flag to run the inference benchmark.
     - with_data_analysis: flag to run the data analysis on mechanical properties.
-    - hpc: flag to run the simulations on HPC.
-    - fitted_path: path to the directory with the fitted models.
     """
     def __init__(self,
                  config_path: Path,
@@ -40,81 +34,77 @@ class PotLine():
                  with_deep_train: bool,
                  with_conversion: bool,
                  with_inference: bool,
-                 with_data_analysis: bool,
-                 hpc: bool,
-                 fitted_path: Optional[Path] = None):
+                 with_data_analysis: bool):
         self.config_reader: ConfigReader = ConfigReader(config_path)
         self.with_hyper_search: bool = with_hyper_search
         self.with_deep_train: bool = with_deep_train
         self.with_conversion: bool = with_conversion
         self.with_inference: bool = with_inference
         self.with_data_analysis: bool = with_data_analysis
-        self.hpc: bool = hpc
-        self.best_n_models: int = int(str(self.config_reader.get_config_section(GEN_NAME)[BEST_N_NAME]))
-        self.model: PotModel
-        self.hyper_searcher: PotSearcher
-        self.experiment_path: Path 
+        self.config = self.config_reader.get_general_config()
+        self.optimizer = PotOptimizer(self.config_reader.get_optimizer_config(),
+                                      DispatcherFactory(JobType.FIT,
+                                                        self.config.cluster))
 
     def run(self):
-        pot_list: list[Path] = self.hyper_search()
-        best_pots: list[Path] = self.filter_best_loss(pot_list)
-        deep_pot_list: list[Path] = self.deep_train(best_pots)
-        self.prepare_lammps(deep_pot_list)
-        self.inference_bench(deep_pot_list)
-        self.properties_simulation(deep_pot_list)
+        optimized_models: list[ModelTracker] = self.hyper_search()
+        best_models: list[ModelTracker] = self.filter_best_loss(optimized_models)
+        deep_models: list[ModelTracker] = self.deep_train(best_models)
+        models_to_test: list[PotModel] = [model.model for model in deep_models]
+        models_out_path: list[Path] = self.prepare_lammps(models_to_test)
+        self.inference_bench(models_out_path)
+        self.properties_simulation(models_out_path)
 
-    def hyper_search(self) -> list[Path]:
-        if not self.with_hyper_search:
-            return self.get_potentials()
-        return self.optimizer.optimize()
+    def hyper_search(self) -> list[ModelTracker]:
+        if self.with_hyper_search:
+            return self.optimizer.run()
+        raise ValueError("Hyperparameter search not enabled.")
 
-    def filter_best_loss(self, filepath_list: list[Path]) -> list[Path]:
-        df: pd.DataFrame = pd.read_csv(self.experiment_path / FINAL_REPORT_NAME)
-        best_iterations_rows: pd.DataFrame = df.nsmallest(self.best_n_models, LOSS_COL_KW)[[ITER_COL_KW, SUBITER_COL_KW]]
-        best_iterations: list[tuple[int, int]] = [(int(row[ITER_COL_KW]), int(row[SUBITER_COL_KW]))
-                                                for _, row in best_iterations_rows.iterrows()]
-        return [fp for fp in filepath_list if
-                (int(fp.parent.parent.name), int(fp.parent.name)) in best_iterations]
+    def filter_best_loss(self, model_list: list[ModelTracker]) -> list[ModelTracker]:
+        sorted_models = sorted(model_list, key=lambda model: model.get_total_test_loss(
+            self.config_reader.get_optimizer_config().energy_weight))
+        return sorted_models[:self.config.best_n_models]
 
-    def deep_train(self, pot_list: list[Path]) -> list[Path]:
+    def deep_train(self, model_list: list[ModelTracker]) -> list[ModelTracker]:
+        """
+        Additional training for the best models.
+        """
         if self.with_deep_train:
-            # Dispatch the deep training jobs
-            deep_id_list: list[int] = []
-            for pot_path in pot_list:
-                deep_trainer: DeepTrainer = create_deep_trainer(
-                    self.config_reader.get_deep_train_config(), pot_path.parent)
-                deep_id_list.append(deep_trainer.dispatch_train())
-            # Wait for the deep training jobs to finish
-            wait_job = Slurm()
-            while True:
-                wait_job.squeue.update_squeue()
-                if not any(wait_id in wait_job.squeue.jobs for wait_id in deep_id_list):
-                    break
-                time.sleep(10)
-        return pot_list
+            deep_trainers: list[DeepTrainer] = []
+            deep_models: list[ModelTracker] = []
+            for model in model_list:
+                deep_trainer = DeepTrainer(self.config_reader.get_deep_train_config(), model,
+                                           DispatcherFactory(JobType.DEEP, self.config.cluster))
+                deep_trainer.run()
+                deep_trainers.append(deep_trainer)
+            for trainer in deep_trainers:
+                deep_models.append(trainer.collect())
+        return deep_models
 
-    def prepare_lammps(self, pot_list: list[Path]) -> None:
+    def prepare_lammps(self, model_list: list[PotModel]) -> list[Path]:
+        out: list[Path] = []
         if self.with_conversion:
-            yace_list = convert_yace(self.model_name, pot_list)
-        else:
-            yace_list = self.get_yaces()
+            for model in model_list:
+                model.lampify()
+                model.create_potential()
+                out.append(model.get_out_path())
+        return out
 
-        for yace_path in yace_list:
-            create_potential(self.model_name, yace_path, yace_path.parent)
-
-    def inference_bench(self, pot_list: list[Path]) -> None:
+    def inference_bench(self, pot_list: list[Path]):
         if self.with_inference:
             for pot_path in pot_list:
-                run_benchmark(pot_path.parent, self.config_reader.get_bench_config(), hpc=self.hpc)
+                run_benchmark(pot_path.parent, self.config_reader.get_bench_config(),
+                              DispatcherFactory(JobType.INF, self.config.cluster))
 
-    def properties_simulation(self, pot_list: list[Path]) -> None:
+    def properties_simulation(self, pot_list: list[Path]):
         if self.with_data_analysis:
             for pot_path in pot_list:
                 run_properties_simulation(pot_path.parent,
-                                          self.config_reader.get_prop_config(), hpc=self.hpc)
+                                          self.config_reader.get_prop_config(),
+                                          DispatcherFactory(JobType.SIM, self.config.cluster))
 
     def get_yaces(self) -> list[Path]:
-        return list(self.experiment_path.glob('*.yace'))
+        return list(self.config.sweep_path.glob('*.yace'))
 
     def get_potentials(self) -> list[Path]:
-        return list(self.experiment_path.glob(POTENTIAL_NAME))
+        return list(self.config.sweep_path.glob(POTENTIAL_NAME))

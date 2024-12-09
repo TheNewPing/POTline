@@ -2,5 +2,4 @@
 Optimizer module.
 """
 
-from .optimizer import Optimizer
-from .xpot_adapter import XpotAdapter
+from .pot_optimizer import PotOptimizer, CONFIG_NAME

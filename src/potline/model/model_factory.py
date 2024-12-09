@@ -4,22 +4,24 @@ XpotModel interface and factory function.
 
 from pathlib import Path
 
-import hjson # type: ignore
-
-from .model import PotModel
+from .model import PotModel, SupportedModel
 from .pace import PotPACE
 
-def create_xpot_model(config_path: Path) -> PotModel:
+_MODEL_CONSTRUCTORS: dict[SupportedModel, type[PotModel]] = {
+    SupportedModel.PACE: PotPACE,
+    # Add other models here as needed
+}
+
+def create_model(model_name: str,
+                 config_filepath: Path,
+                 out_path: Path,
+                 hpc: bool) -> PotModel:
     """
-    Create an XPOT model from the configuration file.
+    Create a model.
+    """
+    for model in SupportedModel:
+        if model_name == model.value:
+            model_class: type[PotModel] = _MODEL_CONSTRUCTORS[model]
+            return model_class(config_filepath, out_path, hpc)
 
-    Args:
-        - config_path: path to the configuration file.
-
-    Returns:
-        HPCMLP: the XPOT model."""
-    with open(config_path, 'r', encoding='utf-8') as file:
-        config_data: dict = hjson.load(file)
-        if config_data['xpot']['fitting_executable'] == 'pacemaker':
-            return PotPACE(str(config_path))
-        raise ValueError('Model not supported.')
+    raise ValueError(f"Unsupported model: {model_name}")

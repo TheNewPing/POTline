@@ -17,7 +17,7 @@ from ..utils import gen_from_template
 
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
 
-class PotPACE(PotModel):
+class PotMACE(PotModel):
     """
     PACE implementation.
     Requires pacemaker.
@@ -70,9 +70,6 @@ class PotPACE(PotModel):
         }
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)
         return self._lmp_pot_path
-
-    def get_last_pot_path(self) -> Path:
-        return self._out_path / LAST_POTENTIAL_NAME
 
     def _collect_raw_errors(self, validation: bool) -> pd.DataFrame:
         """

@@ -23,23 +23,11 @@
 
 # Collect the input parameters
 out_path=$1
-hpc=$2
-LMMP=$3
-lmp_inps=$4
-pps_python=$5
-ref_data_path=$6
-eaddress=$7
-
-if [ "$hpc" = "True" ]; then
-    LMMP="srun -G0 -n1 ${LMMP}"
-    module load 2024
-    module load Miniconda3/24.7.1-0
-    module load 2022
-    module load OpenMPI/4.1.4-NVHPC-22.7-CUDA-11.7.0
-    # Initialize Conda
-    source $(conda info --base)/etc/profile.d/conda.sh
-    conda activate pl
-fi
+LMMP=$2
+lmp_inps=$3
+pps_python=$4
+ref_data_path=$5
+eaddress=$6
 
 # Change to the output directory
 cd ${out_path}

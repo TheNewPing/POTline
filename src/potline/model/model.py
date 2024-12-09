@@ -4,27 +4,75 @@ Base class for MLPs in XPOT using HPC.
 
 from __future__ import annotations
 
-import csv
+import shutil
+import json
 from collections.abc import Callable
 from pathlib import Path
 from abc import ABC, abstractmethod
-from enum import Enum
 
 import numpy as np
 import pandas as pd
 
-import xpot.loaders as load # type: ignore
 from xpot import maths # type: ignore
 
-from ..dispatcher import Dispatcher
+from ..dispatcher import Dispatcher, SupportedModel, DispatcherFactory
 
-class ColKW(Enum):
+YACE_NAME: str = 'model.yace'
+POTENTIAL_NAME: str = 'potential.in'
+POTENTIAL_TEMPLATE_PATH: Path = Path(__file__).parent / 'template' / POTENTIAL_NAME
+
+class Losses():
     """
-    Column keywords.
+    Losses class for the model.
     """
-    ENERGY = "energies"
-    FORCES = "forces"
-    ATOMS = "atom_counts"
+    def __init__(self, energy: float, force: float):
+        self.energy: float = energy
+        self.force: float = force
+
+class RawLosses():
+    """
+    Raw losses class for the model.
+    """
+    def __init__(self, energies: list[float], forces: list[float],
+                 atom_counts: list[float]):
+        self.energies: list[float] = energies
+        self.forces: list[float] = forces
+        self.atom_counts: list[float] = atom_counts
+
+class ModelTracker():
+    """
+    Class to track the progress of a job in the optimisation sweep.
+    """
+    def __init__(self, model: PotModel, iteration: int, subiter: int,
+                 params: dict, train_losses: Losses | None = None,
+                 test_losses: Losses | None = None) -> None:
+        self.model = model
+        self.iteration = iteration
+        self.subiter = subiter
+        self.params = params
+        self.train_losses = train_losses
+        self.test_losses = test_losses
+
+    def get_total_test_loss(self, energy_weight: float) -> float:
+        """
+        Get the total test loss from the model.
+        """
+        if self.test_losses is None:
+            raise ValueError("Test loss not calculated.")
+        return maths.calculate_loss(self.test_losses.energy, self.test_losses.force, energy_weight)
+
+    def get_total_train_loss(self, energy_weight: float) -> float:
+        """
+        Get the total train loss from the model.
+        """
+        if self.train_losses is None:
+            raise ValueError("Train loss not calculated.")
+        return maths.calculate_loss(self.train_losses.energy, self.train_losses.force, energy_weight)
+
+_MODEL_DEFAULTS = {
+    SupportedModel.PACE: Path(__file__).parent / "defaults" / "ace_defaults.json",
+    SupportedModel.MACE: Path(__file__).parent / "defaults" / "mace_defaults.json",
+}
 
 class PotModel(ABC):
     """
@@ -32,182 +80,106 @@ class PotModel(ABC):
 
     Args:
         - config_filepath: path to the configuration file.
-        - default_filepath: path to the default configuration file.
         - out_path: path to the output directory.
-        - energy_weight: weight of the energy loss.
         - hpc: flag to run the simulations on HPC.
     """
     def __init__(self, config_filepath: Path,
                  out_path: Path,
-                 energy_weight: float,
-                 hpc: bool,
-                 default_filepath: Path):
-        defaults = load.get_defaults(str(default_filepath))
-        hypers = load.get_input_hypers(str(config_filepath))
-        self.energy_weight: float = energy_weight
-        self.hpc: bool = hpc
-        self.out_path: Path = out_path
-        self.out_path.mkdir(parents=True, exist_ok=False)
-
-        self.mlp_total = load.merge_hypers(defaults, hypers)
-        load.validate_subdict(self.mlp_total, hypers)
-        self.optimisation_space = load.get_optimisable_params(self.mlp_total)
-        self.iteration: int = 0
-        self.subiter: int = 0
-        self.iter_path: Path = self.out_path / str(self.iteration) / str(self.subiter)
-        self.dispatcher: Dispatcher | None = None
+                 hpc: bool):
+        self._config_filepath: Path = config_filepath
+        self._hpc: bool = hpc
+        self._out_path: Path = out_path
+        self._dispatcher: Dispatcher | None = None
+        self._yace_path: Path = self._out_path.parent / YACE_NAME
+        self._lmp_pot_path: Path = self._out_path.parent / POTENTIAL_NAME
 
     @abstractmethod
-    def dispatch_fit(
-        self,
-        opt_values: dict[str, str | int | float],
-        iteration: int,
-        subiter: int,
-    ) -> int:
+    def dispatch_fit(self,
+                     dispatcher_factory: DispatcherFactory,
+                     extra_cmd_opts: list[str] | None = None):
         pass
 
     @abstractmethod
-    def collect_loss(self, wait_id: int, iteration: int, subiter: int) -> float:
+    def set_config_maxiter(self, maxiter: int):
         pass
 
     @abstractmethod
-    def _write_input_file(self, out_filepath: Path):
-        pass
-
-    @abstractmethod
-    def _collect_raw_errors(self, errors_filepath: Path) -> pd.DataFrame:
-        pass
-
-    def _prep_fit(
-        self,
-        opt_values: dict[str, str | int | float],
-        iteration: int,
-        subiter: int,
-    ):
+    def lampify(self) -> Path:
         """
-        Prepare hyperparameters for the model fitting.
+        Convert the model YAML to YACE format.
 
-        Parameters
-        ----------
-        opt_values : dict
-            Dictionary of parameter names and values returned by the optimiser
-            for the current iteration of fitting.
-        iteration : int
-            The current iteration number.
-        subiter : int
-            The current subiteration number.
+        Returns:
+            Path: The path to the YACE file.
         """
-        self.iteration = iteration
-        self.subiter = subiter
-        self.iter_path = self.out_path / str(self.iteration) / str(self.subiter)
-        self.iter_path.mkdir(parents=True, exist_ok=True)
 
-        self.mlp_total = load.reconstitute_lists(self.mlp_total, opt_values)
-        self.mlp_total = load.prep_dict_for_dump(self.mlp_total)
-        self.mlp_total = load.trim_empty_values(self.mlp_total)  # type: ignore
-        self.mlp_total = load.convert_numpy_types(self.mlp_total)
+    @abstractmethod
+    def create_potential(self) -> Path:
+        """
+        Create the potential in YACE format.
+
+        Returns:
+            Path: The path to the potential.
+        """
+
+    @abstractmethod
+    def get_last_pot_path(self) -> Path:
+        pass
+
+    @abstractmethod
+    def _collect_raw_errors(self, validation: bool) -> pd.DataFrame:
+        pass
+
+    @abstractmethod
+    def _calculate_errors(self, validation: bool = False) -> RawLosses:
+        pass
+
+    def collect_loss(self, validation: bool) -> Losses:
+        """
+        Collect the loss from the fitting process.
+        """
+        if self._dispatcher is None:
+            raise ValueError("Dispatcher not set.")
+        self._dispatcher.wait()
+        return self._validate_errors(self._calculate_errors(validation))
 
     def _validate_errors(
         self,
-        errors: dict[str, list[float]],
+        errors: RawLosses,
         metric: Callable = maths.get_rmse,
-        n_scaling: float | list[float] = 0.5,
-    ) -> list[tuple[float, float]]:
+        n_scaling: float = 1,
+    ) -> Losses:
         """
         Calculate the training and validation error values specific to the loss
         function of XPOT from the MLP.
-
-        Parameters
-        ----------
-        errors : tuple
-            Tuple of training and validation errors.
-        metric : Callable
-            The error metric to use. Default is RMSE, MAE is also available.
         """
-        if isinstance(n_scaling, float):
-            energy_diff = (
-                errors[ColKW.ENERGY]
-                / np.array(errors[ColKW.ATOMS]) ** n_scaling
-            )
-            forces_diff = errors[ColKW.FORCES]
-            print(forces_diff)
-            energy_error = metric(energy_diff)
-            forces_error = metric(forces_diff)
+        energy_diff = (
+            errors.energies
+            / np.array(errors.atom_counts) ** n_scaling
+        )
+        return Losses(metric(energy_diff), metric(errors.forces))
 
-            return [(energy_error, forces_error)]
-
-        if isinstance(n_scaling, list):
-            energy_diffs = []
-            for i in n_scaling:
-                energy_diff = (
-                    errors[ColKW.ENERGY] / np.array(errors[ColKW.ATOMS]) ** i
-                )
-                energy_error = metric(energy_diff)
-                energy_diffs.append(energy_error)
-            forces_diff = errors[ColKW.FORCES]
-            forces_error = metric(forces_diff)
-            forces_diffs = [forces_error] * len(energy_diffs)
-            output = []
-            for e, f in zip(energy_diffs, forces_diffs):
-                output.append((e, f))
-            return output
-
-        raise ValueError("n_scaling must be a float or list of floats.")
-
-    def _process_errors(
-        self,
-        train_errors: tuple[float, float],
-        test_errors: tuple[float, float],
-        filepath: Path,
-    ) -> float:
+    def get_out_path(self) -> Path:
         """
-        Write the error metrics to a file.
-
-        Parameters
-        ----------
-        train_errors : tuple
-            Tuple of training errors.
-        test_errors : tuple
-            Tuple of test errors.
-        filename : str
-            The file to write to.
+        Get the output path of the model.
         """
-        errors = [
-            train_errors[0],
-            test_errors[0],
-            train_errors[1],
-            test_errors[1],
-        ]
-        self._write_error_file(errors, filepath)
+        return self._out_path
 
-        loss = maths.calculate_loss(test_errors[0], test_errors[1], self.energy_weight)
-        return loss
-
-    def _write_error_file(self,
-                         errors: list[float],
-                         filepath: Path):
+    def switch_out_path(self, out_path: Path):
         """
-        Write the error values to a file.
-
-        Parameters
-        ----------
-        e_train : float
-            The energy training error.
-        f_train : float
-            The force training error.
-        e_test : float
-            The energy validation error.
-        f_test : float
-            The force validation error.
-        filename : str
-            The file to write to.
+        Switch the output path of the model.
         """
-        if len(errors) != 4:
-            raise ValueError(
-                "Error values must be a list of length 4, made up of "
-                "the training and testing energy and force errors."
-            )
-        output_data = [self.iteration, self.subiter, *errors]
-        with filepath.open("a", newline="", encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(output_data)
+        shutil.copy(self._config_filepath, out_path)
+        self._config_filepath = out_path / self._config_filepath.name
+        self._out_path = out_path
+
+    @staticmethod
+    def get_defaults(model_name: str) -> dict:
+        """
+        Get the default parameters from a json file.
+        """
+        for model in SupportedModel:
+            if model.value == model_name:
+                with _MODEL_DEFAULTS[model].open('r', encoding='utf-8') as file:
+                    return json.load(file)
+
+        raise ValueError(f"Model {model_name} not supported.")
