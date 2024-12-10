@@ -11,7 +11,7 @@ import yaml
 import numpy as np
 import pandas as pd
 
-from .model import PotModel, RawLosses, POTENTIAL_TEMPLATE_PATH
+from .model import PotModel, RawLosses, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME
 from ..dispatcher import DispatcherFactory, SupportedModel
 from ..utils import gen_from_template
 
@@ -115,3 +115,10 @@ class PotPACE(PotModel):
         forces_diff = [pred - ref for pred, ref in zip(pred_forces, ref_forces)]
 
         return RawLosses(energy_diff, forces_diff, n_per_structure)
+
+    @staticmethod
+    def from_path(out_path):
+        """
+        Create a model from a path.
+        """
+        return PotPACE(out_path / CONFIG_NAME, out_path)

@@ -10,6 +10,7 @@ from collections.abc import Callable
 from pathlib import Path
 from abc import ABC, abstractmethod
 
+import yaml
 import numpy as np
 import pandas as pd
 
@@ -19,7 +20,13 @@ from ..dispatcher import Dispatcher, SupportedModel, DispatcherFactory
 
 YACE_NAME: str = 'model.yace'
 POTENTIAL_NAME: str = 'potential.in'
+CONFIG_NAME: str = "optimized_params.yaml"
 POTENTIAL_TEMPLATE_PATH: Path = Path(__file__).parent / 'template' / POTENTIAL_NAME
+
+_MODEL_DEFAULTS = {
+    SupportedModel.PACE: Path(__file__).parent / "defaults" / "ace_defaults.json",
+    SupportedModel.MACE: Path(__file__).parent / "defaults" / "mace_defaults.json",
+}
 
 class Losses():
     """
@@ -39,41 +46,6 @@ class RawLosses():
         self.forces: list[float] = forces
         self.atom_counts: list[float] = atom_counts
 
-class ModelTracker():
-    """
-    Class to track the progress of a job in the optimisation sweep.
-    """
-    def __init__(self, model: PotModel, iteration: int, subiter: int,
-                 params: dict, train_losses: Losses | None = None,
-                 test_losses: Losses | None = None) -> None:
-        self.model = model
-        self.iteration = iteration
-        self.subiter = subiter
-        self.params = params
-        self.train_losses = train_losses
-        self.test_losses = test_losses
-
-    def get_total_test_loss(self, energy_weight: float) -> float:
-        """
-        Get the total test loss from the model.
-        """
-        if self.test_losses is None:
-            raise ValueError("Test loss not calculated.")
-        return maths.calculate_loss(self.test_losses.energy, self.test_losses.force, energy_weight)
-
-    def get_total_train_loss(self, energy_weight: float) -> float:
-        """
-        Get the total train loss from the model.
-        """
-        if self.train_losses is None:
-            raise ValueError("Train loss not calculated.")
-        return maths.calculate_loss(self.train_losses.energy, self.train_losses.force, energy_weight)
-
-_MODEL_DEFAULTS = {
-    SupportedModel.PACE: Path(__file__).parent / "defaults" / "ace_defaults.json",
-    SupportedModel.MACE: Path(__file__).parent / "defaults" / "mace_defaults.json",
-}
-
 class PotModel(ABC):
     """
     Base class for MLIAP models.
@@ -81,13 +53,10 @@ class PotModel(ABC):
     Args:
         - config_filepath: path to the configuration file.
         - out_path: path to the output directory.
-        - hpc: flag to run the simulations on HPC.
     """
     def __init__(self, config_filepath: Path,
-                 out_path: Path,
-                 hpc: bool):
+                 out_path: Path):
         self._config_filepath: Path = config_filepath
-        self._hpc: bool = hpc
         self._out_path: Path = out_path
         self._dispatcher: Dispatcher | None = None
         self._yace_path: Path = self._out_path.parent / YACE_NAME
@@ -172,6 +141,13 @@ class PotModel(ABC):
         self._config_filepath = out_path / self._config_filepath.name
         self._out_path = out_path
 
+    def get_params(self) -> dict:
+        """
+        Get the parameters of the model.
+        """
+        with self._config_filepath.open('r', encoding='utf-8') as file:
+            return yaml.safe_load(file)
+
     @staticmethod
     def get_defaults(model_name: str) -> dict:
         """
@@ -183,3 +159,10 @@ class PotModel(ABC):
                     return json.load(file)
 
         raise ValueError(f"Model {model_name} not supported.")
+
+    @staticmethod
+    @abstractmethod
+    def from_path(out_path: Path) -> PotModel:
+        """
+        Create a model from a path.
+        """

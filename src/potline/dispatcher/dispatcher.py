@@ -19,8 +19,8 @@ class JobType(Enum):
     FIT = 'fit'
     INF = 'inf'
     DEEP = 'deep'
-    HYP = 'hyp'
     SIM = 'sim'
+    MAIN = 'main'
 
 class SlurmCluster(Enum):
     """

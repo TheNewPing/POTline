@@ -19,6 +19,7 @@ class CommandsName(Enum):
     MOD_CONDA = 'module_conda.sh'
     MOD_CUDA = 'module_cuda.sh'
     MOD_MPI = 'module_mpi.sh'
+    TF_GPU_TEST = 'tf_gpu_test.py'
 
 def get_slurm_options(cluster: str, job_type: JobType, out_path: Path,# noqa: C901
                       model: SupportedModel | None = None,
@@ -89,6 +90,24 @@ def get_slurm_options(cluster: str, job_type: JobType, out_path: Path,# noqa: C9
                 }
             elif model == SupportedModel.MACE:
                 raise NotImplementedError("MACE model not implemented.")
+        elif job_type == JobType.MAIN:
+            if model is None:
+                raise ValueError("Model must be provided for fitting jobs.")
+            if model == SupportedModel.PACE:
+                return {
+                    'job_name': f"main_{str(model)}",
+                    'output': f"{str(out_path)}/main_%j.out",
+                    'error': f"{str(out_path)}/main_%j.err",
+                    'time': "119:00:00",
+                    'mem': "50G",
+                    'partition': "gpu",
+                    'nodes': 1,
+                    'ntasks': 1,
+                    'cpus_per_task': 16,
+                    'gpus': 1,
+                }
+            elif model == SupportedModel.MACE:
+                raise NotImplementedError("MACE model not implemented.")
         raise NotImplementedError(f"Job type {job_type} not implemented.")
     raise NotImplementedError(f"Cluster {cluster} not implemented.")
 
@@ -110,7 +129,8 @@ def get_slurm_commands(cluster: str, # noqa: C901
             if model == SupportedModel.PACE:
                 return [f'source {_template_path / cluster / CommandsName.MOD_CONDA.value}',
                         f'source {_template_path / cluster / CommandsName.MOD_CUDA.value}',
-                        f'source {_template_path / cluster / CommandsName.CONDA_PACE.value}']
+                        f'source {_template_path / cluster / CommandsName.CONDA_PACE.value}',
+                        f'python {_template_path / CommandsName.TF_GPU_TEST.value}']
             elif model == SupportedModel.MACE:
                 raise NotImplementedError("MACE model not implemented.")
         elif job_type == JobType.DEEP:
@@ -119,7 +139,18 @@ def get_slurm_commands(cluster: str, # noqa: C901
             if model == SupportedModel.PACE:
                 return [f'source {_template_path / cluster / CommandsName.MOD_CONDA.value}',
                         f'source {_template_path / cluster / CommandsName.MOD_CUDA.value}',
-                        f'source {_template_path / cluster / CommandsName.CONDA_PACE.value}']
+                        f'source {_template_path / cluster / CommandsName.CONDA_PACE.value}',
+                        f'python {_template_path / CommandsName.TF_GPU_TEST.value}']
+            elif model == SupportedModel.MACE:
+                raise NotImplementedError("MACE model not implemented.")
+        elif job_type == JobType.MAIN:
+            if model is None:
+                raise ValueError("Model must be provided for fitting jobs.")
+            if model == SupportedModel.PACE:
+                return [f'source {_template_path / cluster / CommandsName.MOD_CONDA.value}',
+                        f'source {_template_path / cluster / CommandsName.MOD_CUDA.value}',
+                        f'source {_template_path / cluster / CommandsName.CONDA_PACE.value}',
+                        f'python {_template_path / CommandsName.TF_GPU_TEST.value}']
             elif model == SupportedModel.MACE:
                 raise NotImplementedError("MACE model not implemented.")
         raise NotImplementedError(f"Job type {job_type} not implemented.")

@@ -28,12 +28,12 @@ class DispatcherFactory():
         Returns:
             Dispatcher: the dispatcher to use.
         """
+        options: dict | None = None
+        tot_cmds: list[str] = commands
+
         if self._cluster:
             options = get_slurm_options(self._cluster, self._job_type, out_path, model, n_cpu, email)
             tot_cmds = get_slurm_commands(self._cluster, self._job_type, model) + commands
-        else:
-            options = None
-            tot_cmds = commands
-        if self._cluster:
             return SlurmDispatcher(tot_cmds, options)
+
         return LocalDispatcher(tot_cmds, options)

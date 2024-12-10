@@ -2,4 +2,4 @@
 Loss logger
 """
 
-from .loss_logger import LossLogger
+from .loss_logger import LossLogger, ModelTracker

@@ -3,9 +3,8 @@ DeepTrainer class for training after hyperparameter search.
 """
 
 from ..config_reader import DeepTrainConfig
-from ..model import ModelTracker
 from ..dispatcher import DispatcherFactory
-from ..loss_logger import LossLogger
+from ..loss_logger import LossLogger, ModelTracker
 
 DEEP_TRAIN_DIR_NAME: str = 'deep_train'
 

@@ -6,11 +6,60 @@ import csv
 from pathlib import Path
 
 from tabulate import tabulate
+from xpot import maths # type: ignore
 
-from ..model import ModelTracker
+from ..model import PotModel, Losses, create_model_from_path
 
 ERROR_FILENAME = "loss_function_errors.csv"
 PARAMETER_FILENAME = "parameters.csv"
+
+class ModelTracker():
+    """
+    Class to track the progress of a job in the optimisation sweep.
+    """
+    def __init__(self, model: PotModel, iteration: int, subiter: int,
+                 params: dict, train_losses: Losses | None = None,
+                 test_losses: Losses | None = None) -> None:
+        self.model = model
+        self.iteration = iteration
+        self.subiter = subiter
+        self.params = params
+        self.train_losses = train_losses
+        self.test_losses = test_losses
+
+    def get_total_test_loss(self, energy_weight: float) -> float:
+        """
+        Get the total test loss from the model.
+        """
+        if self.test_losses is None:
+            raise ValueError("Test loss not calculated.")
+        return maths.calculate_loss(self.test_losses.energy, self.test_losses.force, energy_weight)
+
+    def get_total_train_loss(self, energy_weight: float) -> float:
+        """
+        Get the total train loss from the model.
+        """
+        if self.train_losses is None:
+            raise ValueError("Train loss not calculated.")
+        return maths.calculate_loss(self.train_losses.energy, self.train_losses.force, energy_weight)
+
+    @staticmethod
+    def from_path(model_name: str, model_path: Path, sweep_path: Path) -> 'ModelTracker':
+        """
+        Create a model tracker from a path.
+        """
+        model = create_model_from_path(model_name, model_path)
+        subiter = int(model_path.name)
+        iteration = int(model_path.parent.name)
+        params = model.get_params()
+        with (sweep_path / ERROR_FILENAME).open("r", encoding='utf-8') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row[0] == str(iteration) and row[1] == str(subiter):
+                    train_losses = Losses(float(row[2]), float(row[4]))
+                    test_losses = Losses(float(row[3]), float(row[5]))
+                    return ModelTracker(model, iteration, subiter, params, train_losses, test_losses)
+        raise ValueError("Model not found in error file.")
 
 class LossLogger():
     """

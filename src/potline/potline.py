@@ -9,8 +9,9 @@ from .inference_bencher import run_benchmark
 from .properties_simulator import run_properties_simulation
 from .config_reader import ConfigReader
 from .deep_trainer import DeepTrainer
-from .model import ModelTracker, PotModel, POTENTIAL_NAME
+from .model import PotModel
 from .dispatcher import DispatcherFactory, JobType
+from .loss_logger import ModelTracker
 
 FINAL_REPORT_NAME: str = 'parameters.csv'
 LOSS_COL_KW: str = 'loss'
@@ -51,14 +52,24 @@ class PotLine():
         best_models: list[ModelTracker] = self.filter_best_loss(optimized_models)
         deep_models: list[ModelTracker] = self.deep_train(best_models)
         models_to_test: list[PotModel] = [model.model for model in deep_models]
-        models_out_path: list[Path] = self.prepare_lammps(models_to_test)
-        self.inference_bench(models_out_path)
-        self.properties_simulation(models_out_path)
+        models_out_paths: list[Path] = self.prepare_lammps(models_to_test)
+        self.inference_bench(models_out_paths)
+        self.properties_simulation(models_out_paths)
 
     def hyper_search(self) -> list[ModelTracker]:
+        """
+        Run the hyperparameter search.
+        """
         if self.with_hyper_search:
             return self.optimizer.run()
-        raise ValueError("Hyperparameter search not enabled.")
+
+        models: list[ModelTracker] = []
+        for model in self.get_model_paths():
+            if model.is_dir():
+                model_tracker = ModelTracker.from_path(
+                    self.config.model_name, model, self.config.sweep_path)
+                models.append(model_tracker)
+        return models
 
     def filter_best_loss(self, model_list: list[ModelTracker]) -> list[ModelTracker]:
         sorted_models = sorted(model_list, key=lambda model: model.get_total_test_loss(
@@ -79,32 +90,31 @@ class PotLine():
                 deep_trainers.append(deep_trainer)
             for trainer in deep_trainers:
                 deep_models.append(trainer.collect())
-        return deep_models
+            return deep_models
+
+        return model_list
 
     def prepare_lammps(self, model_list: list[PotModel]) -> list[Path]:
-        out: list[Path] = []
         if self.with_conversion:
             for model in model_list:
                 model.lampify()
                 model.create_potential()
-                out.append(model.get_out_path())
-        return out
 
-    def inference_bench(self, pot_list: list[Path]):
+        return [model.get_out_path() for model in model_list]
+
+    def inference_bench(self, out_paths: list[Path]):
         if self.with_inference:
-            for pot_path in pot_list:
-                run_benchmark(pot_path.parent, self.config_reader.get_bench_config(),
+            for out_path in out_paths:
+                run_benchmark(out_path, self.config_reader.get_bench_config(),
                               DispatcherFactory(JobType.INF, self.config.cluster))
 
-    def properties_simulation(self, pot_list: list[Path]):
+    def properties_simulation(self, out_paths: list[Path]):
         if self.with_data_analysis:
-            for pot_path in pot_list:
-                run_properties_simulation(pot_path.parent,
+            for out_path in out_paths:
+                run_properties_simulation(out_path,
                                           self.config_reader.get_prop_config(),
                                           DispatcherFactory(JobType.SIM, self.config.cluster))
 
-    def get_yaces(self) -> list[Path]:
-        return list(self.config.sweep_path.glob('*.yace'))
-
-    def get_potentials(self) -> list[Path]:
-        return list(self.config.sweep_path.glob(POTENTIAL_NAME))
+    def get_model_paths(self) -> list[Path]:
+        iter_dirs: list[Path] = [d for d in self.config.sweep_path.iterdir() if d.is_dir()]
+        return [d for d in iter_dirs for d in d.iterdir() if d.is_dir()]

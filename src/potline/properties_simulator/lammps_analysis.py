@@ -11,7 +11,6 @@ PROPERTIES_BENCH_DIR_NAME: str = 'properties_bench'
 SUBMIT_SCRIPT_NAME: str = 'submit.sh'
 PROP_BENCH_TEMPLATE_PATH: Path = Path(__file__).parent / 'template'
 SUBMIT_TEMPLATE_PATH: Path = PROP_BENCH_TEMPLATE_PATH / SUBMIT_SCRIPT_NAME
-EMAIL: str = 'e.rodaro@rug.nl'
 
 def run_properties_simulation(fitted_path: Path, config: PropConfig,
                               dispatcher_factory: DispatcherFactory):
@@ -27,7 +26,8 @@ def run_properties_simulation(fitted_path: Path, config: PropConfig,
 
     command: list[str] = [str(cmd) for cmd in
                           ['bash', SUBMIT_TEMPLATE_PATH, prop_bench_dir, config.lammps_bin_path,
-                           config.lammps_inps_path, config.pps_python_path, config.ref_data_path, EMAIL]]
+                           config.lammps_inps_path, config.pps_python_path, config.ref_data_path,
+                           config.email]]
 
-    dispatcher: Dispatcher = dispatcher_factory.create_dispatcher(command, prop_bench_dir)
+    dispatcher: Dispatcher = dispatcher_factory.create_dispatcher(command, prop_bench_dir, email=config.email)
     dispatcher.dispatch()

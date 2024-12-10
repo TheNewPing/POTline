@@ -50,6 +50,7 @@ class PropSimKW(Enum):
     LAMMPS_INPS = 'lammps_inps_path'
     PPS_PYTHON = 'pps_python_path'
     REF_DATA = 'ref_data_path'
+    EMAIL = 'email'
 
 class HyperSearchKW(Enum):
     """
@@ -59,8 +60,6 @@ class HyperSearchKW(Enum):
     N_INIT_PTS = 'n_initial_points'
     N_PTS = 'n_points'
     STRAT = 'strategy'
-    GRID = 'initial_grid'
-    FUNC = 'func_levels'
     ENERGY_WEIGHT = 'energy_weight'
     OPTIMIZER_PARAMS = 'optimizer_params'
 
@@ -84,11 +83,13 @@ class PropConfig():
     def __init__(self, lammps_bin_path: Path,
                  lammps_inps_path: Path,
                  pps_python_path: Path,
-                 ref_data_path: Path):
+                 ref_data_path: Path,
+                 email: str):
         self.lammps_bin_path: Path = lammps_bin_path
         self.lammps_inps_path: Path = lammps_inps_path
         self.pps_python_path: Path = pps_python_path
         self.ref_data_path: Path = ref_data_path
+        self.email = email
 
 class HyperConfig():
     """
@@ -101,7 +102,6 @@ class HyperConfig():
                  n_points: int,
                  strategy: str,
                  energy_weight: float,
-                 hpc: bool,
                  optimizer_params: dict,):
         self.model_name: str = model_name
         self.sweep_path: Path = sweep_path
@@ -110,7 +110,6 @@ class HyperConfig():
         self.n_points: int = n_points
         self.strategy: str = strategy
         self.energy_weight: float = energy_weight
-        self.hpc: bool = hpc
         self.optimizer_params: dict = optimizer_params
 
 class DeepTrainConfig():
@@ -176,7 +175,6 @@ class ConfigReader():
             int(str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.N_PTS.value])),
             str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.STRAT.value]),
             float(str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.ENERGY_WEIGHT.value])),
-            bool(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.HPC.value])),
             self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.OPTIMIZER_PARAMS.value],
         )
 
@@ -197,7 +195,8 @@ class ConfigReader():
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.LMP_BIN.value])),
             Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.LAMMPS_INPS.value])),
             Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.PPS_PYTHON.value])),
-            Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.REF_DATA.value]))
+            Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.REF_DATA.value])),
+            str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.EMAIL.value])
         )
 
     def get_deep_train_config(self) -> DeepTrainConfig:

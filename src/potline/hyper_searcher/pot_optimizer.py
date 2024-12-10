@@ -12,12 +12,11 @@ from skopt import Optimizer # type: ignore
 import xpot.loaders as load # type: ignore
 
 from ..config_reader import HyperConfig
-from ..model import PotModel, create_model, ModelTracker
-from ..loss_logger import LossLogger
+from ..model import PotModel, create_model, CONFIG_NAME
+from ..loss_logger import LossLogger, ModelTracker
 from ..dispatcher import DispatcherFactory
 
 OPTIM_DIR_NAME: str = "hyper_search"
-CONFIG_NAME: str = "optimized_params.yaml"
 
 class PotOptimizer():
     """
@@ -73,7 +72,7 @@ class PotOptimizer():
                 self._config.sweep_path / str(self._iteration) / str(self._subiter) / OPTIM_DIR_NAME
             config_path: Path = self._prep_fit(next_params, self._iteration, self._subiter)
             fit_trackers.append(ModelTracker(
-                create_model(self._config.model_name, config_path, self._iter_path, self._config.hpc),
+                create_model(self._config.model_name, config_path, self._iter_path),
                 self._iteration, self._subiter, next_params))
 
         # Start the fitting process
