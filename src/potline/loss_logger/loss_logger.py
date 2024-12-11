@@ -49,8 +49,8 @@ class ModelTracker():
         Create a model tracker from a path.
         """
         model = create_model_from_path(model_name, model_path)
-        subiter = int(model_path.name)
-        iteration = int(model_path.parent.name)
+        subiter = int(model_path.parent.name)
+        iteration = int(model_path.parent.parent.name)
         params = model.get_params()
         with (sweep_path / ERROR_FILENAME).open("r", encoding='utf-8') as f:
             reader = csv.reader(f)
@@ -82,7 +82,8 @@ class LossLogger():
                 reader = csv.reader(csv_file)
                 rows = list(reader)
                 table = tabulate(rows, headers="firstrow", tablefmt="github")
-            with filepath.open("a+", encoding='utf-8') as f:
+            out_path = filepath.parent / filepath.stem
+            with out_path.open("a+", encoding='utf-8') as f:
                 f.write(table)
 
         tabulate_csv(self._error_filepath)

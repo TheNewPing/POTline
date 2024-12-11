@@ -30,7 +30,7 @@ runtime3=$((runtime2-runtime1))
 
 # Write timings to a file
 timings_file="${out_path}/bench_timings.csv"
-echo "start_time,mid_time,end_time,prerun_steps,max_steps,time_diff" > $timings_file
-echo "$start_time,$mid_time,$end_time,${prerun_steps},${max_steps},$runtime3" >> $timings_file
+echo "start_time,mid_time,end_time,prerun_steps,max_steps,n_cpu,time_diff" > $timings_file
+echo "$start_time,$mid_time,$end_time,${prerun_steps},${max_steps},${n_cpu},$runtime3" >> $timings_file
 
 exit 0

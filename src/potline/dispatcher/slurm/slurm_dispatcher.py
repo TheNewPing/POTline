@@ -34,7 +34,7 @@ class SlurmDispatcher(Dispatcher):
     """
     def __init__(self, commands: list[str], options: dict | None = None):
         super().__init__(commands, options)
-        self.job: Slurm = Slurm(self.options)
+        self.job: Slurm = Slurm(**self.options)
         self._job_id: int = -1
 
     def dispatch(self):
@@ -44,8 +44,10 @@ class SlurmDispatcher(Dispatcher):
         Returns:
             int: the job ID of the dispatched command.
         """
-        self.dispatched = True
+        for command in self.commands:
+            self.job.add_cmd(command)
         self._job_id = self.job.sbatch()
+        self.dispatched = True
 
     def wait(self):
         """
@@ -54,7 +56,7 @@ class SlurmDispatcher(Dispatcher):
         if self.dispatched:
             while True:
                 self.job.squeue.update_squeue()
-                if self._job_id not in self.job.squeue:
+                if self._job_id not in self.job.squeue.jobs:
                     break
                 time.sleep(10)
         else:

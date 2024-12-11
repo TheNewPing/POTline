@@ -31,4 +31,6 @@ if __name__ == '__main__':
                       args.noinference,
                       args.noproperties)
 
+    print('Starting PotLine pipeline...')
     potline.run()
+    print('PotLine pipeline finished.')

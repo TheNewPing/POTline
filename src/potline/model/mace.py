@@ -29,7 +29,8 @@ class PotMACE(PotModel):
             f'cd {self._out_path}',
             ' '.join(['pacemaker', str(self._config_filepath)] + (extra_cmd_opts or []))
         ]
-        self._dispatcher = dispatcher_factory.create_dispatcher(commands, self._out_path, SupportedModel.PACE)
+        self._dispatcher = dispatcher_factory.create_dispatcher(
+            commands, self._out_path, SupportedModel.PACE.value)
         self._dispatcher.dispatch()
 
     def set_config_maxiter(self, maxiter: int):

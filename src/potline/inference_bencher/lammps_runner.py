@@ -30,5 +30,6 @@ def run_benchmark(fitted_path: Path, config: BenchConfig,
                                                config.lammps_bin_path, LAMMPS_IN_PATH, config.prerun_steps,
                                                config.max_steps, inf_bench_dir]]
 
-    dispatcher: Dispatcher = dispatcher_factory.create_dispatcher(command, inf_bench_dir, n_cpu=config.n_cpu)
+    dispatcher: Dispatcher = dispatcher_factory.create_dispatcher(
+        [' '.join(command)],inf_bench_dir, n_cpu=config.n_cpu)
     dispatcher.dispatch()

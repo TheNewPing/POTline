@@ -49,13 +49,14 @@ class PotOptimizer():
 
         self._loss_logger = LossLogger(self._config.sweep_path, self._get_keys())
 
-    def run(self):
+    def run(self) -> list[ModelTracker]:
         """
         Run the optimisation sweep.
         """
         for _ in range(self._config.max_iter):
             self._fitted_models += self._optimize()
         self._loss_logger.tabulate_final_results()
+        return self._fitted_models
 
     def _optimize(self) -> list[ModelTracker]:
         """
@@ -70,7 +71,7 @@ class PotOptimizer():
             self._subiter += 1
             self._iter_path = \
                 self._config.sweep_path / str(self._iteration) / str(self._subiter) / OPTIM_DIR_NAME
-            config_path: Path = self._prep_fit(next_params, self._iteration, self._subiter)
+            config_path: Path = self._prep_fit(next_params)
             fit_trackers.append(ModelTracker(
                 create_model(self._config.model_name, config_path, self._iter_path),
                 self._iteration, self._subiter, next_params))
@@ -106,15 +107,10 @@ class PotOptimizer():
     def _prep_fit(
         self,
         opt_values: dict,
-        iteration: int,
-        subiter: int,
     ) -> Path:
         """
         Prepare hyperparameters for the model fitting.
         """
-        self._iteration = iteration
-        self._subiter = subiter
-        self._iter_path = self._config.sweep_path / str(self._iteration) / str(self._subiter) / OPTIM_DIR_NAME
         self._iter_path.mkdir(parents=True, exist_ok=True)
 
         self._mlp_total = load.reconstitute_lists(self._mlp_total, opt_values)

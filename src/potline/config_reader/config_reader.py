@@ -149,6 +149,8 @@ class ConfigReader():
     - data_analysis: configuration for the data analysis on mechanical properties with LAMMPS.
     """
     def __init__(self, file_path: Path):
+        if not file_path.exists() or not file_path.is_file():
+            raise FileNotFoundError(f'Configuration file {file_path} not found.')
         self.file_path: Path = file_path
         with open(file_path, 'r', encoding='utf-8') as file:
             self.config_data: dict = hjson.load(file)
@@ -165,7 +167,7 @@ class ConfigReader():
         """
         Get the optimizer configuration from the configuration file.
         """
-        if MainSectionKW.HYPER_SEARCH not in self.config_data:
+        if MainSectionKW.HYPER_SEARCH.value not in self.config_data:
             raise ValueError('No hyperparameter search configuration found in the config file.')
         return HyperConfig(
             str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
@@ -179,7 +181,7 @@ class ConfigReader():
         )
 
     def get_bench_config(self) -> BenchConfig:
-        if MainSectionKW.INFERENCE not in self.config_data:
+        if MainSectionKW.INFERENCE.value not in self.config_data:
             raise ValueError('No benchmark configuration found in the config file.')
         return BenchConfig(
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.LMP_BIN.value])),
@@ -189,7 +191,7 @@ class ConfigReader():
         )
 
     def get_prop_config(self) -> PropConfig:
-        if MainSectionKW.PROP_SIM not in self.config_data:
+        if MainSectionKW.PROP_SIM.value not in self.config_data:
             raise ValueError('No property simulation configuration found in the config file.')
         return PropConfig(
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.LMP_BIN.value])),
@@ -200,7 +202,7 @@ class ConfigReader():
         )
 
     def get_deep_train_config(self) -> DeepTrainConfig:
-        if MainSectionKW.DEEP_TRAINING not in self.config_data:
+        if MainSectionKW.DEEP_TRAINING.value not in self.config_data:
             raise ValueError('No deep training configuration found in the config file.')
         return DeepTrainConfig(
             int(str(self.get_config_section(MainSectionKW.DEEP_TRAINING.value)[DeepTrainKW.MAX_EPOCHS.value])),
@@ -208,7 +210,7 @@ class ConfigReader():
         )
 
     def get_general_config(self) -> GeneralConfig:
-        if MainSectionKW.GENERAL not in self.config_data:
+        if MainSectionKW.GENERAL.value not in self.config_data:
             raise ValueError('No general configuration found in the config file.')
         return GeneralConfig(
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.LMP_BIN.value])),

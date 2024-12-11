@@ -29,5 +29,6 @@ def run_properties_simulation(fitted_path: Path, config: PropConfig,
                            config.lammps_inps_path, config.pps_python_path, config.ref_data_path,
                            config.email]]
 
-    dispatcher: Dispatcher = dispatcher_factory.create_dispatcher(command, prop_bench_dir, email=config.email)
+    dispatcher: Dispatcher = dispatcher_factory.create_dispatcher(
+        [' '.join(command)], prop_bench_dir, email=config.email)
     dispatcher.dispatch()

@@ -4,11 +4,11 @@ Potential optimization pipeline API.
 
 from pathlib import Path
 
-from .hyper_searcher import PotOptimizer
+from .hyper_searcher import PotOptimizer, OPTIM_DIR_NAME
 from .inference_bencher import run_benchmark
 from .properties_simulator import run_properties_simulation
 from .config_reader import ConfigReader
-from .deep_trainer import DeepTrainer
+from .deep_trainer import DeepTrainer, DEEP_TRAIN_DIR_NAME
 from .model import PotModel
 from .dispatcher import DispatcherFactory, JobType
 from .loss_logger import ModelTracker
@@ -43,9 +43,6 @@ class PotLine():
         self.with_inference: bool = with_inference
         self.with_data_analysis: bool = with_data_analysis
         self.config = self.config_reader.get_general_config()
-        self.optimizer = PotOptimizer(self.config_reader.get_optimizer_config(),
-                                      DispatcherFactory(JobType.FIT,
-                                                        self.config.cluster))
 
     def run(self):
         optimized_models: list[ModelTracker] = self.hyper_search()
@@ -61,10 +58,12 @@ class PotLine():
         Run the hyperparameter search.
         """
         if self.with_hyper_search:
-            return self.optimizer.run()
+            return PotOptimizer(self.config_reader.get_optimizer_config(),
+                                DispatcherFactory(JobType.FIT.value, self.config.cluster)
+                                ).run()
 
         models: list[ModelTracker] = []
-        for model in self.get_model_paths():
+        for model in self.get_model_out_paths():
             if model.is_dir():
                 model_tracker = ModelTracker.from_path(
                     self.config.model_name, model, self.config.sweep_path)
@@ -85,7 +84,7 @@ class PotLine():
             deep_models: list[ModelTracker] = []
             for model in model_list:
                 deep_trainer = DeepTrainer(self.config_reader.get_deep_train_config(), model,
-                                           DispatcherFactory(JobType.DEEP, self.config.cluster))
+                                           DispatcherFactory(JobType.DEEP.value, self.config.cluster))
                 deep_trainer.run()
                 deep_trainers.append(deep_trainer)
             for trainer in deep_trainers:
@@ -100,21 +99,35 @@ class PotLine():
                 model.lampify()
                 model.create_potential()
 
-        return [model.get_out_path() for model in model_list]
+        return [model.get_out_path() if DEEP_TRAIN_DIR_NAME not in model.get_out_path().name
+                else model.get_out_path().parent
+                 for model in model_list]
 
     def inference_bench(self, out_paths: list[Path]):
         if self.with_inference:
             for out_path in out_paths:
                 run_benchmark(out_path, self.config_reader.get_bench_config(),
-                              DispatcherFactory(JobType.INF, self.config.cluster))
+                              DispatcherFactory(JobType.INF.value, self.config.cluster))
 
     def properties_simulation(self, out_paths: list[Path]):
         if self.with_data_analysis:
             for out_path in out_paths:
                 run_properties_simulation(out_path,
                                           self.config_reader.get_prop_config(),
-                                          DispatcherFactory(JobType.SIM, self.config.cluster))
+                                          DispatcherFactory(JobType.SIM.value, self.config.cluster))
 
-    def get_model_paths(self) -> list[Path]:
+    def get_model_out_paths(self) -> list[Path]:
+        """
+        Get the paths to the models.
+        """
         iter_dirs: list[Path] = [d for d in self.config.sweep_path.iterdir() if d.is_dir()]
-        return [d for d in iter_dirs for d in d.iterdir() if d.is_dir()]
+        subiter_dirs : list[Path] = [d for d in iter_dirs for d in d.iterdir() if d.is_dir()]
+        out_paths: list[Path] = []
+        for path in subiter_dirs:
+            if (path / DEEP_TRAIN_DIR_NAME).exists():
+                out_paths.append(path / DEEP_TRAIN_DIR_NAME)
+            elif (path / OPTIM_DIR_NAME).exists():
+                out_paths.append(path / OPTIM_DIR_NAME)
+            else:
+                raise ValueError(f"Could not find the model in {path}")
+        return out_paths
