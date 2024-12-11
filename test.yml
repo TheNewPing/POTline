@@ -1,3 +1,0 @@
-cpus_per_task: 15
-job_name: 'name'
-output: '%A_%a.out'
