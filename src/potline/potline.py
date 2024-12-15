@@ -71,7 +71,7 @@ class PotLine():
         return models
 
     def filter_best_loss(self, model_list: list[ModelTracker]) -> list[ModelTracker]:
-        sorted_models = sorted(model_list, key=lambda model: model.get_total_test_loss(
+        sorted_models = sorted(model_list, key=lambda model: model.get_total_valid_loss(
             self.config_reader.get_optimizer_config().energy_weight))
         return sorted_models[:self.config.best_n_models]
 

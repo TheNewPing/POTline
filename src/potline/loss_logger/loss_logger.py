@@ -18,30 +18,20 @@ class ModelTracker():
     Class to track the progress of a job in the optimisation sweep.
     """
     def __init__(self, model: PotModel, iteration: int, subiter: int,
-                 params: dict, train_losses: Losses | None = None,
-                 test_losses: Losses | None = None) -> None:
+                 params: dict, valid_losses: Losses | None = None) -> None:
         self.model = model
         self.iteration = iteration
         self.subiter = subiter
         self.params = params
-        self.train_losses = train_losses
-        self.test_losses = test_losses
+        self.valid_losses = valid_losses
 
-    def get_total_test_loss(self, energy_weight: float) -> float:
+    def get_total_valid_loss(self, energy_weight: float) -> float:
         """
-        Get the total test loss from the model.
+        Get the total valid loss from the model.
         """
-        if self.test_losses is None:
-            raise ValueError("Test loss not calculated.")
-        return maths.calculate_loss(self.test_losses.energy, self.test_losses.force, energy_weight)
-
-    def get_total_train_loss(self, energy_weight: float) -> float:
-        """
-        Get the total train loss from the model.
-        """
-        if self.train_losses is None:
-            raise ValueError("Train loss not calculated.")
-        return maths.calculate_loss(self.train_losses.energy, self.train_losses.force, energy_weight)
+        if self.valid_losses is None:
+            raise ValueError("valid loss not calculated.")
+        return maths.calculate_loss(self.valid_losses.energy, self.valid_losses.force, energy_weight)
 
     @staticmethod
     def from_path(model_name: str, model_path: Path, sweep_path: Path) -> 'ModelTracker':
@@ -56,9 +46,8 @@ class ModelTracker():
             reader = csv.reader(f)
             for row in reader:
                 if row[0] == str(iteration) and row[1] == str(subiter):
-                    train_losses = Losses(float(row[2]), float(row[4]))
-                    test_losses = Losses(float(row[3]), float(row[5]))
-                    return ModelTracker(model, iteration, subiter, params, train_losses, test_losses)
+                    valid_losses = Losses(float(row[2]), float(row[3]))
+                    return ModelTracker(model, iteration, subiter, params, valid_losses)
         raise ValueError("Model not found in error file.")
 
 class LossLogger():
@@ -93,11 +82,11 @@ class LossLogger():
         """
         Write the error values to a file.
         """
-        if job_tracker.test_losses is None or job_tracker.train_losses is None:
+        if job_tracker.valid_losses is None:
             raise ValueError("Losses not calculated.")
         output_data = [job_tracker.iteration, job_tracker.subiter,
-                        job_tracker.train_losses.energy, job_tracker.test_losses.energy,
-                        job_tracker.train_losses.force, job_tracker.test_losses.force]
+                       job_tracker.valid_losses.energy,
+                       job_tracker.valid_losses.force]
         with self._error_filepath.open("a", newline="", encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(output_data)
@@ -113,10 +102,8 @@ class LossLogger():
             f.write(
                 "Iteration,"
                 + "Subiteration,"
-                + "Train Δ Energy,"
-                + "Test Δ Energy,"
-                + "Train Δ Force,"
-                + "Test Δ Force"
+                + "valid Δ Energy,"
+                + "valid Δ Force"
                 + "\n"
             )
 

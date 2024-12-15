@@ -1,9 +1,9 @@
 """
-Tensorflow GPU test.
+PyTorch GPU test.
 """
 
 if __name__ == '__main__':
-    import tensorflow as tf
+    import torch
     import time
     import logging
     import sys
@@ -23,8 +23,7 @@ if __name__ == '__main__':
         """
         start_time = time.time()
         while time.time() - start_time < timeout:
-            gpus = tf.config.experimental.list_physical_devices('GPU')
-            if gpus:
+            if torch.cuda.is_available():
                 logger.info("GPU is available.")
                 return True
             logger.info("Waiting for GPU to be available...")
@@ -33,5 +32,7 @@ if __name__ == '__main__':
         return False
 
     if wait_for_gpu():
-        logger.info("Num GPUs Available: %d", len(tf.config.experimental.list_physical_devices('GPU')))
-    logger.info("Num CPUs Available: %d", len(tf.config.experimental.list_physical_devices('CPU')))
+        logger.info("Num GPUs Available: %d", torch.cuda.device_count())
+        for i in range(torch.cuda.device_count()):
+            logger.info("GPU %d: %s", i, torch.cuda.get_device_name(i))
+    logger.info("CUDA available: %s", torch.cuda.is_available())

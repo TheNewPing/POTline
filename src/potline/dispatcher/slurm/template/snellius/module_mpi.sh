@@ -1,4 +1,4 @@
 #!/bin/bash
 
-module load 2022
-module load OpenMPI/4.1.4-NVHPC-22.7-CUDA-11.7.0
+module load 2023
+module load OpenMPI/4.1.5-NVHPC-24.5-CUDA-12.1.1

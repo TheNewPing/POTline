@@ -6,12 +6,14 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from collections.abc import Callable
 
 import yaml
 import numpy as np
 import pandas as pd
+from xpot import maths
 
-from .model import PotModel, RawLosses, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME
+from .model import PotModel, RawLosses, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses
 from ..dispatcher import DispatcherFactory, SupportedModel
 from ..utils import gen_from_template
 
@@ -24,26 +26,22 @@ class PotPACE(PotModel):
     """
     def dispatch_fit(self,
                      dispatcher_factory: DispatcherFactory,
-                     extra_cmd_opts: list[str] | None = None):
+                     deep: bool = False):
         commands: list[str] = [
             f'cd {self._out_path}',
-            ' '.join(['pacemaker', str(self._config_filepath)] + (extra_cmd_opts or []))
+            ' '.join(['pacemaker', str(self._config_filepath)] +
+                     ([f'-p {str(self._out_path / LAST_POTENTIAL_NAME)}']
+                      if deep else []))
         ]
         self._dispatcher = dispatcher_factory.create_dispatcher(
             commands, self._out_path, SupportedModel.PACE.value)
         self._dispatcher.dispatch()
 
-    def set_config_maxiter(self, maxiter: int):
-        """
-        Set the maximum number of iterations in the configuration file.
-        """
-        with self._config_filepath.open('r', encoding='utf-8') as file:
-            config = yaml.safe_load(file)
-
-        config['fit']['maxiter'] = maxiter
-
-        with self._config_filepath.open('w', encoding='utf-8') as file:
-            yaml.safe_dump(config, file)
+    def collect_loss(self) -> Losses:
+        if self._dispatcher is None:
+            raise ValueError("Dispatcher not set.")
+        self._dispatcher.wait()
+        return self._validate_errors(self._calculate_errors())
 
     def lampify(self) -> Path:
         """
@@ -72,35 +70,37 @@ class PotPACE(PotModel):
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)
         return self._lmp_pot_path
 
-    def get_last_pot_path(self) -> Path:
-        return self._out_path / LAST_POTENTIAL_NAME
+    def set_config_maxiter(self, maxiter: int):
+        """
+        Set the maximum number of iterations in the configuration file.
+        """
+        with self._config_filepath.open('r', encoding='utf-8') as file:
+            config = yaml.safe_load(file)
 
-    def _collect_raw_errors(self, validation: bool) -> pd.DataFrame:
+        config['fit']['maxiter'] = maxiter
+
+        with self._config_filepath.open('w', encoding='utf-8') as file:
+            yaml.safe_dump(config, file)
+
+    def _collect_raw_errors(self) -> pd.DataFrame:
         """
         Collect errors from the fitting process.
         """
-        errors_filepath: Path = self._out_path / "test_pred.pckl.gzip" if validation \
-            else self._out_path / "train_pred.pckl.gzip"
+        errors_filepath: Path = self._out_path / "test_pred.pckl.gzip"
         df = pd.read_pickle(errors_filepath, compression="gzip")
         return df
 
-    def _calculate_errors(self, validation: bool = False) -> RawLosses:
+    def _calculate_errors(self) -> RawLosses:
         """
         Validate the potential from pickle files produced by :code:`pacemaker`
         during the fitting process.
-
-        Parameters
-        ----------
-        validation : bool
-            If True, calculate validation errors, otherwise calculate training
-            errors.
 
         Returns
         -------
         dict
             The errors as a dictionary of lists.
         """
-        errors = self._collect_raw_errors(validation)
+        errors = self._collect_raw_errors()
 
         n_per_structure = errors["NUMBER_OF_ATOMS"].values.tolist()
 
@@ -116,6 +116,22 @@ class PotPACE(PotModel):
         forces_diff = [pred - ref for pred, ref in zip(pred_forces, ref_forces)]
 
         return RawLosses(energy_diff, forces_diff, n_per_structure)
+
+    def _validate_errors(
+        self,
+        errors: RawLosses,
+        metric: Callable = maths.get_rmse,
+        n_scaling: float = 1,
+    ) -> Losses:
+        """
+        Calculate the training and validation error values specific to the loss
+        function of XPOT from the MLP.
+        """
+        energy_diff = (
+            errors.energies
+            / np.array(errors.atom_counts) ** n_scaling
+        )
+        return Losses(metric(energy_diff), metric(errors.forces))
 
     @staticmethod
     def from_path(out_path):

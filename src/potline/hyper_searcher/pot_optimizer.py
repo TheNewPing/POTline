@@ -82,18 +82,17 @@ class PotOptimizer():
 
         # Collect the loss values
         for fit_tr in fit_trackers:
-            fit_tr.train_losses = fit_tr.model.collect_loss(validation=False)
-            fit_tr.test_losses = fit_tr.model.collect_loss(validation=True)
+            fit_tr.valid_losses = fit_tr.model.collect_loss()
             self._loss_logger.write_error_file(fit_tr)
 
         # Tell the optimizer the results
         self._tell([fit_tr.params for fit_tr in fit_trackers],
-                  [fit_tr.get_total_test_loss(self._config.energy_weight) for fit_tr in fit_trackers])
+                  [fit_tr.get_total_valid_loss(self._config.energy_weight) for fit_tr in fit_trackers])
 
         # Write the results to the parameters.csv file
         for fit_tr in fit_trackers:
             i: int = self._config.n_points - fit_tr.subiter + 1
-            loss: float = fit_tr.get_total_test_loss(self._config.energy_weight)
+            loss: float = fit_tr.get_total_valid_loss(self._config.energy_weight)
             key_values: list[str] = [str(i) for i in self._optimizer.Xi[-i]]
             self._loss_logger.write_param_result(fit_tr.iteration, fit_tr.subiter, loss, key_values)
 

@@ -25,7 +25,8 @@ def run_properties_simulation(fitted_path: Path, config: PropConfig,
     prop_bench_dir.mkdir(exist_ok=True)
 
     command: list[str] = [str(cmd) for cmd in
-                          ['bash', SUBMIT_TEMPLATE_PATH, prop_bench_dir, config.lammps_bin_path,
+                          ['bash', SUBMIT_TEMPLATE_PATH, prop_bench_dir,
+                           config.lammps_bin_path,
                            config.lammps_inps_path, config.pps_python_path, config.ref_data_path,
                            config.email]]
 

@@ -11,6 +11,7 @@ class SupportedModel(Enum):
     """
     PACE = "pacemaker"
     MACE = "mace"
+    GRACE = "grace"
 
 class JobType(Enum):
     """

@@ -27,7 +27,8 @@ def run_benchmark(fitted_path: Path, config: BenchConfig,
     inf_bench_dir.mkdir(exist_ok=True)
 
     command: list[str] = [str(cmd) for cmd in ['bash', BENCH_SCRIPT_TEMPLATE_PATH, config.n_cpu,
-                                               config.lammps_bin_path, LAMMPS_IN_PATH, config.prerun_steps,
+                                               config.lammps_bin_path,
+                                               LAMMPS_IN_PATH, config.prerun_steps,
                                                config.max_steps, inf_bench_dir]]
 
     dispatcher: Dispatcher = dispatcher_factory.create_dispatcher(

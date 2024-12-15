@@ -3,30 +3,10 @@ Slurm dispatcher
 """
 
 import time
-from pathlib import Path
-from enum import Enum
 
 from simple_slurm import Slurm # type: ignore
 
-from ..dispatcher import Dispatcher, SlurmCluster
-
-class SlurmKW(Enum):
-    """
-    Supported cluster options.
-    """
-    MOD_CONDA = 'conda'
-    ENV_PACE = 'env_pace'
-    MOD_CUDA = 'cuda'
-
-_cluster_paths: dict[SlurmCluster, Path] = {
-    SlurmCluster.SNELLIUS: (Path(__file__).parent / 'template' / 'snellius').resolve()
-}
-
-_script_names: dict[SlurmKW, str] = {
-    SlurmKW.MOD_CONDA: 'module_conda.sh',
-    SlurmKW.MOD_CUDA: 'module_cuda.sh',
-    SlurmKW.ENV_PACE: 'conda_pace.sh'
-}
+from ..dispatcher import Dispatcher
 
 class SlurmDispatcher(Dispatcher):
     """

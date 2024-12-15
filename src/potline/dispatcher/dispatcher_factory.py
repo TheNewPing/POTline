@@ -8,6 +8,18 @@ from .dispatcher import Dispatcher
 from .local import LocalDispatcher
 from .slurm import SlurmDispatcher, get_slurm_commands, get_slurm_options
 
+class JobRequest():
+    def __init__(self, commands: list[str], out_path: Path,
+                 model: str | None = None,
+                 n_cpu: int | None = None,
+                 email: str | None = None):
+        self.commands = commands
+        self.out_path = out_path
+        self.model = model
+        self.n_cpu = n_cpu
+        self.email = email
+
+
 class DispatcherFactory():
     """
     Dispatcher factory.
@@ -17,6 +29,10 @@ class DispatcherFactory():
                  cluster: str | None = None):
         self._job_type = job_type
         self._cluster = cluster
+        self.job_requests: list[JobRequest] = []
+
+    def add_job_request(self, job_request: JobRequest):
+        self.job_requests.append(job_request)
 
     def create_dispatcher(self, commands: list[str], out_path: Path,
                           model: str | None = None,

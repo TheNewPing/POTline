@@ -164,7 +164,7 @@ cython_debug/
 # Dataset
 *.xyz
 *.gzip
-test.ipynb
+*.ipynb
 
 # output
 out/*

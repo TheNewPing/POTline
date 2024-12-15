@@ -4,13 +4,10 @@ Pacemaker wrapper for fitting ACE potentials using XPOT in HPC.
 
 from __future__ import annotations
 
-import sys
-import shutil
-import json
 from pathlib import Path
+import shutil
 
 import yaml
-from mace.cli.create_lammps_model import main as create_lammps_model
 
 from .model import PotModel, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses
 from ..dispatcher import DispatcherFactory, SupportedModel
@@ -18,44 +15,43 @@ from ..utils import gen_from_template
 
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
 
-class PotMACE(PotModel):
+class PotGRACE(PotModel):
     """
-    MACE implementation.
+    GRACE implementation.
+    Requires gracemaker.
     """
+    def __init__(self, config_filepath, out_path):
+        super().__init__(config_filepath, out_path)
+        with config_filepath.open('r', encoding='utf-8') as file:
+            config: dict = yaml.safe_load(file)
+            self._seed_number: int = config['seed']
+            self._seed_path: Path = out_path / 'seed' / f'{self._seed_number}'
+        self._yace_path = self._seed_path / 'final_model'
+
     def dispatch_fit(self,
                      dispatcher_factory: DispatcherFactory,
-                     deep: bool = False,):
+                     deep: bool = False):
         commands: list[str] = [
             f'cd {self._out_path}',
-            ' '.join(['mace_run_train', f'--config {str(self._config_filepath)}'] +
-                     (['--restart_latest'] if deep else []))
+            ' '.join(['gracemaker', str(self._config_filepath)] +
+                     (['-r'] if deep else []))
         ]
         self._dispatcher = dispatcher_factory.create_dispatcher(
-            commands, self._out_path, SupportedModel.MACE.value)
+            commands, self._out_path, SupportedModel.GRACE.value)
         self._dispatcher.dispatch()
 
     def collect_loss(self) -> Losses:
         if self._dispatcher is None:
             raise ValueError("Dispatcher not set.")
         self._dispatcher.wait()
-        results_path: Path = next((self._out_path / "results").glob("*.txt"))
-        with results_path.open('r', encoding='utf-8') as file:
-            lines = file.readlines()
+        train_metrics_path: Path = self._seed_path / 'train_metrics.yaml'
+        with train_metrics_path.open('r', encoding='utf-8') as file:
+            train_metrics: dict = yaml.safe_load(file)
 
-        eval_lines: list[str] = [line for line in lines if '"mode": "eval"' in line]
-        if not eval_lines:
-            raise ValueError("No evaluation data found.")
+        rmse_de: float = train_metrics[-1]['rmse/de']
+        rmse_f_comp: float = train_metrics[-1]['rmse/f_comp']
 
-        last_eval = eval_lines[-1]
-        last_eval_data: dict = json.loads(last_eval)
-
-        rmse_e: float | None = last_eval_data.get("rmse_e")
-        rmse_f: float | None = last_eval_data.get("rmse_f")
-
-        if rmse_e is None or rmse_f is None:
-            raise ValueError("RMSE values not found in the last evaluation data.")
-
-        return Losses(rmse_e, rmse_f)
+        return Losses(rmse_de, rmse_f_comp)
 
     def lampify(self) -> Path:
         """
@@ -64,16 +60,6 @@ class PotMACE(PotModel):
         Returns:
             Path: The path to the YACE file.
         """
-        # TODO: insert path in config
-        with self._config_filepath.open('r', encoding='utf-8') as file:
-            model_name: str = yaml.safe_load(file)['name']
-
-        old_argv = sys.argv
-        sys.argv = ["program", f'{self._out_path / model_name}.model']
-        create_lammps_model()
-        sys.argv = old_argv
-
-        self._yace_path = self._out_path / f'{model_name}.model-lammps.pt'
         return self._yace_path
 
     def create_potential(self) -> Path:
@@ -84,7 +70,7 @@ class PotMACE(PotModel):
             Path: The path to the potential.
         """
         potential_values: dict = {
-            'pstyle': 'mace',
+            'pstyle': 'grace pad_verbose',
             'yace_path': str(self._yace_path),
         }
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)
@@ -97,7 +83,7 @@ class PotMACE(PotModel):
         with self._config_filepath.open('r', encoding='utf-8') as file:
             config = yaml.safe_load(file)
 
-        config['max_num_epochs'] = maxiter
+        config['fit']['maxiter'] = maxiter
 
         with self._config_filepath.open('w', encoding='utf-8') as file:
             yaml.safe_dump(config, file)
@@ -106,12 +92,14 @@ class PotMACE(PotModel):
         """
         Switch the output path of the model.
         """
-        shutil.copytree(self._out_path / 'checkpoints', out_path / 'checkpoints', dirs_exist_ok=True)
+        shutil.copytree(self._out_path, out_path, dirs_exist_ok=True)
         super().switch_out_path(out_path)
+        self._seed_path: Path = self._out_path / 'seed' / f'{self._seed_number}'
+        self._yace_path = self._seed_path / 'final_model'
 
     @staticmethod
     def from_path(out_path):
         """
         Create a model from a path.
         """
-        return PotMACE(out_path / CONFIG_NAME, out_path)
+        return PotGRACE(out_path / CONFIG_NAME, out_path)

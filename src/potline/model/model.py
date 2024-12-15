@@ -6,15 +6,10 @@ from __future__ import annotations
 
 import shutil
 import json
-from collections.abc import Callable
 from pathlib import Path
 from abc import ABC, abstractmethod
 
 import yaml
-import numpy as np
-import pandas as pd
-
-from xpot import maths # type: ignore
 
 from ..dispatcher import Dispatcher, SupportedModel, DispatcherFactory
 
@@ -23,9 +18,11 @@ POTENTIAL_NAME: str = 'potential.in'
 CONFIG_NAME: str = "optimized_params.yaml"
 POTENTIAL_TEMPLATE_PATH: Path = Path(__file__).parent / 'template' / POTENTIAL_NAME
 
+# TODO: move to model implementation
 _MODEL_DEFAULTS = {
     SupportedModel.PACE: Path(__file__).parent / "defaults" / "ace_defaults.json",
     SupportedModel.MACE: Path(__file__).parent / "defaults" / "mace_defaults.json",
+    SupportedModel.GRACE: Path(__file__).parent / "defaults" / "grace_defaults.json",
 }
 
 class Losses():
@@ -65,12 +62,14 @@ class PotModel(ABC):
     @abstractmethod
     def dispatch_fit(self,
                      dispatcher_factory: DispatcherFactory,
-                     extra_cmd_opts: list[str] | None = None):
+                     deep: bool = False,):
         pass
 
     @abstractmethod
-    def set_config_maxiter(self, maxiter: int):
-        pass
+    def collect_loss(self) -> Losses:
+        """
+        Collect the loss from the fitting process.
+        """
 
     @abstractmethod
     def lampify(self) -> Path:
@@ -91,41 +90,8 @@ class PotModel(ABC):
         """
 
     @abstractmethod
-    def get_last_pot_path(self) -> Path:
+    def set_config_maxiter(self, maxiter: int):
         pass
-
-    @abstractmethod
-    def _collect_raw_errors(self, validation: bool) -> pd.DataFrame:
-        pass
-
-    @abstractmethod
-    def _calculate_errors(self, validation: bool = False) -> RawLosses:
-        pass
-
-    def collect_loss(self, validation: bool) -> Losses:
-        """
-        Collect the loss from the fitting process.
-        """
-        if self._dispatcher is None:
-            raise ValueError("Dispatcher not set.")
-        self._dispatcher.wait()
-        return self._validate_errors(self._calculate_errors(validation))
-
-    def _validate_errors(
-        self,
-        errors: RawLosses,
-        metric: Callable = maths.get_rmse,
-        n_scaling: float = 1,
-    ) -> Losses:
-        """
-        Calculate the training and validation error values specific to the loss
-        function of XPOT from the MLP.
-        """
-        energy_diff = (
-            errors.energies
-            / np.array(errors.atom_counts) ** n_scaling
-        )
-        return Losses(metric(energy_diff), metric(errors.forces))
 
     def get_out_path(self) -> Path:
         """

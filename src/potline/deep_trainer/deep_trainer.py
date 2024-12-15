@@ -18,7 +18,6 @@ class DeepTrainer():
         self._model_tracker = model_tracker
         self._iter_path = \
             self._config.sweep_path / str(self._model_tracker.iteration) / str(self._model_tracker.subiter)
-        self._pot_path = self._model_tracker.model.get_last_pot_path()
         self._out_path = self._iter_path / DEEP_TRAIN_DIR_NAME
         self._out_path.mkdir(exist_ok=True)
         self._model_tracker.model.switch_out_path(self._out_path)
@@ -28,10 +27,9 @@ class DeepTrainer():
         self._loss_logger = LossLogger(self._out_path)
 
     def run(self):
-        self._model_tracker.model.dispatch_fit(self._dispatcher_factory, ['-p', str(self._pot_path)])
+        self._model_tracker.model.dispatch_fit(self._dispatcher_factory, deep=True)
 
     def collect(self) -> ModelTracker:
-        self._model_tracker.train_losses = self._model_tracker.model.collect_loss(validation=False)
-        self._model_tracker.test_losses = self._model_tracker.model.collect_loss(validation=True)
+        self._model_tracker.valid_losses = self._model_tracker.model.collect_loss()
         self._loss_logger.write_error_file(self._model_tracker)
         return self._model_tracker
