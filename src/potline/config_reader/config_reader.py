@@ -41,7 +41,6 @@ class InferenceKW(Enum):
     """
     PRE_STEPS = 'prerun_steps'
     MAX_STEPS = 'max_steps'
-    N_CPU = 'n_cpu'
 
 class PropSimKW(Enum):
     """
@@ -69,12 +68,10 @@ class BenchConfig():
     """
     def __init__(self, lammps_bin_path: Path,
                  prerun_steps: int,
-                 max_steps: int,
-                 n_cpu: int):
+                 max_steps: int,):
         self.lammps_bin_path: Path = lammps_bin_path
         self.prerun_steps: int = prerun_steps
         self.max_steps: int = max_steps
-        self.n_cpu: int = n_cpu
 
 class PropConfig():
     """
@@ -187,7 +184,6 @@ class ConfigReader():
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.LMP_BIN.value])),
             int(str(self.get_config_section(MainSectionKW.INFERENCE.value)[InferenceKW.PRE_STEPS.value])),
             int(str(self.get_config_section(MainSectionKW.INFERENCE.value)[InferenceKW.MAX_STEPS.value])),
-            int(str(self.get_config_section(MainSectionKW.INFERENCE.value)[InferenceKW.N_CPU.value]))
         )
 
     def get_prop_config(self) -> PropConfig:

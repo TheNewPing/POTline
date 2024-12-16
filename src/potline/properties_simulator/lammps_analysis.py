@@ -13,6 +13,8 @@ SUBMIT_SCRIPT_NAME: str = 'submit.sh'
 PROP_BENCH_TEMPLATE_PATH: Path = Path(__file__).parent / 'template'
 SUBMIT_TEMPLATE_PATH: Path = PROP_BENCH_TEMPLATE_PATH / SUBMIT_SCRIPT_NAME
 
+_N_CPU: int = 1
+
 def run_properties_simulation(model: PotModel, config: PropConfig,
                               dispatcher_factory: DispatcherFactory):
     """
@@ -29,8 +31,8 @@ def run_properties_simulation(model: PotModel, config: PropConfig,
                           ['bash', SUBMIT_TEMPLATE_PATH, prop_bench_dir,
                            f'"{config.lammps_bin_path} {model.get_lammps_params()}"',
                            config.lammps_inps_path, config.pps_python_path, config.ref_data_path,
-                           config.email, 1]]
+                           config.email, _N_CPU]]
 
     dispatcher: Dispatcher = dispatcher_factory.create_dispatcher(
-        [' '.join(command)], prop_bench_dir, model=model.get_name().value, n_cpu=1, email=config.email)
+        [' '.join(command)], prop_bench_dir, model=model.get_name().value, n_cpu=_N_CPU, email=config.email)
     dispatcher.dispatch()
