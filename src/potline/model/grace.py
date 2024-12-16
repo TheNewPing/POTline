@@ -1,5 +1,5 @@
 """
-Pacemaker wrapper for fitting ACE potentials using XPOT in HPC.
+Gracemaker wrapper.
 """
 
 from __future__ import annotations
@@ -18,7 +18,6 @@ LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
 class PotGRACE(PotModel):
     """
     GRACE implementation.
-    Requires gracemaker.
     """
     def __init__(self, config_filepath, out_path):
         super().__init__(config_filepath, out_path)
@@ -54,21 +53,9 @@ class PotGRACE(PotModel):
         return Losses(rmse_de, rmse_f_comp)
 
     def lampify(self) -> Path:
-        """
-        Convert the model YAML to YACE format.
-
-        Returns:
-            Path: The path to the YACE file.
-        """
         return self._yace_path
 
     def create_potential(self) -> Path:
-        """
-        Create the potential in YACE format.
-
-        Returns:
-            Path: The path to the potential.
-        """
         potential_values: dict = {
             'pstyle': 'grace pad_verbose',
             'yace_path': str(self._yace_path),
@@ -77,9 +64,6 @@ class PotGRACE(PotModel):
         return self._lmp_pot_path
 
     def set_config_maxiter(self, maxiter: int):
-        """
-        Set the maximum number of iterations in the configuration file.
-        """
         with self._config_filepath.open('r', encoding='utf-8') as file:
             config = yaml.safe_load(file)
 
@@ -89,18 +73,12 @@ class PotGRACE(PotModel):
             yaml.safe_dump(config, file)
 
     def get_lammps_params(self) -> str:
-        """
-        Get the LAMMPS parameters.
-        """
         return ''
 
     def get_name(self) -> SupportedModel:
         return SupportedModel.GRACE
 
     def switch_out_path(self, out_path: Path):
-        """
-        Switch the output path of the model.
-        """
         shutil.copytree(self._out_path, out_path, dirs_exist_ok=True)
         super().switch_out_path(out_path)
         self._seed_path: Path = self._out_path / 'seed' / f'{self._seed_number}'
@@ -108,7 +86,4 @@ class PotGRACE(PotModel):
 
     @staticmethod
     def from_path(out_path):
-        """
-        Create a model from a path.
-        """
         return PotGRACE(out_path / CONFIG_NAME, out_path)

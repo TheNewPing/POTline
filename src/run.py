@@ -1,5 +1,5 @@
 """
-CLI script for running PotLine.
+CLI script for dispatching PotLine.
 """
 
 from argparse import Namespace, ArgumentParser

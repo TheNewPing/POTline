@@ -22,7 +22,6 @@ LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
 class PotPACE(PotModel):
     """
     PACE implementation.
-    Requires pacemaker.
     """
     def dispatch_fit(self,
                      dispatcher_factory: DispatcherFactory,
@@ -44,12 +43,6 @@ class PotPACE(PotModel):
         return self._validate_errors(self._calculate_errors())
 
     def lampify(self) -> Path:
-        """
-        Convert the model YAML to YACE format.
-
-        Returns:
-            Path: The path to the YACE file.
-        """
         subprocess.run(['pace_yaml2yace', '-o',
                         str(self._yace_path),
                         str(self._out_path / LAST_POTENTIAL_NAME)],
@@ -57,12 +50,6 @@ class PotPACE(PotModel):
         return self._yace_path
 
     def create_potential(self) -> Path:
-        """
-        Create the potential in YACE format.
-
-        Returns:
-            Path: The path to the potential.
-        """
         potential_values: dict = {
             'pstyle': 'pace product',
             'yace_path': str(self._yace_path),
@@ -71,9 +58,6 @@ class PotPACE(PotModel):
         return self._lmp_pot_path
 
     def set_config_maxiter(self, maxiter: int):
-        """
-        Set the maximum number of iterations in the configuration file.
-        """
         with self._config_filepath.open('r', encoding='utf-8') as file:
             config = yaml.safe_load(file)
 
@@ -83,9 +67,6 @@ class PotPACE(PotModel):
             yaml.safe_dump(config, file)
 
     def get_lammps_params(self) -> str:
-        """
-        Get the LAMMPS parameters.
-        """
         return '-k on g 1 -sf kk -pk kokkos newton on neigh half'
 
     def get_name(self) -> SupportedModel:
@@ -94,6 +75,9 @@ class PotPACE(PotModel):
     def _collect_raw_errors(self) -> pd.DataFrame:
         """
         Collect errors from the fitting process.
+
+        Returns
+            pd.DataFrame: the errors from the fitting process
         """
         errors_filepath: Path = self._out_path / "test_pred.pckl.gzip"
         df = pd.read_pickle(errors_filepath, compression="gzip")
@@ -105,9 +89,7 @@ class PotPACE(PotModel):
         during the fitting process.
 
         Returns
-        -------
-        dict
-            The errors as a dictionary of lists.
+            RawLosses: the raw losses for each prediction.
         """
         errors = self._collect_raw_errors()
 
@@ -133,8 +115,15 @@ class PotPACE(PotModel):
         n_scaling: float = 1,
     ) -> Losses:
         """
-        Calculate the training and validation error values specific to the loss
-        function of XPOT from the MLP.
+        Calculate the loss resulting loss.
+
+        Args:
+            - errors: the raw errors from the fitting process.
+            - metric: the metric to use for the loss.
+            - n_scaling: the scaling factor for the atom count.
+
+        Returns:
+            Losses: the losses from the fitting process.
         """
         energy_diff = (
             errors.energies
@@ -144,7 +133,4 @@ class PotPACE(PotModel):
 
     @staticmethod
     def from_path(out_path):
-        """
-        Create a model from a path.
-        """
         return PotPACE(out_path / CONFIG_NAME, out_path)

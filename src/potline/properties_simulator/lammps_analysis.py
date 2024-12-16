@@ -1,5 +1,5 @@
 """
-Data analysis for LAMMPS simulations.
+Properties simulation.
 """
 
 from pathlib import Path
@@ -21,8 +21,9 @@ def run_properties_simulation(model: PotModel, config: PropConfig,
     Run the properties simulation using LAMMPS.
 
     Args:
-        - fitted_path: path to the directory with the fitted models.
-        - config: configuration for the data analysis.
+        - model: model to use for the simulation
+        - config: properties simulation configuration
+        - dispatcher_factory: factory for dispatching the simulation
     """
     prop_bench_dir: Path = model.get_out_path().parent / PROPERTIES_BENCH_DIR_NAME
     prop_bench_dir.mkdir(exist_ok=True)

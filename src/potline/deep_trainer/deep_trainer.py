@@ -10,7 +10,12 @@ DEEP_TRAIN_DIR_NAME: str = 'deep_train'
 
 class DeepTrainer():
     """
-    Abstract class for training after hyperparameter search.
+    Class for training after hyperparameter search.
+
+    Args:
+        - config: configuration for deep training
+        - model_tracker: model to train
+        - dispatcher_factory: factory for dispatching training jobs
     """
     def __init__(self, config: DeepTrainConfig, model_tracker: ModelTracker,
                  dispatcher_factory: DispatcherFactory):

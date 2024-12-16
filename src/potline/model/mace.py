@@ -58,12 +58,6 @@ class PotMACE(PotModel):
         return Losses(rmse_e, rmse_f)
 
     def lampify(self) -> Path:
-        """
-        Convert the model YAML to YACE format.
-
-        Returns:
-            Path: The path to the YACE file.
-        """
         # TODO: insert path in config
         with self._config_filepath.open('r', encoding='utf-8') as file:
             model_name: str = yaml.safe_load(file)['name']
@@ -77,12 +71,6 @@ class PotMACE(PotModel):
         return self._yace_path
 
     def create_potential(self) -> Path:
-        """
-        Create the potential in YACE format.
-
-        Returns:
-            Path: The path to the potential.
-        """
         potential_values: dict = {
             'pstyle': 'mace no_domain_decomposition',
             'yace_path': str(self._yace_path),
@@ -91,9 +79,6 @@ class PotMACE(PotModel):
         return self._lmp_pot_path
 
     def set_config_maxiter(self, maxiter: int):
-        """
-        Set the maximum number of iterations in the configuration file.
-        """
         with self._config_filepath.open('r', encoding='utf-8') as file:
             config = yaml.safe_load(file)
 
@@ -103,24 +88,15 @@ class PotMACE(PotModel):
             yaml.safe_dump(config, file)
 
     def get_lammps_params(self) -> str:
-        """
-        Get the LAMMPS parameters.
-        """
         return '-k on g 1 -sf kk -pk kokkos newton on neigh half'
 
     def get_name(self) -> SupportedModel:
         return SupportedModel.MACE
 
     def switch_out_path(self, out_path: Path):
-        """
-        Switch the output path of the model.
-        """
         shutil.copytree(self._out_path / 'checkpoints', out_path / 'checkpoints', dirs_exist_ok=True)
         super().switch_out_path(out_path)
 
     @staticmethod
     def from_path(out_path):
-        """
-        Create a model from a path.
-        """
         return PotMACE(out_path / CONFIG_NAME, out_path)

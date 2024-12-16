@@ -170,10 +170,12 @@ class ConfigReader():
             str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
             int(str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.MAX_ITER.value])),
-            int(str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.N_INIT_PTS.value])),
+            int(str(self.get_config_section(
+                MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.N_INIT_PTS.value])),
             int(str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.N_PTS.value])),
             str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.STRAT.value]),
-            float(str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.ENERGY_WEIGHT.value])),
+            float(str(self.get_config_section(
+                MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.ENERGY_WEIGHT.value])),
             self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.OPTIMIZER_PARAMS.value],
         )
 

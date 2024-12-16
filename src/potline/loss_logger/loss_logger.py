@@ -16,6 +16,13 @@ PARAMETER_FILENAME = "parameters.csv"
 class ModelTracker():
     """
     Class to track the progress of a job in the optimisation sweep.
+
+    Args:
+        - model: model to track
+        - iteration: iteration number
+        - subiter: subiteration number
+        - params: parameters of the model
+        - valid_losses: valid losses of the model
     """
     def __init__(self, model: PotModel, iteration: int, subiter: int,
                  params: dict, valid_losses: Losses | None = None) -> None:
@@ -28,6 +35,9 @@ class ModelTracker():
     def get_total_valid_loss(self, energy_weight: float) -> float:
         """
         Get the total valid loss from the model.
+
+        Args:
+            - energy_weight: weight of the energy loss
         """
         if self.valid_losses is None:
             raise ValueError("valid loss not calculated.")
@@ -37,6 +47,14 @@ class ModelTracker():
     def from_path(model_name: str, model_path: Path, sweep_path: Path) -> 'ModelTracker':
         """
         Create a model tracker from a path.
+
+        Args:
+            - model_name: name of the model
+            - model_path: path to the model, used to recover the model
+            - sweep_path: path to the sweep, used to recover the valid losses
+
+        Returns:
+            ModelTracker: the model tracker
         """
         model = create_model_from_path(model_name, model_path)
         subiter = int(model_path.parent.name)
@@ -53,6 +71,10 @@ class ModelTracker():
 class LossLogger():
     """
     Loss logger
+
+    Args:
+        - sweep_path: path to the sweep
+        - keys: keys of the optimized parameters
     """
     def __init__(self, sweep_path: Path, keys: list[str] | None = None):
         self._sweep_path = sweep_path
@@ -63,8 +85,7 @@ class LossLogger():
 
     def tabulate_final_results(self):
         """
-        Tabulate the final results of the optimisation into pretty tables, with
-        filenames
+        Tabulate the final results of the optimisation into pretty tables.
         """
         def tabulate_csv(filepath: Path):
             with filepath.open(encoding='utf-8') as csv_file:
@@ -81,6 +102,9 @@ class LossLogger():
     def write_error_file(self, job_tracker: ModelTracker):
         """
         Write the error values to a file.
+
+        Args:
+            - job_tracker: the job tracker to write to the file
         """
         if job_tracker.valid_losses is None:
             raise ValueError("Losses not calculated.")
@@ -116,6 +140,12 @@ class LossLogger():
     ):
         """
         Write the loss to the parameters.csv file.
+
+        Args:
+            - iteration: iteration number
+            - subiteration: subiteration number
+            - loss: loss value
+            - key_values: optimizable parameter values
         """
         if self._keys is None:
             raise ValueError("Keys must be provided to write to the parameters file.")

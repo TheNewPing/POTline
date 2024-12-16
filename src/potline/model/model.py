@@ -28,6 +28,10 @@ _MODEL_DEFAULTS = {
 class Losses():
     """
     Losses class for the model.
+
+    Args:
+        - energy: energy loss
+        - force: force loss
     """
     def __init__(self, energy: float, force: float):
         self.energy: float = energy
@@ -36,6 +40,11 @@ class Losses():
 class RawLosses():
     """
     Raw losses class for the model.
+
+    Args:
+        - energies: list of energy losses
+        - forces: list of force losses
+        - atom_counts: list of atom counts
     """
     def __init__(self, energies: list[float], forces: list[float],
                  atom_counts: list[float]):
@@ -63,27 +72,36 @@ class PotModel(ABC):
     def dispatch_fit(self,
                      dispatcher_factory: DispatcherFactory,
                      deep: bool = False,):
-        pass
+        """
+        Dispatch the fitting process.
+
+        Args:
+            - dispatcher_factory: factory for dispatching the fitting process.
+            - deep: flag for deep training.
+        """
 
     @abstractmethod
     def collect_loss(self) -> Losses:
         """
         Collect the loss from the fitting process.
+
+        Returns:
+            Losses: the losses from the fitting process.
         """
 
     @abstractmethod
     def lampify(self) -> Path:
         """
-        Convert the model YAML to YACE format.
+        Convert the model to a LAMMPS compatible format.
 
         Returns:
-            Path: The path to the YACE file.
+            Path: The path to the converted model.
         """
 
     @abstractmethod
     def create_potential(self) -> Path:
         """
-        Create the potential in YACE format.
+        Create the potential file that will be included in the LAMMPS scripts.
 
         Returns:
             Path: The path to the potential.
@@ -91,25 +109,47 @@ class PotModel(ABC):
 
     @abstractmethod
     def set_config_maxiter(self, maxiter: int):
-        pass
+        """
+        Set the maximum number of iterations for the model.
+        Overwrites the current configuration file. Used for deep training.
+
+        Args:
+            - maxiter: the maximum number of iterations.
+        """
 
     @abstractmethod
     def get_lammps_params(self) -> str:
-        pass
+        """
+        Get model specific LAMMPS parameters.
+
+        Returns:
+            str: the model specific LAMMPS parameters.
+        """
 
     @abstractmethod
     def get_name(self) -> SupportedModel:
-        pass
+        """
+        Get the name of the model.
+
+        Returns:
+            SupportedModel: the name of the model.
+        """
 
     def get_out_path(self) -> Path:
         """
         Get the output path of the model.
+
+        Returns:
+            Path: the output path of the model.
         """
         return self._out_path
 
     def switch_out_path(self, out_path: Path):
         """
         Switch the output path of the model.
+
+        Args:
+            - out_path: the new output path.
         """
         shutil.copy(self._config_filepath, out_path)
         self._config_filepath = out_path / self._config_filepath.name
@@ -118,6 +158,9 @@ class PotModel(ABC):
     def get_params(self) -> dict:
         """
         Get the parameters of the model.
+
+        Returns:
+            dict: the parameters of the model.
         """
         with self._config_filepath.open('r', encoding='utf-8') as file:
             return yaml.safe_load(file)
@@ -125,7 +168,13 @@ class PotModel(ABC):
     @staticmethod
     def get_defaults(model_name: str) -> dict:
         """
-        Get the default parameters from a json file.
+        Get the default parameters of the model class.
+
+        Args:
+            - model_name: name of the model
+
+        Returns:
+            dict: the default parameters of the model.
         """
         for model in SupportedModel:
             if model.value == model_name:
@@ -138,5 +187,11 @@ class PotModel(ABC):
     @abstractmethod
     def from_path(out_path: Path) -> PotModel:
         """
-        Create a model from a path.
+        Create a model from a path. The model must be already trained.
+
+        Args:
+            - out_path: path to the model.
+
+        Returns:
+            PotModel: the model.
         """

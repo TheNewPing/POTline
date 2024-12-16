@@ -21,6 +21,11 @@ def run_benchmark(model: PotModel, config: BenchConfig,
                   dispatcher_factory: DispatcherFactory):
     """
     Run the LAMMPS benchmark.
+
+    Args:
+        - model: model to benchmark
+        - config: benchmark configuration
+        - dispatcher_factory: factory for dispatching the benchmark
     """
     inf_bench_dir: Path = model.get_out_path().parent / INFERENCE_BENCH_DIR_NAME
     inf_bench_dir.mkdir(exist_ok=True)

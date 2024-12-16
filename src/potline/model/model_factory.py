@@ -10,6 +10,11 @@ def create_model(model_name: str,
                  out_path: Path) -> PotModel:
     """
     Create a model.
+
+    Args:
+        - model_name: name of the model
+        - config_filepath: path to the configuration file
+        - out_path: path to the output directory
     """
     if model_name == SupportedModel.PACE.value:
         from .pace import PotPACE
@@ -26,7 +31,11 @@ def create_model(model_name: str,
 def create_model_from_path(model_name: str,
                            out_path: Path) -> PotModel:
     """
-    Create a model from a path.
+    Create a model from a path. Thee model must be already trained.
+
+    Args:
+        - model_name: name of the model
+        - out_path: path to the output directory
     """
     if model_name == SupportedModel.PACE.value:
         from .pace import PotPACE

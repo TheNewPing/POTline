@@ -8,31 +8,19 @@ from .dispatcher import Dispatcher
 from .local import LocalDispatcher
 from .slurm import SlurmDispatcher, get_slurm_commands, get_slurm_options
 
-class JobRequest():
-    def __init__(self, commands: list[str], out_path: Path,
-                 model: str | None = None,
-                 n_cpu: int | None = None,
-                 email: str | None = None):
-        self.commands = commands
-        self.out_path = out_path
-        self.model = model
-        self.n_cpu = n_cpu
-        self.email = email
-
-
 class DispatcherFactory():
     """
     Dispatcher factory.
+
+    Args:
+        - job_type: type of job to run
+        - cluster: cluster to run the job on
     """
     def __init__(self,
                  job_type: str,
                  cluster: str | None = None):
         self._job_type = job_type
         self._cluster = cluster
-        self.job_requests: list[JobRequest] = []
-
-    def add_job_request(self, job_request: JobRequest):
-        self.job_requests.append(job_request)
 
     def create_dispatcher(self, commands: list[str], out_path: Path,
                           model: str | None = None,
@@ -40,6 +28,13 @@ class DispatcherFactory():
                           email: str | None = None) -> Dispatcher:
         """
         Create a dispatcher based on the options.
+
+        Args:
+            - commands: commands to run
+            - out_path: path to the output directory
+            - model: model name
+            - n_cpu: number of CPUs to use
+            - email: email to send the job results to
 
         Returns:
             Dispatcher: the dispatcher to use.
@@ -51,10 +46,5 @@ class DispatcherFactory():
             options = get_slurm_options(self._cluster, self._job_type, out_path, model, n_cpu, email)
             tot_cmds = get_slurm_commands(self._cluster, self._job_type, model) + commands
             return SlurmDispatcher(tot_cmds, options)
-
-        print(f"Build dispatcher with: {self._cluster}, {self._job_type}, \
-              {out_path}, {model}, {n_cpu}, {email}")
-        print(f"Options: {options}")
-        print(f"Commands: {tot_cmds}")
 
         return LocalDispatcher(tot_cmds, options)

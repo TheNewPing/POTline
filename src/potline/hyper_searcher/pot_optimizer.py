@@ -23,7 +23,8 @@ class PotOptimizer():
     Custom optimizer class for XPOT, based on the skopt.Optimizer class.
 
     Args:
-        - config: HyperConfig object.
+        - config: configuration data.
+        - dispatcher_factory: factory for dispatching training
     """
     def __init__(
         self,
@@ -100,6 +101,9 @@ class PotOptimizer():
         return fit_trackers
 
     def _get_keys(self) -> list[str]:
+        """
+        Get the keys of the optimizable parameters.
+        """
         keys = [" ".join(i[0]) for i in self._optimizable_params] # type: ignore
         return list(map(str, keys))
 
@@ -109,6 +113,12 @@ class PotOptimizer():
     ) -> Path:
         """
         Prepare hyperparameters for the model fitting.
+
+        Args:
+            - opt_values: dictionary of hyperparameters.
+
+        Returns:
+            Path: path to the configuration file.
         """
         self._iter_path.mkdir(parents=True, exist_ok=True)
 
@@ -127,10 +137,8 @@ class PotOptimizer():
         Ask the optimizer for a new set of parameters based on the current
         results of the optimisation.
 
-        Returns
-        -------
-        dict
-            Dictionary of parameter names and values.
+        Returns:
+            list: list of dictionaries of parameter to test.
         """
         param_values_list: list[list] = \
             self._optimizer.ask(self._config.n_points, self._config.strategy)
@@ -142,12 +150,9 @@ class PotOptimizer():
         Tell the optimizer the result of the last iteration, as well as the
         parameter values used to achieve it.
 
-        Parameters
-        ----------
-        params_list : list
-            List of dictionaries of parameter names and values.
-        results_list : list
-            List of results from the last iteration.
+        Args:
+            - params_list: list of dictionaries of parameter tested.
+            - results_list: list of results from the last iteration.
         """
         # 1. make sure that we get the order correct
         locations_list = [[params[name] for name in self._optimizable_params] for params in params_list]

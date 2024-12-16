@@ -20,9 +20,6 @@ class SlurmDispatcher(Dispatcher):
     def dispatch(self):
         """
         Dispatch the command using Slurm.
-
-        Returns:
-            int: the job ID of the dispatched command.
         """
         for command in self.commands:
             self.job.add_cmd(command)
