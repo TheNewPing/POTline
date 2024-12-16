@@ -1,0 +1,45 @@
+{
+    general: {
+        lammps_bin_path: "/home/erodaro/lammps_mace/lammps/build/lmp",
+        model_name: mace
+        best_n_models: 5
+        hpc: true
+        cluster: 'snellius'
+        sweep_path: "/home/erodaro/POTline/test_refactor/mace"
+    }
+    deep_training: {
+        max_epochs: 1,
+    }
+    inference: {
+        prerun_steps: 100,
+        max_steps: 1100,
+    }
+    data_analysis: {
+        lammps_inps_path: "/home/erodaro/POTline/src/potline/properties_simulator/pot_testing/lmps_inputs",
+        pps_python_path: "/home/erodaro/POTline/src/potline/properties_simulator/pot_testing/py_pps",
+        ref_data_path: "/home/erodaro/POTline/src/potline/properties_simulator/pot_testing/REF_DATA",
+        email: "e.rodaro@rug.nl"
+    }
+    hyper_search: {
+        max_iter: 1,
+        n_initial_points: 5
+        n_points: 10
+        strategy: "cl_min"
+        energy_weight: 0.3
+        optimizer_params: {
+            model: "MACE"
+            num_channels: 32
+            max_L: 0
+            r_max: "skopt.space.Real(4, 7)"
+            name: "mace_test"
+            train_file: "/home/erodaro/POTline/src/data/ogata-extended/ogata_extended.xyz"
+            valid_fraction: 0.10
+            energy_key: "energy"
+            forces_key: "forces"
+            device: cuda
+            batch_size: 50
+            max_num_epochs: 1
+            seed: 123
+        }
+    }
+}

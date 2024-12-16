@@ -2,18 +2,21 @@
 Potential optimization pipeline API.
 """
 
-import time
 from pathlib import Path
-from typing import Optional
 
-from simple_slurm import Slurm
+from .hyper_searcher import PotOptimizer, OPTIM_DIR_NAME
+from .inference_bencher import run_benchmark
+from .properties_simulator import run_properties_simulation
+from .config_reader import ConfigReader
+from .deep_trainer import DeepTrainer, DEEP_TRAIN_DIR_NAME
+from .model import PotModel
+from .dispatcher import DispatcherFactory, JobType
+from .loss_logger import ModelTracker
 
-from .optimizer import Optimizer, XpotAdapter
-from .lammps_runner import run_benchmark
-from .lammps_analysis import run_properties_simulation
-from .utils import get_best_models, convert_yace, create_potential, POTENTIAL_NAME
-from .config_reader import ConfigReader, GEN_NAME, MODEL_NAME, BEST_N_NAME
-from .deep_trainer import create_deep_trainer, DeepTrainer
+FINAL_REPORT_NAME: str = 'parameters.csv'
+LOSS_COL_KW: str = 'loss'
+ITER_COL_KW: str = 'iteration'
+SUBITER_COL_KW: str = 'subiteration'
 
 class PotLine():
     """
@@ -25,8 +28,6 @@ class PotLine():
     - with_conversion: flag to convert the results to LAMMPS format.
     - with_inference: flag to run the inference benchmark.
     - with_data_analysis: flag to run the data analysis on mechanical properties.
-    - hpc: flag to run the simulations on HPC.
-    - fitted_path: path to the directory with the fitted models.
     """
     def __init__(self,
                  config_path: Path,
@@ -34,90 +35,97 @@ class PotLine():
                  with_deep_train: bool,
                  with_conversion: bool,
                  with_inference: bool,
-                 with_data_analysis: bool,
-                 hpc: bool,
-                 fitted_path: Optional[Path] = None):
+                 with_data_analysis: bool):
         self.config_reader: ConfigReader = ConfigReader(config_path)
         self.with_hyper_search: bool = with_hyper_search
         self.with_deep_train: bool = with_deep_train
         self.with_conversion: bool = with_conversion
         self.with_inference: bool = with_inference
         self.with_data_analysis: bool = with_data_analysis
-        self.hpc: bool = hpc
-        self.model_name: str = str(self.config_reader.get_config_section(GEN_NAME)[MODEL_NAME])
-        self.best_n_models: int = int(str(self.config_reader.get_config_section(GEN_NAME)[BEST_N_NAME]))
-        if self.with_hyper_search:
-            self.optimizer: Optimizer = XpotAdapter(*self.config_reader.get_optimizer_config())
-        self.fitted_path: Path = fitted_path.resolve() if fitted_path \
-            else self.optimizer.get_sweep_path().resolve()
+        self.config = self.config_reader.get_general_config()
 
-    def run(self) -> None:  # noqa: C901
+    def run(self):
+        optimized_models: list[ModelTracker] = self.hyper_search()
+        best_models: list[ModelTracker] = self.filter_best_loss(optimized_models)
+        deep_models: list[ModelTracker] = self.deep_train(best_models)
+        models_to_test: list[PotModel] = [model.model for model in deep_models]
+        lamped_models: list[Path] = self.prepare_lammps(models_to_test)
+        self.inference_bench(lamped_models)
+        self.properties_simulation(lamped_models)
+
+    def hyper_search(self) -> list[ModelTracker]:
         """
-        Run the optimization pipeline.
-        1. Optimize the potential, convert the results to yace format, print the final results.
-        2. Run the inference benchmark.
-        3. Run the data analysis on mechanical properties
+        Run the hyperparameter search.
         """
         if self.with_hyper_search:
-            self.optimizer.optimize()
-            self.optimizer.get_final_results()
+            return PotOptimizer(self.config_reader.get_optimizer_config(),
+                                DispatcherFactory(JobType.FIT.value, self.config.cluster)
+                                ).run()
 
-        if self.with_conversion:
-            yace_list = convert_yace(self.model_name, self.fitted_path)
-        else:
-            yace_list = get_yaces(self.fitted_path)
+        models: list[ModelTracker] = []
+        for model in self.get_model_out_paths():
+            if model.is_dir():
+                model_tracker = ModelTracker.from_path(
+                    self.config.model_name, model, self.config.sweep_path)
+                models.append(model_tracker)
+        return models
 
-        yace_list = get_best_models(self.fitted_path, yace_list, self.best_n_models)
+    def filter_best_loss(self, model_list: list[ModelTracker]) -> list[ModelTracker]:
+        sorted_models = sorted(model_list, key=lambda model: model.get_total_valid_loss(
+            self.config_reader.get_optimizer_config().energy_weight))
+        return sorted_models[:self.config.best_n_models]
 
+    def deep_train(self, model_list: list[ModelTracker]) -> list[ModelTracker]:
+        """
+        Additional training for the best models.
+        """
         if self.with_deep_train:
-            # Dispatch the deep training jobs
-            deep_id_list: list[int] = []
-            for yace_path in yace_list:
-                deep_trainer: DeepTrainer = create_deep_trainer(
-                    self.config_reader.get_deep_train_config(), yace_path.parent)
-                deep_id_list.append(deep_trainer.dispatch_train())
-            wait_job = Slurm()
-            # Wait for the deep training jobs to finish
-            while True:
-                wait_job.squeue.update_squeue()
-                if not any(wait_id in wait_job.squeue.jobs for wait_id in deep_id_list):
-                    break
-                time.sleep(10)
-            # Run again yace conversion
-            convert_yace(self.model_name, self.fitted_path)
+            deep_trainers: list[DeepTrainer] = []
+            deep_models: list[ModelTracker] = []
+            for model in model_list:
+                deep_trainer = DeepTrainer(self.config_reader.get_deep_train_config(), model,
+                                           DispatcherFactory(JobType.DEEP.value, self.config.cluster))
+                deep_trainer.run()
+                deep_trainers.append(deep_trainer)
+            for trainer in deep_trainers:
+                deep_models.append(trainer.collect())
+            return deep_models
 
-        for yace_path in yace_list:
-            create_potential(self.model_name, yace_path, yace_path.parent)
+        return model_list
 
+    def prepare_lammps(self, model_list: list[PotModel]) -> list[PotModel]:
+        if self.with_conversion:
+            for model in model_list:
+                model.lampify()
+                model.create_potential()
+
+        return model_list
+
+    def inference_bench(self, models: list[PotModel]):
         if self.with_inference:
-            for yace_path in yace_list:
-                run_benchmark(yace_path.parent, self.config_reader.get_bench_config(), hpc=self.hpc)
+            for model in models:
+                run_benchmark(model, self.config_reader.get_bench_config(),
+                              DispatcherFactory(JobType.INF.value, self.config.cluster))
 
+    def properties_simulation(self, models: list[PotModel]):
         if self.with_data_analysis:
-            for yace_path in yace_list:
-                run_properties_simulation(yace_path.parent,
-                                          self.config_reader.get_prop_config(), hpc=self.hpc)
+            for model in models:
+                run_properties_simulation(model,
+                                          self.config_reader.get_prop_config(),
+                                          DispatcherFactory(JobType.SIM.value, self.config.cluster))
 
-def get_yaces(out_yace_path: Path) -> list[Path]:
-    """
-    Get the list of yace files in the output directory.
-
-    Args:
-    - out_yace_path: path to the output directory.
-
-    Returns:
-    - list of yace files.
-    """
-    return list(out_yace_path.glob('*.yace'))
-
-def get_potentials(fitted_path: Path) -> list[Path]:
-    """
-    Get the list of potential files in the fitted directory.
-
-    Args:
-    - fitted_path: path to the fitted directory.
-
-    Returns:
-    - list of potential files.
-    """
-    return list(fitted_path.glob(POTENTIAL_NAME))
+    def get_model_out_paths(self) -> list[Path]:
+        """
+        Get the paths to the models.
+        """
+        iter_dirs: list[Path] = [d for d in self.config.sweep_path.iterdir() if d.is_dir()]
+        subiter_dirs : list[Path] = [d for d in iter_dirs for d in d.iterdir() if d.is_dir()]
+        out_paths: list[Path] = []
+        for path in subiter_dirs:
+            if (path / DEEP_TRAIN_DIR_NAME).exists():
+                out_paths.append(path / DEEP_TRAIN_DIR_NAME)
+            elif (path / OPTIM_DIR_NAME).exists():
+                out_paths.append(path / OPTIM_DIR_NAME)
+            else:
+                raise ValueError(f"Could not find the model in {path}")
+        return out_paths

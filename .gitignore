@@ -164,6 +164,7 @@ cython_debug/
 # Dataset
 *.xyz
 *.gzip
+*.ipynb
 
 # output
 out/*
@@ -171,6 +172,9 @@ first_test/*
 baseline/*
 prototype/*
 quick_config/*
+hyper_search/*
+test/*
+test_refactor/*
 REF_DATA/*
 plots/*
 potential/*
