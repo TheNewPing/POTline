@@ -88,6 +88,12 @@ class PotGRACE(PotModel):
         with self._config_filepath.open('w', encoding='utf-8') as file:
             yaml.safe_dump(config, file)
 
+    def get_lammps_params(self) -> str:
+        """
+        Get the LAMMPS parameters.
+        """
+        return ''
+
     def switch_out_path(self, out_path: Path):
         """
         Switch the output path of the model.

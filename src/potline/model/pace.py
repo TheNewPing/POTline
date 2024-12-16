@@ -64,7 +64,7 @@ class PotPACE(PotModel):
             Path: The path to the potential.
         """
         potential_values: dict = {
-            'pstyle': 'pace',
+            'pstyle': 'pace product',
             'yace_path': str(self._yace_path),
         }
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)
@@ -81,6 +81,12 @@ class PotPACE(PotModel):
 
         with self._config_filepath.open('w', encoding='utf-8') as file:
             yaml.safe_dump(config, file)
+
+    def get_lammps_params(self) -> str:
+        """
+        Get the LAMMPS parameters.
+        """
+        return '-k on g 1 -sf kk -pk kokkos newton on neigh half'
 
     def _collect_raw_errors(self) -> pd.DataFrame:
         """

@@ -93,6 +93,10 @@ class PotModel(ABC):
     def set_config_maxiter(self, maxiter: int):
         pass
 
+    @abstractmethod
+    def get_lammps_params(self) -> str:
+        pass
+
     def get_out_path(self) -> Path:
         """
         Get the output path of the model.

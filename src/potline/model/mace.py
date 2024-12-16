@@ -88,6 +88,8 @@ class PotMACE(PotModel):
             'yace_path': str(self._yace_path),
         }
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)
+        with self._lmp_pot_path.open('a', encoding='utf-8') as file:
+            file.write("\natom_modify map yes\nnewton on\n")
         return self._lmp_pot_path
 
     def set_config_maxiter(self, maxiter: int):
@@ -101,6 +103,12 @@ class PotMACE(PotModel):
 
         with self._config_filepath.open('w', encoding='utf-8') as file:
             yaml.safe_dump(config, file)
+
+    def get_lammps_params(self) -> str:
+        """
+        Get the LAMMPS parameters.
+        """
+        return '-k on g 1 -sf kk'
 
     def switch_out_path(self, out_path: Path):
         """

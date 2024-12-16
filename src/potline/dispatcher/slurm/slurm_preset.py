@@ -53,7 +53,7 @@ def make_gpu_options(job: JobType, model: SupportedModel, out_path: Path,
         'exclude':_faulty_nodes,
     }
 
-def get_slurm_options(cluster: str, job_type: str, out_path: Path,# noqa: C901
+def get_slurm_options(cluster: str, job_type: str, out_path: Path, # noqa: C901
                       model: str | None = None,
                       n_cpu: int | None = None,
                       email: str | None = None) -> dict:
@@ -64,12 +64,12 @@ def get_slurm_options(cluster: str, job_type: str, out_path: Path,# noqa: C901
         if job_type == JobType.INF.value:
             if not n_cpu:
                 raise ValueError("n_cpu must be provided for inference jobs.")
-            return make_base_options(JobType.INF, model, out_path, "03:00:00", "40G", 1, n_cpu)
+            return make_gpu_options(JobType.INF, model, out_path, "3:00:00", "50G", 1, n_cpu, 1, "gpu_a100")
         elif job_type == JobType.SIM.value:
             if not email:
                 raise ValueError("Email must be provided for simulation jobs.")
             return {
-                **make_base_options(JobType.SIM, model, out_path, "03:00:00", "40G", 32, 1),
+                **make_gpu_options(JobType.SIM, model, out_path, "3:00:00", "50G", 1, n_cpu, 1, "gpu_a100"),
                 'mail_type': 'ALL',
                 'mail_user': email,
             }
@@ -87,11 +87,14 @@ def get_slurm_options(cluster: str, job_type: str, out_path: Path,# noqa: C901
             if model is None:
                 raise ValueError("Model must be provided for fitting jobs.")
             if model == SupportedModel.PACE.value:
-                return make_gpu_options(JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100")
+                return make_gpu_options(
+                    JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100")
             elif model == SupportedModel.MACE.value:
-                return make_gpu_options(JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100")
+                return make_gpu_options(
+                    JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100")
             elif model == SupportedModel.GRACE.value:
-                return make_gpu_options(JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100")
+                return make_gpu_options(
+                    JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100")
             raise NotImplementedError(f"Model {model} not implemented.")
         elif job_type == JobType.MAIN.value:
             if model is None:
@@ -149,14 +152,11 @@ def get_slurm_commands(cluster: str, # noqa: C901
             if model is None:
                 raise ValueError("Model must be provided for fitting jobs.")
             if model == SupportedModel.PACE.value:
-                return [f'source {_template_path / cluster / CommandsName.CONDA_PACE.value}',
-                        f'python {_template_path / CommandsName.TF_GPU_TEST.value}']
+                return [f'source {_template_path / cluster / CommandsName.CONDA_PACE.value}',]
             elif model == SupportedModel.MACE.value:
-                return [f'source {_template_path / cluster / CommandsName.CONDA_MACE.value}',
-                        f'python {_template_path / CommandsName.PYT_GPU_TEST.value}']
+                return [f'source {_template_path / cluster / CommandsName.CONDA_MACE.value}',]
             elif model == SupportedModel.GRACE.value:
-                return [f'source {_template_path / cluster / CommandsName.CONDA_GRACE.value}',
-                        f'python {_template_path / CommandsName.TF_GPU_TEST.value}']
+                return [f'source {_template_path / cluster / CommandsName.CONDA_GRACE.value}',]
             raise NotImplementedError(f"Model {model} not implemented.")
         raise NotImplementedError(f"Job type {job_type} not implemented.")
     raise NotImplementedError(f"Cluster {cluster} not implemented.")

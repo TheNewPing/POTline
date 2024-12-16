@@ -28,6 +28,7 @@ lmp_inps=$3
 pps_python=$4
 ref_data_path=$5
 eaddress=$6
+n_cpu=$7
 
 # Change to the output directory
 cd ${out_path}
@@ -65,7 +66,7 @@ echo '#**********************************' | tee -a ./data/results.txt
 #**********************************
 # E-V curve 
 cp ${lmp_inps}/in.eos .
-mpirun -n 4 ${LMMP} -in in.eos -v folder ${potential_name}
+eval mpirun -np ${n_cpu} ${LMMP} -in in.eos -v folder ${potential_name}
 # fit EOS
 cp ${pps_python}/eos-fit.py .
 python eos-fit.py
@@ -75,40 +76,40 @@ a0=$(grep 'a0 =' ./data/results.txt | awk '{print $3}')
 
 # Vacancy formation energy
 cp ${lmp_inps}/in.vac .
-${LMMP} -in in.vac -v lat ${a0}
+eval ${LMMP} -in in.vac -v lat ${a0}
 
 # Calculation of elastic constants.--------------------------------
 cp ${lmp_inps}/in.elastic .
 cp ${lmp_inps}/*.mod .
-${LMMP} -in in.elastic -v lat ${a0}
+eval ${LMMP} -in in.elastic -v lat ${a0}
 
 # Calculation of surface energies.---------------------------------
 cp ${lmp_inps}/in.surf* .
 # (100) plane
-${LMMP} -in in.surf1 -v lat ${a0}
+eval ${LMMP} -in in.surf1 -v lat ${a0}
 # (110) plane
-${LMMP} -in in.surf2 -v lat ${a0}
+eval ${LMMP} -in in.surf2 -v lat ${a0}
 # (111) plane
-${LMMP} -in in.surf3 -v lat ${a0}
+eval ${LMMP} -in in.surf3 -v lat ${a0}
 # (112) plane
-${LMMP} -in in.surf4 -v lat ${a0}
+eval ${LMMP} -in in.surf4 -v lat ${a0}
 
 # Bain path calculation.------------------------------------------
 cp ${lmp_inps}/in.bain_path .
-${LMMP} -in in.bain_path -v lat ${a0}
+eval ${LMMP} -in in.bain_path -v lat ${a0}
 cp bain_path.csv ./data
 
 # Stacking fault energy---------------------------------------------
 cp ${lmp_inps}/in.sfe_* .
-${LMMP} -in in.sfe_110 -v lat ${a0}
-${LMMP} -in in.sfe_112 -v lat ${a0}
+eval ${LMMP} -in in.sfe_110 -v lat ${a0}
+eval ${LMMP} -in in.sfe_112 -v lat ${a0}
 cp ./sfe_110.csv ./data
 cp ./sfe_112.csv ./data
 
 # Traction-separatio curve------------------------------------------
 cp ${lmp_inps}/in.ts_* .
-${LMMP} -in in.ts_100 -v lat ${a0}
-${LMMP} -in in.ts_110 -v lat ${a0}
+eval ${LMMP} -in in.ts_100 -v lat ${a0}
+eval ${LMMP} -in in.ts_110 -v lat ${a0}
 cp ./ts_100.csv ./data
 cp ./ts_110.csv ./data
 

@@ -49,9 +49,9 @@ class PotLine():
         best_models: list[ModelTracker] = self.filter_best_loss(optimized_models)
         deep_models: list[ModelTracker] = self.deep_train(best_models)
         models_to_test: list[PotModel] = [model.model for model in deep_models]
-        models_out_paths: list[Path] = self.prepare_lammps(models_to_test)
-        self.inference_bench(models_out_paths)
-        self.properties_simulation(models_out_paths)
+        lamped_models: list[Path] = self.prepare_lammps(models_to_test)
+        self.inference_bench(lamped_models)
+        self.properties_simulation(lamped_models)
 
     def hyper_search(self) -> list[ModelTracker]:
         """
@@ -93,26 +93,24 @@ class PotLine():
 
         return model_list
 
-    def prepare_lammps(self, model_list: list[PotModel]) -> list[Path]:
+    def prepare_lammps(self, model_list: list[PotModel]) -> list[PotModel]:
         if self.with_conversion:
             for model in model_list:
                 model.lampify()
                 model.create_potential()
 
-        return [model.get_out_path() if DEEP_TRAIN_DIR_NAME not in model.get_out_path().name
-                else model.get_out_path().parent
-                 for model in model_list]
+        return model_list
 
-    def inference_bench(self, out_paths: list[Path]):
+    def inference_bench(self, models: list[PotModel]):
         if self.with_inference:
-            for out_path in out_paths:
-                run_benchmark(out_path, self.config_reader.get_bench_config(),
+            for model in models:
+                run_benchmark(model, self.config_reader.get_bench_config(),
                               DispatcherFactory(JobType.INF.value, self.config.cluster))
 
-    def properties_simulation(self, out_paths: list[Path]):
+    def properties_simulation(self, models: list[PotModel]):
         if self.with_data_analysis:
-            for out_path in out_paths:
-                run_properties_simulation(out_path,
+            for model in models:
+                run_properties_simulation(model,
                                           self.config_reader.get_prop_config(),
                                           DispatcherFactory(JobType.SIM.value, self.config.cluster))
 

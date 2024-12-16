@@ -17,10 +17,10 @@ cp ${bench_potential_in_path} ${out_path}
 
 echo "start"
 start_time=`date +%s`
-mpirun --oversubscribe -np ${n_cpu} ${lammps_bin_path} -in "${out_path}/bench.in" -v steps ${prerun_steps}
+eval mpirun -np ${n_cpu} ${lammps_bin_path} -in "${out_path}/bench.in" -v steps ${prerun_steps}
 echo "prerun done"
 mid_time=`date +%s`
-mpirun --oversubscribe -np ${n_cpu} ${lammps_bin_path} -in "${out_path}/bench.in" -v steps ${max_steps}
+eval mpirun -np ${n_cpu} ${lammps_bin_path} -in "${out_path}/bench.in" -v steps ${max_steps}
 end_time=`date +%s`
 echo "finished"
 
