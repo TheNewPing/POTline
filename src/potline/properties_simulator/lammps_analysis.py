@@ -32,5 +32,5 @@ def run_properties_simulation(model: PotModel, config: PropConfig,
                            config.email, 1]]
 
     dispatcher: Dispatcher = dispatcher_factory.create_dispatcher(
-        [' '.join(command)], prop_bench_dir, n_cpu=1, email=config.email)
+        [' '.join(command)], prop_bench_dir, model=model.get_name().value, n_cpu=1, email=config.email)
     dispatcher.dispatch()

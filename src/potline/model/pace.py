@@ -88,6 +88,9 @@ class PotPACE(PotModel):
         """
         return '-k on g 1 -sf kk -pk kokkos newton on neigh half'
 
+    def get_name(self) -> SupportedModel:
+        return SupportedModel.PACE
+
     def _collect_raw_errors(self) -> pd.DataFrame:
         """
         Collect errors from the fitting process.

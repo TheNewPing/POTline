@@ -10,6 +10,7 @@ variable	zz equal 20*$z
 
 units		metal
 atom_style	atomic
+atom_modify   map yes
 
 lattice		bcc 2.830
 region		box block 0 ${xx} 0 ${yy} 0 ${zz}

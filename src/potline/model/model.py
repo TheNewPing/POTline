@@ -97,6 +97,10 @@ class PotModel(ABC):
     def get_lammps_params(self) -> str:
         pass
 
+    @abstractmethod
+    def get_name(self) -> SupportedModel:
+        pass
+
     def get_out_path(self) -> Path:
         """
         Get the output path of the model.

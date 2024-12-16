@@ -30,5 +30,5 @@ def run_benchmark(model: PotModel, config: BenchConfig,
         config.max_steps, inf_bench_dir]]
 
     dispatcher: Dispatcher = dispatcher_factory.create_dispatcher(
-        [' '.join(command)],inf_bench_dir, n_cpu=config.n_cpu)
+        [' '.join(command)],inf_bench_dir, model=model.get_name().value, n_cpu=config.n_cpu)
     dispatcher.dispatch()

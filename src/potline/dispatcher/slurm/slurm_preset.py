@@ -23,6 +23,7 @@ class CommandsName(Enum):
     CONDA_GRACE = 'conda_grace.sh'
     MOD_MPI = 'module_mpi.sh'
     MOD_SIM = 'module_prop_sim.sh'
+    MOD_MKL = 'module_mkl.sh'
 
 def make_base_options(job: JobType, model: SupportedModel, out_path: Path,
                       time: str, mem: str, ntasks: int, cpus_per_task: int) -> dict:
@@ -118,10 +119,30 @@ def get_slurm_commands(cluster: str, # noqa: C901
     """
     if cluster == SlurmCluster.SNELLIUS.value:
         if job_type == JobType.INF.value:
-            return [f'source {_template_path / cluster / CommandsName.MOD_MPI.value}']
+            if model is None:
+                raise ValueError("Model must be provided for inference jobs.")
+            if model == SupportedModel.PACE.value:
+                return [f'source {_template_path / cluster / CommandsName.MOD_MPI.value}']
+            elif model == SupportedModel.MACE.value:
+                return [f'source {_template_path / cluster / CommandsName.MOD_MPI.value}',
+                        f'source {_template_path / cluster / CommandsName.MOD_MKL.value}']
+            elif model == SupportedModel.GRACE.value:
+                return [f'source {_template_path / cluster / CommandsName.MOD_MPI.value}']
+            raise NotImplementedError(f"Model {model} not implemented.")
         elif job_type == JobType.SIM.value:
-            return [f'source {_template_path / cluster / CommandsName.MOD_MPI.value}',
-                    f'source {_template_path / cluster / CommandsName.MOD_SIM.value}']
+            if model is None:
+                raise ValueError("Model must be provided for simulation jobs.")
+            if model == SupportedModel.PACE.value:
+                return [f'source {_template_path / cluster / CommandsName.MOD_MPI.value}',
+                        f'source {_template_path / cluster / CommandsName.MOD_SIM.value}']
+            elif model == SupportedModel.MACE.value:
+                return [f'source {_template_path / cluster / CommandsName.MOD_MPI.value}',
+                        f'source {_template_path / cluster / CommandsName.MOD_MKL.value}',
+                        f'source {_template_path / cluster / CommandsName.MOD_SIM.value}']
+            elif model == SupportedModel.GRACE.value:
+                return [f'source {_template_path / cluster / CommandsName.MOD_MPI.value}',
+                        f'source {_template_path / cluster / CommandsName.MOD_SIM.value}']
+            raise NotImplementedError(f"Model {model} not implemented.")
         elif job_type == JobType.FIT.value:
             if model is None:
                 raise ValueError("Model must be provided for fitting jobs.")

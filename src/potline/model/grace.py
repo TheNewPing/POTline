@@ -94,6 +94,9 @@ class PotGRACE(PotModel):
         """
         return ''
 
+    def get_name(self) -> SupportedModel:
+        return SupportedModel.GRACE
+
     def switch_out_path(self, out_path: Path):
         """
         Switch the output path of the model.

@@ -84,12 +84,10 @@ class PotMACE(PotModel):
             Path: The path to the potential.
         """
         potential_values: dict = {
-            'pstyle': 'mace',
+            'pstyle': 'mace no_domain_decomposition',
             'yace_path': str(self._yace_path),
         }
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)
-        with self._lmp_pot_path.open('a', encoding='utf-8') as file:
-            file.write("\natom_modify map yes\nnewton on\n")
         return self._lmp_pot_path
 
     def set_config_maxiter(self, maxiter: int):
@@ -108,7 +106,10 @@ class PotMACE(PotModel):
         """
         Get the LAMMPS parameters.
         """
-        return '-k on g 1 -sf kk'
+        return '-k on g 1 -sf kk -pk kokkos newton on neigh half'
+
+    def get_name(self) -> SupportedModel:
+        return SupportedModel.MACE
 
     def switch_out_path(self, out_path: Path):
         """
