@@ -175,6 +175,7 @@ quick_config/*
 hyper_search/*
 test/*
 test_refactor/*
+full_test/*
 REF_DATA/*
 plots/*
 potential/*

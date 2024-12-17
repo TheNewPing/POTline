@@ -2,13 +2,13 @@
     general: {
         lammps_bin_path: "/home/erodaro/lammps_pace/lammps/build/lmp",
         model_name: pacemaker
-        best_n_models: 5
+        best_n_models: 20
         hpc: true
         cluster: 'snellius'
-        sweep_path: "/home/erodaro/POTline/test_refactor/pace"
+        sweep_path: "/home/erodaro/POTline/full_test/pace"
     }
     deep_training: {
-        max_epochs: 20,
+        max_epochs: 200,
     }
     inference: {
         prerun_steps: 100,
@@ -21,9 +21,9 @@
         email: "e.rodaro@rug.nl"
     }
     hyper_search: {
-        max_iter: 3,
+        max_iter: 10,
         n_initial_points: 5
-        n_points: 10
+        n_points: 20
         strategy: "cl_min"
         energy_weight: 0.3
         optimizer_params: {
@@ -33,7 +33,7 @@
                 "purpose": "Potential fit"
                 },
             "data": {
-                "filename": "/home/erodaro/POTline/src/data/Ogata_DB.pckl.gzip",
+                "filename": "/home/erodaro/POTline/src/data/ogata-extended/ogata_extended_corrected.pckl.gzip",
                 "test_size": 0.10
             },
             "potential": {
@@ -80,7 +80,7 @@
                     "w_orth": "skopt.space.Real(0,1e-7)"
                 },
                 "optimizer": "BFGS",
-                "maxiter": 20,
+                "maxiter": 100,
                 "repulsion": "skopt.space.Categorical(categories=['auto', 'none'])",
                 "trainable_parameters": "ALL",
                 min_relative_train_loss_per_iter: 5e-5

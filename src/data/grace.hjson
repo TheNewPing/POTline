@@ -2,13 +2,13 @@
     general: {
         lammps_bin_path: "/home/erodaro/lammps_grace/lammps/build/lmp",
         model_name: grace
-        best_n_models: 5
+        best_n_models: 20
         hpc: true
         cluster: 'snellius'
-        sweep_path: "/home/erodaro/POTline/test_refactor/grace"
+        sweep_path: "/home/erodaro/POTline/full_test/grace"
     }
     deep_training: {
-        max_epochs: 1,
+        max_epochs: 200,
     }
     inference: {
         prerun_steps: 100,
@@ -21,26 +21,28 @@
         email: "e.rodaro@rug.nl"
     }
     hyper_search: {
-        max_iter: 1,
+        max_iter: 10,
         n_initial_points: 5
-        n_points: 10
+        n_points: 20
         strategy: "cl_min"
         energy_weight: 0.3
         optimizer_params: {
-            "cutoff": 6.0,
+            "cutoff": 6.0
             "seed": 42
             "metadata": {
                 "purpose": "Potential fit"
                 },
             "data": {
-                "filename": "/home/erodaro/POTline/src/data/Ogata_DB.pckl.gzip",
+                "filename": "/home/erodaro/POTline/src/data/ogata-extended/ogata_extended_corrected.pckl.gzip",
                 "test_size": 0.10
             },
             "potential": {
                 "elements": ["Fe"],
                 preset: GRACE_1LAYER
                 kwargs: {lmax: 4, n_rad_max: 32, max_order: 4, n_mlp_dens: 12}
-                scale: True
+                shift: "skopt.space.Categorical(categories=['True', 'False'])"
+                scale: "skopt.space.Categorical(categories=['True', 'False'])"
+                float_dtype: "skopt.space.Categorical(categories=['float64', 'float32'])"
             },
             "fit": {
                 loss: {
@@ -54,24 +56,25 @@
                         type: huber
                         delta: 0.01 
                     },
+                    l2_reg: "skopt.space.Real(0,1e-7)"
                 }
-                maxiter: 1 # Number of epochs / iterations
+                maxiter: 100 # Number of epochs / iterations
 
                 optimizer: Adam
                 opt_params: {
-                            learning_rate: 0.01,
+                            learning_rate: "skopt.space.Real(1e-4,1e-1)",
                             amsgrad: True,
                             use_ema: True,
-                            ema_momentum: 0.99,
-                            weight_decay: null,
+                            ema_momentum: "skopt.space.Real(0,1)",
+                            weight_decay: "skopt.space.Real(0,1e-8)",
                             clipvalue: 1.0,
                         }
 
                 # for learning-rate reduction
                 learning_rate_reduction: {
-                    patience: 5,
-                    factor: 0.98,
-                    min: 5.0e-4,
+                    patience: "skopt.space.Integer(5,50)",
+                    factor: "skopt.space.Real(0.1,0.99)",
+                    min: "skopt.space.Real(5e-5,5e-3)",
                     stop_at_min: True,
                     resume_lr: True,
                     }
@@ -87,15 +90,16 @@
                 jit_compile: True
                 #  eval_init_stats: True # to evaluate initial metrics
 
-                train_max_n_buckets: 10 # max number of buckets (group of batches of same shape) in train set
-                test_max_n_buckets: 5 # same for test
+                train_max_n_buckets: "skopt.space.Integer(1,50)" # max number of buckets (group of batches of same shape) in train set
+                test_max_n_buckets: "skopt.space.Integer(1,50)" # same for test
 
-                checkpoint_freq: 2 # frequency for **REGULAR** checkpoints.
+                checkpoint_freq: 10 # frequency for **REGULAR** checkpoints.
                 # save_all_regular_checkpoints: True # to store ALL regular checkpoints
                 progressbar: False 
                 # show batch-evaluation progress bar
-                train_shuffle: True 
+                train_shuffle: "skopt.space.Categorical(categories=['True', 'False'])"
                 # shuffle train batches on every epoch
+                normalize_weights: "skopt.space.Categorical(categories=['True', 'False'])"
             },
         }
     }

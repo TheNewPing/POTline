@@ -39,6 +39,7 @@ def make_base_options(job: JobType, model: SupportedModel, out_path: Path,
         'nodes': 1,
         'ntasks': ntasks,
         'cpus_per_task': cpus_per_task,
+        'requeue': True,
     }
 
 def make_gpu_options(job: JobType, model: SupportedModel, out_path: Path,
