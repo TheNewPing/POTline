@@ -5,7 +5,7 @@ CLI script for dispatching PotLine.
 from argparse import Namespace, ArgumentParser
 from pathlib import Path
 
-from potline.dispatcher import DispatcherFactory, JobType
+from potline.dispatcher import DispatcherManager, JobType
 from potline.config_reader import ConfigReader
 
 def parse_args() -> Namespace:
@@ -36,6 +36,6 @@ if __name__ == '__main__':
     commands = [f'cd {config.sweep_path.resolve()}',
                 f'python {main_path} {cmd_args}',]
 
-    dispatcher = DispatcherFactory(JobType.MAIN.value, config.cluster).create_dispatcher(
+    dispatcher = DispatcherManager(JobType.MAIN.value, config.cluster).create_dispatcher(
         commands, config.sweep_path, config.model_name)
     dispatcher.dispatch()

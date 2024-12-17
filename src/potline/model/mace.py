@@ -13,7 +13,7 @@ import yaml
 from mace.cli.create_lammps_model import main as create_lammps_model
 
 from .model import PotModel, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses
-from ..dispatcher import DispatcherFactory, SupportedModel
+from ..dispatcher import DispatcherManager, SupportedModel
 from ..utils import gen_from_template
 
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
@@ -22,8 +22,8 @@ class PotMACE(PotModel):
     """
     MACE implementation.
     """
-    def dispatch_fit(self,
-                     dispatcher_factory: DispatcherFactory,
+    def get_fit_cmd(self,
+                     dispatcher_factory: DispatcherManager,
                      deep: bool = False,):
         commands: list[str] = [
             f'cd {self._out_path}',

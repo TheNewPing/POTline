@@ -10,7 +10,7 @@ from .properties_simulator import run_properties_simulation
 from .config_reader import ConfigReader
 from .deep_trainer import DeepTrainer, DEEP_TRAIN_DIR_NAME
 from .model import PotModel
-from .dispatcher import DispatcherFactory, JobType
+from .dispatcher import DispatcherManager, JobType
 from .loss_logger import ModelTracker
 
 FINAL_REPORT_NAME: str = 'parameters.csv'
@@ -59,7 +59,7 @@ class PotLine():
         """
         if self.with_hyper_search:
             return PotOptimizer(self.config_reader.get_optimizer_config(),
-                                DispatcherFactory(JobType.FIT.value, self.config.cluster)
+                                DispatcherManager(JobType.FIT.value, self.config.cluster)
                                 ).run()
 
         models: list[ModelTracker] = []
@@ -84,7 +84,7 @@ class PotLine():
             deep_models: list[ModelTracker] = []
             for model in model_list:
                 deep_trainer = DeepTrainer(self.config_reader.get_deep_train_config(), model,
-                                           DispatcherFactory(JobType.DEEP.value, self.config.cluster))
+                                           DispatcherManager(JobType.DEEP.value, self.config.cluster))
                 deep_trainer.run()
                 deep_trainers.append(deep_trainer)
             for trainer in deep_trainers:
@@ -105,14 +105,14 @@ class PotLine():
         if self.with_inference:
             for model in models:
                 run_benchmark(model, self.config_reader.get_bench_config(),
-                              DispatcherFactory(JobType.INF.value, self.config.cluster))
+                              DispatcherManager(JobType.INF.value, self.config.cluster))
 
     def properties_simulation(self, models: list[PotModel]):
         if self.with_data_analysis:
             for model in models:
                 run_properties_simulation(model,
                                           self.config_reader.get_prop_config(),
-                                          DispatcherFactory(JobType.SIM.value, self.config.cluster))
+                                          DispatcherManager(JobType.SIM.value, self.config.cluster))
 
     def get_model_out_paths(self) -> list[Path]:
         """

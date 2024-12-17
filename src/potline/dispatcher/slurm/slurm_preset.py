@@ -6,11 +6,22 @@ from pathlib import Path
 from enum import Enum
 
 from ..dispatcher import SlurmCluster, JobType, SupportedModel
+from ...hyper_searcher import OPTIM_DIR_NAME
+from ...deep_trainer import DEEP_TRAIN_DIR_NAME
+from ...inference_bencher import INFERENCE_BENCH_DIR_NAME
+from ...properties_simulator import PROPERTIES_BENCH_DIR_NAME
 
 _file_path: Path = Path(__file__).parent.resolve()
 _template_path: Path = _file_path / 'template'
 
 _faulty_nodes = 'gcn25,gcn56'
+
+_job_dirs = {
+    JobType.FIT: OPTIM_DIR_NAME,
+    JobType.INF: INFERENCE_BENCH_DIR_NAME,
+    JobType.DEEP: DEEP_TRAIN_DIR_NAME,
+    JobType.SIM: PROPERTIES_BENCH_DIR_NAME,
+}
 
 class CommandsName(Enum):
     """
@@ -42,23 +53,29 @@ def make_base_options(job: JobType, model: SupportedModel, out_path: Path,
         'requeue': True,
     }
 
-def make_gpu_options(job: JobType, model: SupportedModel, out_path: Path,
+def make_gpu_array_options(job: JobType, model: SupportedModel, out_path: Path,
                     time: str, mem: str, ntasks: int, cpus_per_task: int, gpus: int,
-                    partition: str) -> dict:
+                    partition: str, array_ids: list[int]) -> dict:
     """
     Make the GPU options for the job.
     """
+    out_job_path: str = f"{str(out_path)}/%a/{_job_dirs[job]}"
     return {
         **make_base_options(job, model, out_path, time, mem, ntasks, cpus_per_task),
+        'chdir': out_job_path,
+        'output': f"{out_job_path}/{job.value}_%A_%a.out",
+        'error': f"{out_job_path}/{job.value}_%A_%a.err",
         'gpus': gpus,
         'partition': partition,
         'exclude':_faulty_nodes,
+        'array': array_ids,
     }
 
 def get_slurm_options(cluster: str, job_type: str, out_path: Path, # noqa: C901
                       model: str | None = None,
                       n_cpu: int | None = None,
-                      email: str | None = None) -> dict:
+                      email: str | None = None,
+                      array_ids: list[int] | None = None) -> dict:
     """
     Get the SLURM options for the job.
     """
@@ -66,12 +83,14 @@ def get_slurm_options(cluster: str, job_type: str, out_path: Path, # noqa: C901
         if job_type == JobType.INF.value:
             if not n_cpu:
                 raise ValueError("n_cpu must be provided for inference jobs.")
-            return make_gpu_options(JobType.INF, model, out_path, "3:00:00", "50G", 1, n_cpu, 1, "gpu_a100")
+            return make_gpu_array_options(
+                JobType.INF, model, out_path, "3:00:00", "50G", 1, n_cpu, 1, "gpu_a100", array_ids)
         elif job_type == JobType.SIM.value:
             if not email:
                 raise ValueError("Email must be provided for simulation jobs.")
             return {
-                **make_gpu_options(JobType.SIM, model, out_path, "3:00:00", "50G", 1, n_cpu, 1, "gpu_a100"),
+                **make_gpu_array_options(
+                    JobType.SIM, model, out_path, "3:00:00", "50G", 1, n_cpu, 1, "gpu_a100", array_ids),
                 'mail_type': 'ALL',
                 'mail_user': email,
             }
@@ -79,24 +98,27 @@ def get_slurm_options(cluster: str, job_type: str, out_path: Path, # noqa: C901
             if model is None:
                 raise ValueError("Model must be provided for fitting jobs.")
             if model == SupportedModel.PACE.value:
-                return make_gpu_options(JobType.FIT, model, out_path, "12:00:00", "50G", 1, 16, 1, "gpu_a100")
+                return make_gpu_array_options(
+                    JobType.FIT, model, out_path, "12:00:00", "50G", 1, 16, 1, "gpu_a100", array_ids)
             elif model == SupportedModel.MACE.value:
-                return make_gpu_options(JobType.FIT, model, out_path, "12:00:00", "50G", 1, 16, 1, "gpu_a100")
+                return make_gpu_array_options(
+                    JobType.FIT, model, out_path, "12:00:00", "50G", 1, 16, 1, "gpu_a100", array_ids)
             elif model == SupportedModel.GRACE.value:
-                return make_gpu_options(JobType.FIT, model, out_path, "12:00:00", "50G", 1, 16, 1, "gpu_a100")
+                return make_gpu_array_options(
+                    JobType.FIT, model, out_path, "12:00:00", "50G", 1, 16, 1, "gpu_a100", array_ids)
             raise NotImplementedError(f"Model {model} not implemented.")
         elif job_type == JobType.DEEP.value:
             if model is None:
                 raise ValueError("Model must be provided for fitting jobs.")
             if model == SupportedModel.PACE.value:
-                return make_gpu_options(
-                    JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100")
+                return make_gpu_array_options(
+                    JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100", array_ids)
             elif model == SupportedModel.MACE.value:
-                return make_gpu_options(
-                    JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100")
+                return make_gpu_array_options(
+                    JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100", array_ids)
             elif model == SupportedModel.GRACE.value:
-                return make_gpu_options(
-                    JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100")
+                return make_gpu_array_options(
+                    JobType.DEEP, model, out_path, "36:00:00", "50G", 1, 16, 1, "gpu_a100", array_ids)
             raise NotImplementedError(f"Model {model} not implemented.")
         elif job_type == JobType.MAIN.value:
             if model is None:

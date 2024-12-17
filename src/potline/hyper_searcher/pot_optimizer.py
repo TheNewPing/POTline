@@ -12,9 +12,9 @@ from skopt import Optimizer # type: ignore
 import xpot.loaders as load # type: ignore
 
 from ..config_reader import HyperConfig
-from ..model import PotModel, create_model, CONFIG_NAME
+from ..model import create_model, CONFIG_NAME
 from ..loss_logger import LossLogger, ModelTracker
-from ..dispatcher import DispatcherFactory
+from ..dispatcher import DispatcherManager
 
 OPTIM_DIR_NAME: str = "hyper_search"
 
@@ -24,22 +24,21 @@ class PotOptimizer():
 
     Args:
         - config: configuration data.
-        - dispatcher_factory: factory for dispatching training
+        - dispatcher_manager: manager for dispatching training
     """
     def __init__(
         self,
         config: HyperConfig,
-        dispatcher_factory: DispatcherFactory,
+        dispatcher_manager: DispatcherManager,
     ):
         self._config = config
-        self._dispatcher_factory = dispatcher_factory
+        self._dispatcher_manager = dispatcher_manager
         self._iteration = 0
         self._subiter = 0
         self._iter_path = self._config.sweep_path / str(self._iteration) / str(self._subiter) / OPTIM_DIR_NAME
         self._fitted_models: list[ModelTracker] = []
 
-        self._defaults = PotModel.get_defaults(self._config.model_name)
-        self._mlp_total = load.merge_hypers(self._defaults, self._config.optimizer_params)
+        self._mlp_total = load.merge_hypers({}, self._config.optimizer_params)
         load.validate_hypers(self._mlp_total, self._config.optimizer_params)
         self._optimizable_params = load.get_optimisable_params(self._mlp_total)
         self._optimizer: Optimizer = Optimizer(
@@ -78,10 +77,14 @@ class PotOptimizer():
                 self._iteration, self._subiter, next_params))
 
         # Start the fitting process
-        for fit_tr in fit_trackers:
-            fit_tr.model.dispatch_fit(self._dispatcher_factory)
+        fit_cmd: str = fit_trackers[0].model.get_fit_cmd(deep=False)
+        self._dispatcher_manager.set_job([fit_cmd],
+                                               self._config.sweep_path,
+                                               list(range(1,self._subiter+1)))
+        self._dispatcher_manager.dispatch_job()
 
         # Collect the loss values
+        self._dispatcher_manager.wait_job()
         for fit_tr in fit_trackers:
             fit_tr.valid_losses = fit_tr.model.collect_loss()
             self._loss_logger.write_error_file(fit_tr)

@@ -14,7 +14,7 @@ import pandas as pd
 from xpot import maths
 
 from .model import PotModel, RawLosses, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses
-from ..dispatcher import DispatcherFactory, SupportedModel
+from ..dispatcher import DispatcherManager, SupportedModel
 from ..utils import gen_from_template
 
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
@@ -23,8 +23,8 @@ class PotPACE(PotModel):
     """
     PACE implementation.
     """
-    def dispatch_fit(self,
-                     dispatcher_factory: DispatcherFactory,
+    def get_fit_cmd(self,
+                     dispatcher_factory: DispatcherManager,
                      deep: bool = False):
         commands: list[str] = [
             f'cd {self._out_path}',

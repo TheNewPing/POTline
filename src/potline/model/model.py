@@ -5,25 +5,16 @@ Base class for MLPs in XPOT using HPC.
 from __future__ import annotations
 
 import shutil
-import json
 from pathlib import Path
 from abc import ABC, abstractmethod
 
 import yaml
-
-from ..dispatcher import Dispatcher, SupportedModel, DispatcherFactory
 
 YACE_NAME: str = 'model.yace'
 POTENTIAL_NAME: str = 'potential.in'
 CONFIG_NAME: str = "optimized_params.yaml"
 POTENTIAL_TEMPLATE_PATH: Path = Path(__file__).parent / 'template' / POTENTIAL_NAME
 
-# TODO: move to model implementation
-_MODEL_DEFAULTS = {
-    SupportedModel.PACE: Path(__file__).parent / "defaults" / "ace_defaults.json",
-    SupportedModel.MACE: Path(__file__).parent / "defaults" / "mace_defaults.json",
-    SupportedModel.GRACE: Path(__file__).parent / "defaults" / "grace_defaults.json",
-}
 
 class Losses():
     """
@@ -64,19 +55,16 @@ class PotModel(ABC):
                  out_path: Path):
         self._config_filepath: Path = config_filepath
         self._out_path: Path = out_path
-        self._dispatcher: Dispatcher | None = None
         self._yace_path: Path = self._out_path.parent / YACE_NAME
         self._lmp_pot_path: Path = self._out_path.parent / POTENTIAL_NAME
 
+    @staticmethod
     @abstractmethod
-    def dispatch_fit(self,
-                     dispatcher_factory: DispatcherFactory,
-                     deep: bool = False,):
+    def get_fit_cmd(deep: bool = False,) -> str:
         """
         Dispatch the fitting process.
 
         Args:
-            - dispatcher_factory: factory for dispatching the fitting process.
             - deep: flag for deep training.
         """
 
@@ -126,15 +114,6 @@ class PotModel(ABC):
             str: the model specific LAMMPS parameters.
         """
 
-    @abstractmethod
-    def get_name(self) -> SupportedModel:
-        """
-        Get the name of the model.
-
-        Returns:
-            SupportedModel: the name of the model.
-        """
-
     def get_out_path(self) -> Path:
         """
         Get the output path of the model.
@@ -164,24 +143,6 @@ class PotModel(ABC):
         """
         with self._config_filepath.open('r', encoding='utf-8') as file:
             return yaml.safe_load(file)
-
-    @staticmethod
-    def get_defaults(model_name: str) -> dict:
-        """
-        Get the default parameters of the model class.
-
-        Args:
-            - model_name: name of the model
-
-        Returns:
-            dict: the default parameters of the model.
-        """
-        for model in SupportedModel:
-            if model.value == model_name:
-                with _MODEL_DEFAULTS[model].open('r', encoding='utf-8') as file:
-                    return json.load(file)
-
-        raise ValueError(f"Model {model_name} not supported.")
 
     @staticmethod
     @abstractmethod

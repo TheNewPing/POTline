@@ -10,7 +10,7 @@ import shutil
 import yaml
 
 from .model import PotModel, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses
-from ..dispatcher import DispatcherFactory, SupportedModel
+from ..dispatcher import DispatcherManager, SupportedModel
 from ..utils import gen_from_template
 
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
@@ -27,8 +27,8 @@ class PotGRACE(PotModel):
             self._seed_path: Path = out_path / 'seed' / f'{self._seed_number}'
         self._yace_path = self._seed_path / 'final_model'
 
-    def dispatch_fit(self,
-                     dispatcher_factory: DispatcherFactory,
+    def get_fit_cmd(self,
+                     dispatcher_factory: DispatcherManager,
                      deep: bool = False):
         commands: list[str] = [
             f'cd {self._out_path}',
