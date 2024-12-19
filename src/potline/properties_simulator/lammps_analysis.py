@@ -38,8 +38,7 @@ class PropertiesSimulator():
             [str(cmd) for cmd in [
                 'srun', SUBMIT_SCRIPT_NAME,
                 f'"{config.lammps_bin_path} {self._lammps_params}"',
-                config.lammps_inps_path, config.pps_python_path, config.ref_data_path,
-                config.email, _N_CPU]])
+                config.lammps_inps_path, config.pps_python_path, config.ref_data_path, _N_CPU]])
 
         for i, tracker in enumerate(self._tracker_list):
             iter_path = self._out_path / str(i)

@@ -36,6 +36,7 @@ class PotOptimizer():
         self._iteration = 0
         self._subiter = 0
         self._out_path = self._config.sweep_path / OPTIM_DIR_NAME
+        self._out_path.mkdir(parents=True, exist_ok=True)
         self._iter_path = self._out_path / str(self._iteration) / str(self._subiter)
         self._fitted_models: list[ModelTracker] = []
 

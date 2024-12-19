@@ -26,8 +26,7 @@ LMMP=$1
 lmp_inps=$2
 pps_python=$3
 ref_data_path=$4
-eaddress=$5
-n_cpu=$6
+n_cpu=$5
 
 # clear caches
 rm dump*
@@ -134,9 +133,9 @@ rm *.mod
 
 # Send email of the plots as the attached file.
 # Mail the results ---------------------------------------------------
-if [ "$hpc" = "True" ]; then
-    mail -s "Basic Properties of iron predicted by IAP" -a ./data/results.txt -a ./plots/eos_bp.png -a ./plots/sfe.png "${eaddress}" <<EOF
-Please check the performance of interatomic potential: ${potential_name}
-EOF
-    echo "Mail the results successful!"
-fi
+# if [ "$hpc" = "True" ]; then
+#     mail -s "Basic Properties of iron predicted by IAP" -a ./data/results.txt -a ./plots/eos_bp.png -a ./plots/sfe.png "${eaddress}" <<EOF
+# Please check the performance of interatomic potential: ${potential_name}
+# EOF
+#     echo "Mail the results successful!"
+# fi

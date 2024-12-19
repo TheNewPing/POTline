@@ -72,6 +72,7 @@ def make_array_options(job: str, model: str, out_path: Path,
     out_job_path: str = f"{str(out_path)}/%a"
     return {
         **make_base_options(job, model, out_path, slurm_opts, dependency),
+        'chdir': out_job_path,
         'output': f"{out_job_path}/{job}_%A_%a.out",
         'error': f"{out_job_path}/{job}_%A_%a.err",
         'array': array_ids,

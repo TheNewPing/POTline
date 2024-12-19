@@ -49,7 +49,8 @@ class DispatcherManager():
         options = get_slurm_options(
             self._cluster, self._job_type, out_path, self._model,
             slurm_dict, array_ids, dependency)
-        source_cmds = [f'source {cmd}' for cmd in job_config.modules]
+        source_cmds = [f'source {cmd}' for cmd in job_config.modules] + \
+            ['export SQUEUE_FORMAT=""%.18A", "%.9P", "%.8j", "%.8u", "%.2t", "%.10M", "%.6D", "%R""']
         py_cmds = [f'python {cmd}' for cmd in job_config.py_scripts] if \
             self._job_type == JobType.WATCH.value else []
         tot_cmds = source_cmds + py_cmds + commands
@@ -69,4 +70,7 @@ class DispatcherManager():
         """
         if self._dispatcher is None:
             raise ValueError("No job has been set yet.")
+        import os
+        print(os.getenv("SQUEUE_FORMAT", "nope"))
+
         self._dispatcher.wait()
