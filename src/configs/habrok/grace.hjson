@@ -22,8 +22,8 @@
             cpus_per_task: 1
             mem: "50G"
             time: "36:00:00"
-            partition: "gpu_a100"
-            gpus: 1
+            partition: "gpu"
+            gpus_per_node:"a100:1"
         }
         modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_grace.sh"]
         py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
@@ -36,8 +36,8 @@
             cpus_per_task: 1
             mem: "50G"
             time: "3:00:00"
-            partition: "gpu_a100"
-            gpus: 1
+            partition: "gpu"
+            gpus_per_node:"a100:1"
         }
         modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_grace.sh",
             "/home4/p319875/repos/POTline/src/configs/habrok/modules/module_mpi.sh"]
@@ -52,8 +52,8 @@
             cpus_per_task: 1
             mem: "50G"
             time: "3:00:00"
-            partition: "gpu_a100"
-            gpus: 1
+            partition: "gpu"
+            gpus_per_node:"a100:1"
             'mail_type': 'ALL',
             'mail_user': "e.rodaro@rug.nl",
         }
@@ -73,8 +73,8 @@
             cpus_per_task: 1
             mem: "50G"
             time: "12:00:00"
-            partition: "gpu_a100"
-            gpus: 1
+            partition: "gpu"
+            gpus_per_node:"a100:1"
         }
         modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_grace.sh"]
         py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
@@ -85,7 +85,7 @@
                 "purpose": "Potential fit"
                 },
             "data": {
-                "filename": "/home4/p319875/repos/POTline/src/data/ogata-extended/ogata_extended_corrected.pckl.gzip",
+                "filename": "/home4/p319875/repos/POTline/src/data/ogata_extended_corrected.pckl.gzip",
                 "test_size": 0.10
             },
             "potential": {

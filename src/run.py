@@ -36,6 +36,6 @@ if __name__ == '__main__':
     commands = [f'cd {config.sweep_path.resolve()}',
                 f'python {main_path} {cmd_args}',]
 
-    dispatcher = DispatcherManager(JobType.MAIN.value, config.cluster).create_dispatcher(
-        commands, config.sweep_path, config.model_name)
-    dispatcher.dispatch()
+    disp_manager = DispatcherManager(JobType.MAIN.value, config.model_name, config.cluster)
+    disp_manager.set_job(commands, config.sweep_path, config.job_config)
+    disp_manager.dispatch_job()
