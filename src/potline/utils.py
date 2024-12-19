@@ -5,9 +5,9 @@ CLI utilities for PotLine.
 from pathlib import Path
 from argparse import Namespace, ArgumentParser
 
-from ..loss_logger import ModelTracker
-from ..hyper_searcher import OPTIM_DIR_NAME
-from ..deep_trainer import DEEP_TRAIN_DIR_NAME
+from potline.loss_logger import ModelTracker
+from potline.hyper_searcher import OPTIM_DIR_NAME
+from potline.deep_trainer import DEEP_TRAIN_DIR_NAME
 
 def parse_config() -> Namespace:
     """

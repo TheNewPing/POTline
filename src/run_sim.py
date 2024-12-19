@@ -5,10 +5,10 @@ CLI entry point for running properties simulations.
 from argparse import Namespace
 from pathlib import Path
 
-from .utils import parse_config, get_model_trackers, filter_best_loss
-from ..properties_simulator import PropertiesSimulator
-from ..config_reader import ConfigReader
-from ..dispatcher import DispatcherManager, JobType
+from potline.utils import parse_config, get_model_trackers, filter_best_loss
+from potline.properties_simulator import PropertiesSimulator
+from potline.config_reader import ConfigReader
+from potline.dispatcher import DispatcherManager, JobType
 
 if __name__ == '__main__':
     args: Namespace = parse_config()

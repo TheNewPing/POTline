@@ -108,14 +108,12 @@ class PropConfig():
                  lammps_inps_path: Path,
                  pps_python_path: Path,
                  ref_data_path: Path,
-                 email: str,
                  sweep_path: Path,
                  job_config: JobConfig):
         self.lammps_bin_path: Path = lammps_bin_path
         self.lammps_inps_path: Path = lammps_inps_path
         self.pps_python_path: Path = pps_python_path
         self.ref_data_path: Path = ref_data_path
-        self.email = email
         self.sweep_path: Path = sweep_path
         self.job_config: JobConfig = job_config
 
@@ -259,7 +257,6 @@ class ConfigReader():
             Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.LAMMPS_INPS.value])),
             Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.PPS_PYTHON.value])),
             Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.REF_DATA.value])),
-            str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.EMAIL.value]),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
             self.get_slurm_config(MainSectionKW.PROP_SIM.value)
         )

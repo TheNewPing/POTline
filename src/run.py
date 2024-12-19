@@ -5,8 +5,8 @@ CLI script for dispatching PotLine.
 from argparse import Namespace, ArgumentParser
 from pathlib import Path
 
-from .dispatcher import DispatcherManager, JobType
-from .config_reader import ConfigReader
+from potline.dispatcher import DispatcherManager, JobType
+from potline.config_reader import ConfigReader
 
 def parse_args() -> Namespace:
     """
@@ -24,7 +24,7 @@ def parse_args() -> Namespace:
 if __name__ == '__main__':
     args: Namespace = parse_args()
     config_path: Path = Path(args.config).resolve()
-    cli_path: Path = Path('src/potline/cli/').resolve()
+    cli_path: Path = Path('src/').resolve()
     gen_config = ConfigReader(config_path).get_general_config()
 
     hyp_id: int | None = None
@@ -42,7 +42,7 @@ if __name__ == '__main__':
         deep_manager = DispatcherManager(JobType.WATCH.value, gen_config.model_name, gen_config.cluster)
         deep_manager.set_job([deep_cmd], deep_config.sweep_path, deep_config.job_config,
                             dependency=hyp_id)
-        deep_manager.dispatch_job()
+        deep_id = deep_manager.dispatch_job()
 
     conv_id: int | None = None
     if args.noconversion:
@@ -50,7 +50,7 @@ if __name__ == '__main__':
         conv_manager = DispatcherManager(JobType.WATCH.value, gen_config.model_name, gen_config.cluster)
         conv_manager.set_job([conv_cmd], gen_config.sweep_path, gen_config.job_config,
                             dependency=deep_id)
-        conv_manager.dispatch_job()
+        conv_id = conv_manager.dispatch_job()
 
     inf_id: int | None = None
     if args.noinference:
@@ -59,7 +59,7 @@ if __name__ == '__main__':
         inf_manager = DispatcherManager(JobType.WATCH.value, gen_config.model_name, gen_config.cluster)
         inf_manager.set_job([inf_cmd], inf_config.sweep_path, inf_config.job_config,
                             dependency=conv_id)
-        inf_manager.dispatch_job()
+        inf_id = inf_manager.dispatch_job()
 
     sim_id: int | None = None
     if args.noproperties:
@@ -68,4 +68,4 @@ if __name__ == '__main__':
         prop_manager = DispatcherManager(JobType.WATCH.value, gen_config.model_name, gen_config.cluster)
         prop_manager.set_job([prop_cmd], prop_config.sweep_path, prop_config.job_config,
                             dependency=conv_id)
-        prop_manager.dispatch_job()
+        sim_id = prop_manager.dispatch_job()

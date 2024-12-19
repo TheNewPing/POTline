@@ -49,7 +49,7 @@ def make_base_options(job: str, model: str, out_path: Path, slurm_opts: dict,
     Make the base options for the job.
     """
     options = {
-        'chdir': out_path,
+        'chdir': str(out_path),
         'job_name': f"{job}_{model}",
         'output': f"{str(out_path)}/{job}_%j.out",
         'error': f"{str(out_path)}/{job}_%j.err",
@@ -57,6 +57,10 @@ def make_base_options(job: str, model: str, out_path: Path, slurm_opts: dict,
     }
     if dependency is not None:
         options['dependency'] = f"afterok:{dependency}"
+
+    print("opt: ")
+    print(options)
+
     return options
 
 def make_array_options(job: str, model: str, out_path: Path,

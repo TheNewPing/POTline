@@ -4,7 +4,7 @@ dispatcher factory
 
 from pathlib import Path
 
-from .slurm_preset import get_slurm_options
+from .slurm_preset import get_slurm_options, JobType
 from .slurm_dispatcher import SlurmDispatcher
 from ..config_reader import JobConfig
 
@@ -43,11 +43,15 @@ class DispatcherManager():
         Returns:
             Dispatcher: the dispatcher to use.
         """
+        slurm_dict = job_config.slurm_watcher if self._job_type == JobType.WATCH.value \
+            else job_config.slurm_opts
+
         options = get_slurm_options(
             self._cluster, self._job_type, out_path, self._model,
-            job_config.slurm_opts, array_ids, dependency)
+            slurm_dict, array_ids, dependency)
         source_cmds = [f'source {cmd}' for cmd in job_config.modules]
-        py_cmds = [f'python {cmd}' for cmd in job_config.py_scripts]
+        py_cmds = [f'python {cmd}' for cmd in job_config.py_scripts] if \
+            self._job_type == JobType.WATCH.value else []
         tot_cmds = source_cmds + py_cmds + commands
         self._dispatcher = SlurmDispatcher(tot_cmds, options)
 

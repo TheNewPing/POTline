@@ -5,8 +5,8 @@ CLI entry point for running model conversion.
 from argparse import Namespace
 from pathlib import Path
 
-from .utils import parse_config, get_model_trackers, filter_best_loss
-from ..config_reader import ConfigReader
+from potline.utils import parse_config, get_model_trackers, filter_best_loss
+from potline.config_reader import ConfigReader
 
 if __name__ == '__main__':
     args: Namespace = parse_config()

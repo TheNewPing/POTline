@@ -5,10 +5,10 @@ CLI entry point for running hyperparameter search.
 from argparse import Namespace
 from pathlib import Path
 
-from .utils import parse_config
-from ..hyper_searcher import PotOptimizer
-from ..config_reader import ConfigReader
-from ..dispatcher import DispatcherManager, JobType
+from potline.utils import parse_config
+from potline.hyper_searcher import PotOptimizer
+from potline.config_reader import ConfigReader
+from potline.dispatcher import DispatcherManager, JobType
 
 if __name__ == '__main__':
     args: Namespace = parse_config()
