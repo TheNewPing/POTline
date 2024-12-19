@@ -28,7 +28,8 @@ class DispatcherManager():
 
     def set_job(self, commands: list[str], out_path: Path,
                 job_config: JobConfig,
-                array_ids: list[int] | None = None):
+                array_ids: list[int] | None = None,
+                dependency: int | None = None):
         """
         Create a dispatcher based on the options.
 
@@ -37,25 +38,31 @@ class DispatcherManager():
             - out_path: path to the output directory
             - job_config: job configuration
             - array_ids: array ids to run
+            - dependency: job dependency
 
         Returns:
             Dispatcher: the dispatcher to use.
         """
         options = get_slurm_options(
-            self._cluster, self._job_type, out_path, self._model, job_config.slurm_opts, array_ids)
+            self._cluster, self._job_type, out_path, self._model,
+            job_config.slurm_opts, array_ids, dependency)
         source_cmds = [f'source {cmd}' for cmd in job_config.modules]
         py_cmds = [f'python {cmd}' for cmd in job_config.py_scripts]
         tot_cmds = source_cmds + py_cmds + commands
         self._dispatcher = SlurmDispatcher(tot_cmds, options)
 
-    def dispatch_job(self):
+    def dispatch_job(self) -> int:
         """
         Dispatch the job.
         """
-        self._dispatcher.dispatch()
+        if self._dispatcher is None:
+            raise ValueError("No job has been set yet.")
+        return self._dispatcher.dispatch()
 
     def wait_job(self):
         """
         Wait for the job to finish.
         """
+        if self._dispatcher is None:
+            raise ValueError("No job has been set yet.")
         self._dispatcher.wait()

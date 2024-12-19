@@ -6,18 +6,22 @@
         hpc: true
         cluster: 'habrok'
         sweep_path: "/scratch/p319875/POTline/full_test/pace"
-        slurm_opts: {
+        slurm_watcher: {
             ntasks: 1
-            cpus_per_task: 4
-            mem: "20G"
+            cpus_per_task: 1
+            mem: "10G"
             time: "1:00:00"
         }
-        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_pace.sh"]
-        py_scripts: []
     }
     deep_training: {
         max_epochs: 1,
-        slurm: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
             ntasks: 1
             cpus_per_task: 1
             mem: "20G"
@@ -31,7 +35,13 @@
     inference: {
         prerun_steps: 100,
         max_steps: 1100,
-        slurm: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
             ntasks: 1
             cpus_per_task: 1
             mem: "20G"
@@ -47,7 +57,13 @@
         lammps_inps_path: "/home4/p319875/repos/POTline/src/potline/properties_simulator/pot_testing/lmps_inputs",
         pps_python_path: "/home4/p319875/repos/POTline/src/potline/properties_simulator/pot_testing/py_pps",
         ref_data_path: "/home4/p319875/repos/POTline/src/potline/properties_simulator/pot_testing/REF_DATA",
-        slurm: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
             ntasks: 1
             cpus_per_task: 1
             mem: "20G"
@@ -68,7 +84,15 @@
         n_points: 3
         strategy: "cl_min"
         energy_weight: 0.3
-        slurm: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "20G"
+            time: "1:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+        }
+        slurm_opts: {
             ntasks: 1
             cpus_per_task: 1
             mem: "20G"

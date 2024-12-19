@@ -13,9 +13,8 @@ import numpy as np
 import pandas as pd
 from xpot import maths # type: ignore
 
-from .model import PotModel, RawLosses, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses
+from .model import PotModel, RawLosses, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses, gen_from_template
 from ..dispatcher import SupportedModel
-from ..utils import gen_from_template
 
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
 

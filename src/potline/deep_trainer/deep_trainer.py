@@ -30,6 +30,7 @@ class DeepTrainer():
             iter_path.mkdir(exist_ok=True)
             tracker.model.switch_out_path(iter_path)
             tracker.model.set_config_maxiter(self._config.max_epochs)
+            tracker.save_info(iter_path)
 
         self._loss_logger = LossLogger(self._out_path)
 

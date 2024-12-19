@@ -21,7 +21,7 @@ class JobType(Enum):
     INF = 'inf'
     DEEP = 'deep'
     SIM = 'sim'
-    MAIN = 'main'
+    WATCH = 'watch'
 
 class SlurmCluster(Enum):
     """
@@ -43,26 +43,31 @@ class CommandsName(Enum):
     MOD_SIM = 'module_prop_sim.sh'
     MOD_MKL = 'module_mkl.sh'
 
-def make_base_options(job: str, model: str, out_path: Path, slurm_opts: dict) -> dict:
+def make_base_options(job: str, model: str, out_path: Path, slurm_opts: dict,
+                      dependency: int | None = None) -> dict:
     """
     Make the base options for the job.
     """
-    return {
+    options = {
         'chdir': out_path,
         'job_name': f"{job}_{model}",
         'output': f"{str(out_path)}/{job}_%j.out",
         'error': f"{str(out_path)}/{job}_%j.err",
         **slurm_opts,
     }
+    if dependency is not None:
+        options['dependency'] = f"afterok:{dependency}"
+    return options
 
 def make_array_options(job: str, model: str, out_path: Path,
-                           slurm_opts: dict, array_ids: list[int]) -> dict:
+                       slurm_opts: dict, array_ids: list[int],
+                       dependency: int | None = None) -> dict:
     """
     Make the array options for the job.
     """
     out_job_path: str = f"{str(out_path)}/%a"
     return {
-        **make_base_options(job, model, out_path, slurm_opts),
+        **make_base_options(job, model, out_path, slurm_opts, dependency),
         'output': f"{out_job_path}/{job}_%A_%a.out",
         'error': f"{out_job_path}/{job}_%A_%a.err",
         'array': array_ids,
@@ -70,7 +75,8 @@ def make_array_options(job: str, model: str, out_path: Path,
 
 def get_slurm_options(cluster: str, job_type: str, out_path: Path,
                       model: str, slurm_opts: dict,
-                      array_ids: list[int] | None = None) -> dict:
+                      array_ids: list[int] | None = None,
+                      dependency: int | None = None) -> dict:
     """
     Get the SLURM options for the job.
     """
@@ -81,9 +87,9 @@ def get_slurm_options(cluster: str, job_type: str, out_path: Path,
     if cluster not in SlurmCluster._value2member_map_: # pylint: disable=protected-access
         raise ValueError(f"Cluster {cluster} is not supported.")
 
-    if job_type == JobType.MAIN.value:
-        return make_base_options(job_type, model, out_path, slurm_opts)
+    if job_type == JobType.WATCH.value:
+        return make_base_options(job_type, model, out_path, slurm_opts, dependency)
 
     if not array_ids:
         raise ValueError("Array ids must be provided for array jobs.")
-    return make_array_options(job_type, model, out_path, slurm_opts, array_ids)
+    return make_array_options(job_type, model, out_path, slurm_opts, array_ids, dependency)

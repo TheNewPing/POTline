@@ -1,12 +1,11 @@
 """
 Configuration file reader for the optimization pipeline.
 """
+from typing import Any
 from pathlib import Path
 from enum import Enum
 
 import hjson # type: ignore
-
-from ..utils import patify
 
 class MainSectionKW(Enum):
     """
@@ -22,6 +21,7 @@ class SlurmJobKW(Enum):
     """
     Keywords for the slurm job configuration.
     """
+    SLURM_WATCHER = 'slurm_watcher'
     SLURM_OPTS = 'slurm_opts'
     MODULES = 'modules'
     PY_SCRIPTS = 'py_scripts'
@@ -74,12 +74,16 @@ class JobConfig():
     """
     Configuration class for the job configuration.
     """
-    def __init__(self, slurm_opts: dict,
+    def __init__(self, slurm_watcher: dict,
+                 slurm_opts: dict,
                  modules: list[str],
-                 py_scripts: list[str]):
+                 py_scripts: list[str],
+                 cluster: str):
+        self.slurm_watcher: dict = slurm_watcher
         self.slurm_opts: dict = slurm_opts
         self.modules: list[str] = modules
         self.py_scripts: list[str] = py_scripts
+        self.cluster: str = cluster
 
 class BenchConfig():
     """
@@ -127,7 +131,7 @@ class HyperConfig():
                  strategy: str,
                  energy_weight: float,
                  optimizer_params: dict,
-                 job_config: JobConfig):
+                 job_config: JobConfig,):
         self.model_name: str = model_name
         self.sweep_path: Path = sweep_path
         self.max_iter: int = max_iter
@@ -168,6 +172,15 @@ class GeneralConfig():
         self.sweep_path: Path = sweep_path
         self.job_config: JobConfig = job_config
 
+def patify(config_dict: dict[str, Any]) -> dict:
+    """
+    Convert all string path values in the dictionary to Path objects.
+    """
+    for key, value in config_dict.items():
+        if key.endswith('_path') and isinstance(value, str):
+            config_dict[key] = Path(value)
+    return config_dict
+
 class ConfigReader():
     """
     Class for reading and converting configuration files.
@@ -197,11 +210,14 @@ class ConfigReader():
         """
         Get the SLURM configuration for a specific job type.
         """
+        gen_config: dict = self.get_config_section(MainSectionKW.GENERAL.value)
         section_config: dict = self.get_config_section(section_name)
         return JobConfig(
+            section_config[SlurmJobKW.SLURM_WATCHER.value],
             section_config[SlurmJobKW.SLURM_OPTS.value],
             section_config[SlurmJobKW.MODULES.value],
             section_config[SlurmJobKW.PY_SCRIPTS.value],
+            gen_config[GeneralKW.CLUSTER.value]
         )
 
     def get_optimizer_config(self) -> HyperConfig:

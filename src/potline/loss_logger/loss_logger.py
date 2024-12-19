@@ -43,6 +43,19 @@ class ModelTracker():
             raise ValueError("valid loss not calculated.")
         return maths.calculate_loss(self.valid_losses.energy, self.valid_losses.force, energy_weight)
 
+    def save_info(self, out_path: Path):
+        """
+        Save the model information to a file.
+
+        Args:
+            - out_path: path to save the information
+        """
+        if self.valid_losses is None:
+            raise ValueError("Losses not calculated.")
+        with (out_path / "model_info.csv").open("w", encoding='utf-8') as f:
+            f.write("iteration,subiteration,valid_energy_loss,valid_force_loss\n")
+            f.write(f"{self.iteration},{self.subiter},{self.valid_losses.energy},{self.valid_losses.force}\n")
+
     @staticmethod
     def from_path(model_name: str, model_path: Path, sweep_path: Path) -> 'ModelTracker':
         """

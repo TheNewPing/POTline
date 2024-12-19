@@ -17,7 +17,7 @@ class SlurmDispatcher():
         self.job: Slurm = Slurm(**self.options)
         self._job_id: int = -1
 
-    def dispatch(self):
+    def dispatch(self) -> int:
         """
         Dispatch the command using Slurm.
         """
@@ -25,6 +25,7 @@ class SlurmDispatcher():
             self.job.add_cmd(command)
         self._job_id = self.job.sbatch()
         self.dispatched = True
+        return self._job_id
 
     def wait(self):
         """

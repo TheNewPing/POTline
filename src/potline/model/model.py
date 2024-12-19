@@ -7,6 +7,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from abc import ABC, abstractmethod
+from string import Template
 
 import yaml
 
@@ -41,6 +42,16 @@ class RawLosses():
         self.energies: list[float] = energies
         self.forces: list[float] = forces
         self.atom_counts: list[float] = atom_counts
+
+def gen_from_template(template_path: Path, values: dict[str, str | int | float | Path], out_filepath: Path):
+    """
+    Generate a file from a template file.
+    """
+    with template_path.open('r', encoding='utf-8') as file_template:
+        template: Template = Template(file_template.read())
+        content: str = template.safe_substitute(values)
+        with out_filepath.open('w', encoding='utf-8') as file_out:
+            file_out.write(content)
 
 class PotModel(ABC):
     """
