@@ -15,7 +15,6 @@ POTENTIAL_NAME: str = 'potential.in'
 CONFIG_NAME: str = "optimized_params.yaml"
 POTENTIAL_TEMPLATE_PATH: Path = Path(__file__).parent / 'template' / POTENTIAL_NAME
 
-
 class Losses():
     """
     Losses class for the model.
@@ -143,6 +142,12 @@ class PotModel(ABC):
         """
         with self._config_filepath.open('r', encoding='utf-8') as file:
             return yaml.safe_load(file)
+
+    def get_pot_path(self) -> Path:
+        """
+        Get the path to the potential file.
+        """
+        return self._lmp_pot_path
 
     @staticmethod
     @abstractmethod

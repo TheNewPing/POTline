@@ -8,6 +8,7 @@ from .config_reader import (
     PropConfig,
     HyperConfig,
     DeepTrainConfig,
+    JobConfig,
     MainSectionKW,
     GeneralKW,
     )

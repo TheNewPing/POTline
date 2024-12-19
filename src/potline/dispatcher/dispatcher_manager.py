@@ -4,9 +4,9 @@ dispatcher factory
 
 from pathlib import Path
 
-from .dispatcher import Dispatcher
-from .local import LocalDispatcher
-from .slurm import SlurmDispatcher, get_slurm_commands, get_slurm_options
+from .slurm_preset import get_slurm_options
+from .slurm_dispatcher import SlurmDispatcher
+from ..config_reader import JobConfig
 
 class DispatcherManager():
     """
@@ -20,39 +20,33 @@ class DispatcherManager():
     def __init__(self,
                  job_type: str,
                  model: str,
-                 cluster: str | None = None):
+                 cluster: str):
         self._job_type = job_type
         self._model = model
         self._cluster = cluster
-        self._dispatcher: Dispatcher | None = None
+        self._dispatcher: SlurmDispatcher | None = None
 
     def set_job(self, commands: list[str], out_path: Path,
-                array_ids: list[int] | None = None,
-                n_cpu: int | None = None,
-                email: str | None = None):
+                job_config: JobConfig,
+                array_ids: list[int] | None = None):
         """
         Create a dispatcher based on the options.
 
         Args:
             - commands: commands to run
             - out_path: path to the output directory
+            - job_config: job configuration
             - array_ids: array ids to run
-            - n_cpu: number of CPUs to use
-            - email: email to send the job results to
 
         Returns:
             Dispatcher: the dispatcher to use.
         """
-        options: dict | None = None
-        tot_cmds: list[str] = commands
-
-        if self._cluster:
-            options = get_slurm_options(
-                self._cluster, self._job_type, out_path, self._model, n_cpu, email, array_ids)
-            tot_cmds = get_slurm_commands(self._cluster, self._job_type, self._model) + commands
-            self._dispatcher = SlurmDispatcher(tot_cmds, options)
-
-        self._dispatcher = LocalDispatcher(tot_cmds, options)
+        options = get_slurm_options(
+            self._cluster, self._job_type, out_path, self._model, job_config.slurm_opts, array_ids)
+        source_cmds = [f'source {cmd}' for cmd in job_config.modules]
+        py_cmds = [f'python {cmd}' for cmd in job_config.py_scripts]
+        tot_cmds = source_cmds + py_cmds + commands
+        self._dispatcher = SlurmDispatcher(tot_cmds, options)
 
     def dispatch_job(self):
         """

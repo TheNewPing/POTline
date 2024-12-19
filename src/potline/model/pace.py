@@ -11,10 +11,10 @@ from collections.abc import Callable
 import yaml
 import numpy as np
 import pandas as pd
-from xpot import maths
+from xpot import maths # type: ignore
 
 from .model import PotModel, RawLosses, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses
-from ..dispatcher import DispatcherManager, SupportedModel
+from ..dispatcher import SupportedModel
 from ..utils import gen_from_template
 
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
@@ -23,23 +23,11 @@ class PotPACE(PotModel):
     """
     PACE implementation.
     """
-    def get_fit_cmd(self,
-                     dispatcher_factory: DispatcherManager,
-                     deep: bool = False):
-        commands: list[str] = [
-            f'cd {self._out_path}',
-            ' '.join(['pacemaker', str(self._config_filepath)] +
-                     ([f'-p {str(self._out_path / LAST_POTENTIAL_NAME)}']
-                      if deep else []))
-        ]
-        self._dispatcher = dispatcher_factory.create_dispatcher(
-            commands, self._out_path, SupportedModel.PACE.value)
-        self._dispatcher.dispatch()
+    @staticmethod
+    def get_fit_cmd(deep: bool = False) -> str:
+        return  ' '.join(['pacemaker', CONFIG_NAME] + ([f'-p {LAST_POTENTIAL_NAME}'] if deep else []))
 
     def collect_loss(self) -> Losses:
-        if self._dispatcher is None:
-            raise ValueError("Dispatcher not set.")
-        self._dispatcher.wait()
         return self._validate_errors(self._calculate_errors())
 
     def lampify(self) -> Path:

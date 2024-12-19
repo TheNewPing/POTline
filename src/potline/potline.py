@@ -5,8 +5,8 @@ Potential optimization pipeline API.
 from pathlib import Path
 
 from .hyper_searcher import PotOptimizer, OPTIM_DIR_NAME
-from .inference_bencher import run_benchmark
-from .properties_simulator import run_properties_simulation
+from .inference_bencher import InferenceBencher
+from .properties_simulator import PropertiesSimulator
 from .config_reader import ConfigReader
 from .deep_trainer import DeepTrainer, DEEP_TRAIN_DIR_NAME
 from .model import PotModel
@@ -59,7 +59,8 @@ class PotLine():
         """
         if self.with_hyper_search:
             return PotOptimizer(self.config_reader.get_optimizer_config(),
-                                DispatcherManager(JobType.FIT.value, self.config.cluster)
+                                DispatcherManager(JobType.FIT.value, self.config.model_name,
+                                                  self.config.cluster)
                                 ).run()
 
         models: list[ModelTracker] = []
@@ -80,16 +81,11 @@ class PotLine():
         Additional training for the best models.
         """
         if self.with_deep_train:
-            deep_trainers: list[DeepTrainer] = []
-            deep_models: list[ModelTracker] = []
-            for model in model_list:
-                deep_trainer = DeepTrainer(self.config_reader.get_deep_train_config(), model,
-                                           DispatcherManager(JobType.DEEP.value, self.config.cluster))
-                deep_trainer.run()
-                deep_trainers.append(deep_trainer)
-            for trainer in deep_trainers:
-                deep_models.append(trainer.collect())
-            return deep_models
+            deep_trainer = DeepTrainer(self.config_reader.get_deep_train_config(), model_list,
+                                        DispatcherManager(JobType.DEEP.value, self.config.model_name,
+                                                          self.config.cluster))
+            deep_trainer.run()
+            return deep_trainer.collect()
 
         return model_list
 
@@ -103,16 +99,17 @@ class PotLine():
 
     def inference_bench(self, models: list[PotModel]):
         if self.with_inference:
-            for model in models:
-                run_benchmark(model, self.config_reader.get_bench_config(),
-                              DispatcherManager(JobType.INF.value, self.config.cluster))
+            bencher = InferenceBencher(self.config_reader.get_bench_config(), models,
+                              DispatcherManager(JobType.INF.value, self.config.model_name,
+                                                self.config.cluster))
+            bencher.run()
 
     def properties_simulation(self, models: list[PotModel]):
         if self.with_data_analysis:
-            for model in models:
-                run_properties_simulation(model,
-                                          self.config_reader.get_prop_config(),
-                                          DispatcherManager(JobType.SIM.value, self.config.cluster))
+            simulator = PropertiesSimulator(self.config_reader.get_prop_config(), models,
+                              DispatcherManager(JobType.SIM.value, self.config.model_name,
+                                                self.config.cluster))
+            simulator.run()
 
     def get_model_out_paths(self) -> list[Path]:
         """

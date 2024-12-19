@@ -14,7 +14,7 @@ class DeepTrainer():
 
     Args:
         - config: configuration for deep training
-        - model_tracker: model to train
+        - tracker_list: models to train
         - dispatcher_manager: manager for dispatching training jobs
     """
     def __init__(self, config: DeepTrainConfig, tracker_list: list[ModelTracker],
@@ -23,27 +23,26 @@ class DeepTrainer():
         self._tracker_list = tracker_list
         self._dispatcher_manager = dispatcher_manager
         self._fit_cmd = tracker_list[0].model.get_fit_cmd(deep=True)
-        for tracker in self._tracker_list:
-            self._iter_path = \
-                self._config.sweep_path / str(tracker.iteration) / str(tracker.subiter)
-            self._out_path = self._iter_path / DEEP_TRAIN_DIR_NAME
-            self._out_path.mkdir(exist_ok=True)
-            tracker.model.switch_out_path(self._out_path)
+        self._out_path = self._config.sweep_path / DEEP_TRAIN_DIR_NAME
+        self._out_path.mkdir(exist_ok=True)
+        for i, tracker in enumerate(self._tracker_list):
+            iter_path = self._out_path / str(i)
+            iter_path.mkdir(exist_ok=True)
+            tracker.model.switch_out_path(iter_path)
             tracker.model.set_config_maxiter(self._config.max_epochs)
 
         self._loss_logger = LossLogger(self._out_path)
 
     def run(self):
-        cmds: list[str] = ['declare -A path_map']
-        # prepare path mapping cmds
-        for i, tracker in enumerate(self._tracker_list):
-            cmds.append(f'path_map[{i+1}]="{str(tracker.model.get_out_path())}"')
-        cmds.append('index=$SLURM_ARRAY_TASK_ID')
-        # TODO: refactor directories structure???? (invert job type and iteration)
-        self._dispatcher_manager.set_job(cmds, p, ids, n_cpu=1)
-        self._tracker_list.model.get_fit_cmd(self._dispatcher_manager, deep=True)
+        self._dispatcher_manager.set_job([self._fit_cmd],
+                                         self._out_path,
+                                         self._config.job_config,
+                                         list(range(1,len(self._tracker_list)+1)))
+        self._dispatcher_manager.dispatch_job()
 
-    def collect(self) -> ModelTracker:
-        self._tracker_list.valid_losses = self._tracker_list.model.collect_loss()
-        self._loss_logger.write_error_file(self._tracker_list)
+    def collect(self) -> list[ModelTracker]:
+        self._dispatcher_manager.wait_job()
+        for tracker in self._tracker_list:
+            tracker.valid_losses = tracker.model.collect_loss()
+            self._loss_logger.write_error_file(tracker)
         return self._tracker_list

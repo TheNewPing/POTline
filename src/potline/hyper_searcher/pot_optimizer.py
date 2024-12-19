@@ -35,7 +35,8 @@ class PotOptimizer():
         self._dispatcher_manager = dispatcher_manager
         self._iteration = 0
         self._subiter = 0
-        self._iter_path = self._config.sweep_path / str(self._iteration) / str(self._subiter) / OPTIM_DIR_NAME
+        self._out_path = self._config.sweep_path / OPTIM_DIR_NAME
+        self._iter_path = self._out_path / str(self._iteration) / str(self._subiter)
         self._fitted_models: list[ModelTracker] = []
 
         self._mlp_total = load.merge_hypers({}, self._config.optimizer_params)
@@ -47,7 +48,7 @@ class PotOptimizer():
             n_initial_points=self._config.n_initial_points,
         )
 
-        self._loss_logger = LossLogger(self._config.sweep_path, self._get_keys())
+        self._loss_logger = LossLogger(self._out_path, self._get_keys())
 
     def run(self) -> list[ModelTracker]:
         """
@@ -69,8 +70,7 @@ class PotOptimizer():
         # Initialize all the models
         for next_params in next_params_list:
             self._subiter += 1
-            self._iter_path = \
-                self._config.sweep_path / str(self._iteration) / str(self._subiter) / OPTIM_DIR_NAME
+            self._iter_path = self._out_path / str(self._iteration) / str(self._subiter)
             config_path: Path = self._prep_fit(next_params)
             fit_trackers.append(ModelTracker(
                 create_model(self._config.model_name, config_path, self._iter_path),
@@ -79,8 +79,9 @@ class PotOptimizer():
         # Start the fitting process
         fit_cmd: str = fit_trackers[0].model.get_fit_cmd(deep=False)
         self._dispatcher_manager.set_job([fit_cmd],
-                                               self._config.sweep_path,
-                                               list(range(1,self._subiter+1)))
+                                         self._out_path / str(self._iteration),
+                                         self._config.job_config,
+                                         list(range(1,self._subiter+1)))
         self._dispatcher_manager.dispatch_job()
 
         # Collect the loss values
@@ -166,7 +167,7 @@ class PotOptimizer():
         """
         Dump the optimizer to a file.
         """
-        filepath: Path = self._config.sweep_path / filename
+        filepath: Path = self._out_path / filename
         with filepath.open("wb") as f:
             pickle.dump(self._optimizer, f)
 
@@ -174,7 +175,7 @@ class PotOptimizer():
         """
         Load the optimizer from a file.
         """
-        filepath: Path = self._config.sweep_path / filename
+        filepath: Path = self._out_path / filename
         with filepath.open("rb") as f:
             self._optimizer = pickle.load(f)
 

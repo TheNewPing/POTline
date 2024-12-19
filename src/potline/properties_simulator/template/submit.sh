@@ -22,16 +22,12 @@
 #------------------------------
 
 # Collect the input parameters
-out_path=$1
-LMMP=$2
-lmp_inps=$3
-pps_python=$4
-ref_data_path=$5
-eaddress=$6
-n_cpu=$7
-
-# Change to the output directory
-cd ${out_path}
+LMMP=$1
+lmp_inps=$2
+pps_python=$3
+ref_data_path=$4
+eaddress=$5
+n_cpu=$6
 
 # clear caches
 rm dump*

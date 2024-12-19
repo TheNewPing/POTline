@@ -6,14 +6,14 @@ import time
 
 from simple_slurm import Slurm # type: ignore
 
-from ..dispatcher import Dispatcher
-
-class SlurmDispatcher(Dispatcher):
+class SlurmDispatcher():
     """
     Slurm command dispatcher.
     """
     def __init__(self, commands: list[str], options: dict | None = None):
-        super().__init__(commands, options)
+        self.commands = commands
+        self.options = options
+        self.dispatched = False
         self.job: Slurm = Slurm(**self.options)
         self._job_id: int = -1
 

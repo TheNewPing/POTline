@@ -3,9 +3,10 @@ This module is responsible for running LAMMPS benchmarks.
 """
 
 from pathlib import Path
+import shutil
 
 from ..config_reader import BenchConfig
-from ..dispatcher import Dispatcher, DispatcherManager
+from ..dispatcher import DispatcherManager
 from ..model import PotModel
 
 INFERENCE_BENCH_DIR_NAME: str = 'inference_bench'
@@ -17,25 +18,40 @@ BENCH_SCRIPT_TEMPLATE_PATH: Path = INF_BENCH_TEMPLATE_PATH / BENCH_SCRIPT_NAME
 
 _N_CPU: int = 1
 
-def run_benchmark(model: PotModel, config: BenchConfig,
-                  dispatcher_manager: DispatcherManager):
+class InferenceBencher():
     """
-    Run the LAMMPS benchmark.
+    Class for running the LAMMPS inference benchmark.
 
     Args:
-        - model: model to benchmark
-        - config: benchmark configuration
-        - dispatcher_manager: manager for dispatching the benchmark
+        - config: configuration for the benchmark
+        - model_list: models to benchmark
+        - dispatcher_manager: manager for dispatching benchmark jobs
     """
-    inf_bench_dir: Path = model.get_out_path().parent / INFERENCE_BENCH_DIR_NAME
-    inf_bench_dir.mkdir(exist_ok=True)
+    def __init__(self, config: BenchConfig, model_list: list[PotModel],
+                 dispatcher_manager: DispatcherManager):
+        self._config = config
+        self._model_list = model_list
+        self._dispatcher_manager = dispatcher_manager
+        self._lammps_params = model_list[0].get_lammps_params()
+        self._out_path = self._config.sweep_path / INFERENCE_BENCH_DIR_NAME
+        self._out_path.mkdir(exist_ok=True)
 
-    command: list[str] = [str(cmd) for cmd in [
-        'bash', BENCH_SCRIPT_TEMPLATE_PATH, _N_CPU,
-        f'"{config.lammps_bin_path} {model.get_lammps_params()}"',
-        LAMMPS_IN_PATH, config.prerun_steps,
-        config.max_steps, inf_bench_dir]]
+        self._bench_cmd: str = ' '.join(
+            [str(cmd) for cmd in [
+                'srun', BENCH_SCRIPT_NAME, _N_CPU,
+                f'"{config.lammps_bin_path} {self._lammps_params}"',
+                config.prerun_steps, config.max_steps]])
 
-    dispatcher: Dispatcher = dispatcher_manager.create_dispatcher(
-        [' '.join(command)],inf_bench_dir, model=model.get_name().value, n_cpu=_N_CPU)
-    dispatcher.dispatch()
+        for i, model in enumerate(self._model_list):
+            iter_path = self._out_path / str(i)
+            iter_path.mkdir(exist_ok=True)
+            shutil.copy(LAMMPS_IN_PATH, iter_path)
+            shutil.copy(BENCH_SCRIPT_TEMPLATE_PATH, iter_path)
+            shutil.copy(model.get_pot_path(), iter_path)
+
+    def run(self):
+        self._dispatcher_manager.set_job([self._bench_cmd],
+                                         self._out_path,
+                                         self._config.job_config,
+                                         list(range(1,len(self._model_list)+1)))
+        self._dispatcher_manager.dispatch_job()
