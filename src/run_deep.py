@@ -17,8 +17,10 @@ if __name__ == '__main__':
     gen_config = ConfigReader(config_path).get_general_config()
     deep_config = ConfigReader(config_path).get_deep_train_config()
 
-    tracker_list = get_model_trackers(gen_config.sweep_path, gen_config.model_name)
+    tracker_list = get_model_trackers(gen_config.sweep_path, gen_config.model_name, force_from_hyp=True)
     best_trackers = filter_best_loss(tracker_list, opt_config.energy_weight, gen_config.best_n_models)
 
-    DeepTrainer(deep_config, best_trackers, DispatcherManager(
-        JobType.DEEP.value, gen_config.model_name, deep_config.job_config.cluster)).run()
+    deep_trainer = DeepTrainer(deep_config, best_trackers, DispatcherManager(
+        JobType.DEEP.value, gen_config.model_name, deep_config.job_config.cluster))
+    deep_trainer.run()
+    deep_trainer.collect()

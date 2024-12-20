@@ -26,11 +26,10 @@ class DeepTrainer():
         self._out_path = self._config.sweep_path / DEEP_TRAIN_DIR_NAME
         self._out_path.mkdir(exist_ok=True)
         for i, tracker in enumerate(self._tracker_list):
-            iter_path = self._out_path / str(i)
+            iter_path = self._out_path / str(i+1)
             iter_path.mkdir(exist_ok=True)
             tracker.model.switch_out_path(iter_path)
             tracker.model.set_config_maxiter(self._config.max_epochs)
-            tracker.save_info(iter_path)
 
         self._loss_logger = LossLogger(self._out_path)
 
@@ -46,4 +45,5 @@ class DeepTrainer():
         for tracker in self._tracker_list:
             tracker.valid_losses = tracker.model.collect_loss()
             self._loss_logger.write_error_file(tracker)
+            tracker.save_info(tracker.model.get_out_path())
         return self._tracker_list

@@ -4,7 +4,7 @@ dispatcher factory
 
 from pathlib import Path
 
-from .slurm_preset import get_slurm_options, JobType
+from .slurm_preset import get_slurm_options
 from .slurm_dispatcher import SlurmDispatcher
 from ..config_reader import JobConfig
 
@@ -43,17 +43,21 @@ class DispatcherManager():
         Returns:
             Dispatcher: the dispatcher to use.
         """
-        slurm_dict = job_config.slurm_watcher if self._job_type == JobType.WATCH.value \
-            else job_config.slurm_opts
+        is_array_job = array_ids is not None
 
+        # Define slurm job requirements
+        slurm_dict = job_config.slurm_watcher if not is_array_job else job_config.slurm_opts
         options = get_slurm_options(
             self._cluster, self._job_type, out_path, self._model,
             slurm_dict, array_ids, dependency)
-        source_cmds = [f'source {cmd}' for cmd in job_config.modules] + \
-            ['export SQUEUE_FORMAT=""%.18A", "%.9P", "%.8j", "%.8u", "%.2t", "%.10M", "%.6D", "%R""']
-        py_cmds = [f'python {cmd}' for cmd in job_config.py_scripts] if \
-            self._job_type == JobType.WATCH.value else []
-        tot_cmds = source_cmds + py_cmds + commands
+
+        # Setup environment
+        source_cmds = [f'source {cmd}' for cmd in job_config.modules]
+        py_cmds = [f'python {cmd}' for cmd in job_config.py_scripts] if is_array_job else []
+        array_cmds = ['cd $SLURM_ARRAY_TASK_ID'] if array_ids else []
+        tot_cmds = array_cmds + source_cmds + py_cmds + commands
+
+        # Create dispatcher
         self._dispatcher = SlurmDispatcher(tot_cmds, options)
 
     def dispatch_job(self) -> int:
@@ -70,7 +74,4 @@ class DispatcherManager():
         """
         if self._dispatcher is None:
             raise ValueError("No job has been set yet.")
-        import os
-        print(os.getenv("SQUEUE_FORMAT", "nope"))
-
         self._dispatcher.wait()

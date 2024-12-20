@@ -65,8 +65,8 @@ class PotModel(ABC):
                  out_path: Path):
         self._config_filepath: Path = config_filepath
         self._out_path: Path = out_path
-        self._yace_path: Path = self._out_path.parent / YACE_NAME
-        self._lmp_pot_path: Path = self._out_path.parent / POTENTIAL_NAME
+        self._yace_path: Path = self._out_path / YACE_NAME
+        self._lmp_pot_path: Path = self._out_path / POTENTIAL_NAME
 
     @staticmethod
     @abstractmethod

@@ -90,6 +90,7 @@ class PotOptimizer():
         for fit_tr in fit_trackers:
             fit_tr.valid_losses = fit_tr.model.collect_loss()
             self._loss_logger.write_error_file(fit_tr)
+            fit_tr.save_info(fit_tr.model.get_out_path())
 
         # Tell the optimizer the results
         self._tell([fit_tr.params for fit_tr in fit_trackers],

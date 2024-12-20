@@ -43,7 +43,7 @@ class InferenceBencher():
                 config.prerun_steps, config.max_steps]])
 
         for i, tracker in enumerate(self._tracker_list):
-            iter_path = self._out_path / str(i)
+            iter_path = self._out_path / str(i+1)
             iter_path.mkdir(exist_ok=True)
             shutil.copy(LAMMPS_IN_PATH, iter_path)
             shutil.copy(BENCH_SCRIPT_TEMPLATE_PATH, iter_path)

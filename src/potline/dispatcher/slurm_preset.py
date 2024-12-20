@@ -18,10 +18,14 @@ class JobType(Enum):
     Supported job types.
     """
     FIT = 'fit'
+    WATCH_FIT = 'w_fit'
     INF = 'inf'
+    WATCH_INF = 'w_inf'
     DEEP = 'deep'
+    WATCH_DEEP = 'w_deep'
     SIM = 'sim'
-    WATCH = 'watch'
+    WATCH_SIM = 'w_sim'
+    CONV = 'conv'
 
 class SlurmCluster(Enum):
     """
@@ -51,16 +55,12 @@ def make_base_options(job: str, model: str, out_path: Path, slurm_opts: dict,
     options = {
         'chdir': str(out_path),
         'job_name': f"{job}_{model}",
-        'output': f"{str(out_path)}/{job}_%j.out",
-        'error': f"{str(out_path)}/{job}_%j.err",
+        'output': f"{job}_%j.out",
+        'error': f"{job}_%j.err",
         **slurm_opts,
     }
     if dependency is not None:
         options['dependency'] = f"afterok:{dependency}"
-
-    print("opt: ")
-    print(options)
-
     return options
 
 def make_array_options(job: str, model: str, out_path: Path,
@@ -69,12 +69,10 @@ def make_array_options(job: str, model: str, out_path: Path,
     """
     Make the array options for the job.
     """
-    out_job_path: str = f"{str(out_path)}/%a"
     return {
         **make_base_options(job, model, out_path, slurm_opts, dependency),
-        'chdir': out_job_path,
-        'output': f"{out_job_path}/{job}_%A_%a.out",
-        'error': f"{out_job_path}/{job}_%A_%a.err",
+        'output': f"{job}_%A_%a.out",
+        'error': f"{job}_%A_%a.err",
         'array': array_ids,
     }
 
@@ -92,7 +90,7 @@ def get_slurm_options(cluster: str, job_type: str, out_path: Path,
     if cluster not in SlurmCluster._value2member_map_: # pylint: disable=protected-access
         raise ValueError(f"Cluster {cluster} is not supported.")
 
-    if job_type == JobType.WATCH.value:
+    if job_type not in [JobType.FIT.value, JobType.INF.value, JobType.DEEP.value, JobType.SIM.value]:
         return make_base_options(job_type, model, out_path, slurm_opts, dependency)
 
     if not array_ids:

@@ -41,7 +41,7 @@ class PropertiesSimulator():
                 config.lammps_inps_path, config.pps_python_path, config.ref_data_path, _N_CPU]])
 
         for i, tracker in enumerate(self._tracker_list):
-            iter_path = self._out_path / str(i)
+            iter_path = self._out_path / str(i+1)
             iter_path.mkdir(exist_ok=True)
             shutil.copy(SUBMIT_TEMPLATE_PATH, iter_path)
             shutil.copy(tracker.model.get_pot_path(), iter_path)

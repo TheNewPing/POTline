@@ -12,6 +12,7 @@ from ..model import PotModel, Losses, create_model_from_path
 
 ERROR_FILENAME = "loss_function_errors.csv"
 PARAMETER_FILENAME = "parameters.csv"
+INFO_FILENAME = "model_info.csv"
 
 class ModelTracker():
     """
@@ -52,33 +53,31 @@ class ModelTracker():
         """
         if self.valid_losses is None:
             raise ValueError("Losses not calculated.")
-        with (out_path / "model_info.csv").open("w", encoding='utf-8') as f:
+        with (out_path / INFO_FILENAME).open("w", encoding='utf-8') as f:
             f.write("iteration,subiteration,valid_energy_loss,valid_force_loss\n")
             f.write(f"{self.iteration},{self.subiter},{self.valid_losses.energy},{self.valid_losses.force}\n")
 
     @staticmethod
-    def from_path(model_name: str, model_path: Path, sweep_path: Path) -> 'ModelTracker':
+    def from_path(model_name: str, model_path: Path) -> 'ModelTracker':
         """
         Create a model tracker from a path.
 
         Args:
             - model_name: name of the model
             - model_path: path to the model, used to recover the model
-            - sweep_path: path to the sweep, used to recover the valid losses
 
         Returns:
             ModelTracker: the model tracker
         """
         model = create_model_from_path(model_name, model_path)
-        subiter = int(model_path.parent.name)
-        iteration = int(model_path.parent.parent.name)
         params = model.get_params()
-        with (sweep_path / ERROR_FILENAME).open("r", encoding='utf-8') as f:
-            reader = csv.reader(f)
+        with (model_path / INFO_FILENAME).open("r", encoding='utf-8') as f:
+            reader = csv.DictReader(f)
             for row in reader:
-                if row[0] == str(iteration) and row[1] == str(subiter):
-                    valid_losses = Losses(float(row[2]), float(row[3]))
-                    return ModelTracker(model, iteration, subiter, params, valid_losses)
+                iteration = int(row['iteration'])
+                subiter = int(row['subiteration'])
+                valid_losses = Losses(float(row['valid_energy_loss']), float(row['valid_force_loss']))
+                return ModelTracker(model, iteration, subiter, params, valid_losses)
         raise ValueError("Model not found in error file.")
 
 class LossLogger():

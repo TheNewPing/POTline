@@ -31,7 +31,7 @@ if __name__ == '__main__':
     if args.nohyper:
         hyp_config = ConfigReader(config_path).get_optimizer_config()
         hyp_cmd = f'python {cli_path / "run_hyp.py"} {config_path}'
-        hyp_manager = DispatcherManager(JobType.WATCH.value, gen_config.model_name, gen_config.cluster)
+        hyp_manager = DispatcherManager(JobType.WATCH_FIT.value, gen_config.model_name, gen_config.cluster)
         hyp_manager.set_job([hyp_cmd], hyp_config.sweep_path, hyp_config.job_config)
         hyp_id = hyp_manager.dispatch_job()
 
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     if args.nodeep:
         deep_config = ConfigReader(config_path).get_deep_train_config()
         deep_cmd = f'python {cli_path / "run_deep.py"} {config_path}'
-        deep_manager = DispatcherManager(JobType.WATCH.value, gen_config.model_name, gen_config.cluster)
+        deep_manager = DispatcherManager(JobType.WATCH_DEEP.value, gen_config.model_name, gen_config.cluster)
         deep_manager.set_job([deep_cmd], deep_config.sweep_path, deep_config.job_config,
                             dependency=hyp_id)
         deep_id = deep_manager.dispatch_job()
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     conv_id: int | None = None
     if args.noconversion:
         conv_cmd = f'python {cli_path / "run_conv.py"} {config_path}'
-        conv_manager = DispatcherManager(JobType.WATCH.value, gen_config.model_name, gen_config.cluster)
+        conv_manager = DispatcherManager(JobType.CONV.value, gen_config.model_name, gen_config.cluster)
         conv_manager.set_job([conv_cmd], gen_config.sweep_path, gen_config.job_config,
                             dependency=deep_id)
         conv_id = conv_manager.dispatch_job()
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     if args.noinference:
         inf_config = ConfigReader(config_path).get_bench_config()
         inf_cmd = f'python {cli_path / "run_inf.py"} {config_path}'
-        inf_manager = DispatcherManager(JobType.WATCH.value, gen_config.model_name, gen_config.cluster)
+        inf_manager = DispatcherManager(JobType.WATCH_INF.value, gen_config.model_name, gen_config.cluster)
         inf_manager.set_job([inf_cmd], inf_config.sweep_path, inf_config.job_config,
                             dependency=conv_id)
         inf_id = inf_manager.dispatch_job()
@@ -64,8 +64,8 @@ if __name__ == '__main__':
     sim_id: int | None = None
     if args.noproperties:
         prop_config = ConfigReader(config_path).get_prop_config()
-        prop_cmd = f'python {cli_path / "run_prop.py"} {config_path}'
-        prop_manager = DispatcherManager(JobType.WATCH.value, gen_config.model_name, gen_config.cluster)
+        prop_cmd = f'python {cli_path / "run_sim.py"} {config_path}'
+        prop_manager = DispatcherManager(JobType.WATCH_SIM.value, gen_config.model_name, gen_config.cluster)
         prop_manager.set_job([prop_cmd], prop_config.sweep_path, prop_config.job_config,
                             dependency=conv_id)
         sim_id = prop_manager.dispatch_job()

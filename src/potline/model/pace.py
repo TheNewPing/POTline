@@ -7,6 +7,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 from collections.abc import Callable
+import shutil
 
 import yaml
 import numpy as np
@@ -58,6 +59,10 @@ class PotPACE(PotModel):
 
     def get_name(self) -> SupportedModel:
         return SupportedModel.PACE
+
+    def switch_out_path(self, out_path: Path):
+        shutil.copy(self._out_path / LAST_POTENTIAL_NAME, out_path / LAST_POTENTIAL_NAME)
+        super().switch_out_path(out_path)
 
     def _collect_raw_errors(self) -> pd.DataFrame:
         """
