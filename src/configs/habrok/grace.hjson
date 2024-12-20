@@ -22,7 +22,7 @@
             ntasks: 1
             cpus_per_task: 1
             mem: "10G"
-            time: "1:00:00"
+            time: "48:00:00"
         }
         slurm_opts: {
             ntasks: 1
@@ -83,16 +83,14 @@
     hyper_search: {
         max_iter: 10,
         n_initial_points: 5
-        n_points: 20
+        n_points: 10
         strategy: "cl_min"
         energy_weight: 0.3
         slurm_watcher: {
             ntasks: 1
             cpus_per_task: 4
-            mem: "20G"
-            time: "1:00:00"
-            partition: "gpu"
-            gpus_per_node:"a100:1"
+            mem: "50G"
+            time: "48:00:00"
         }
         slurm_opts: {
             ntasks: 1
