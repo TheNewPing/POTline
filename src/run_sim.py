@@ -21,4 +21,4 @@ if __name__ == '__main__':
     best_trackers = filter_best_loss(tracker_list, opt_config.energy_weight, gen_config.best_n_models)
 
     PropertiesSimulator(prop_config, best_trackers, DispatcherManager(
-        JobType.INF.value, gen_config.model_name, prop_config.job_config.cluster)).run()
+        JobType.SIM.value, gen_config.model_name, prop_config.job_config.cluster)).run()

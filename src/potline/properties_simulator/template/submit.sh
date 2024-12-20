@@ -52,8 +52,8 @@ potential_name=`echo $(basename $fullpath)`
 # Grep the potential version and echo to results file
 echo '#**********************************' | tee -a  ./data/results.txt
 echo 'Potential basis set:' ${potential_name} | tee -a ./data/results.txt
-awk '/^pair_style*/' ../potential.in | tee -a ./data/results.txt
-awk '/^pair_coeff*/' ../potential.in | tee -a ./data/results.txt
+awk '/^pair_style*/' ./potential.in | tee -a ./data/results.txt
+awk '/^pair_coeff*/' ./potential.in | tee -a ./data/results.txt
 echo '#**********************************' | tee -a ./data/results.txt
 
 #**********************************

@@ -47,7 +47,7 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 1
-            mem: "20G"
+            mem: "50G"
             time: "1:00:00"
             partition: "gpu"
             gpus_per_node:"a100:1"
@@ -69,7 +69,7 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 1
-            mem: "20G"
+            mem: "50G"
             time: "1:00:00"
             partition: "gpu"
             gpus_per_node:"a100:1"
@@ -77,8 +77,7 @@
             'mail_user': "e.rodaro@rug.nl",
         }
         modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_pace.sh",
-            "/home4/p319875/repos/POTline/src/configs/habrok/modules/module_mpi.sh",
-            "/home4/p319875/repos/POTline/src/configs/habrok/modules/module_prop_sim.sh"]
+            "/home4/p319875/repos/POTline/src/configs/habrok/modules/module_mpi.sh",]
         py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
     }
     hyper_search: {
