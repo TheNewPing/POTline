@@ -1,0 +1,184 @@
+{
+    general: {
+        lammps_bin_path: "/home4/p319875/lammps_grace/lammps/build/lmp",
+        model_name: grace
+        best_n_models: 20
+        hpc: true
+        cluster: 'habrok'
+        sweep_path: "/home4/p319875/repos/POTline/full_test/grace"
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {}
+        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_grace.sh"]
+        py_scripts: []
+    }
+    deep_training: {
+        max_epochs: 200,
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "10G"
+            time: "48:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "50G"
+            time: "36:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+        }
+        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_grace.sh"]
+        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
+    }
+    inference: {
+        prerun_steps: 100,
+        max_steps: 1100,
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "50G"
+            time: "3:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+        }
+        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_grace.sh",
+            "/home4/p319875/repos/POTline/src/configs/habrok/modules/module_mpi.sh"]
+        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
+    }
+    data_analysis: {
+        lammps_inps_path: "/home4/p319875/repos/POTline/src/potline/properties_simulator/pot_testing/lmps_inputs",
+        pps_python_path: "/home4/p319875/repos/POTline/src/potline/properties_simulator/pot_testing/py_pps",
+        ref_data_path: "/home4/p319875/repos/POTline/src/potline/properties_simulator/pot_testing/REF_DATA",
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "50G"
+            time: "3:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+            'mail_type': 'ALL',
+            'mail_user': "e.rodaro@rug.nl",
+        }
+        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_grace.sh",
+            "/home4/p319875/repos/POTline/src/configs/habrok/modules/module_mpi.sh",]
+        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
+    }
+    hyper_search: {
+        max_iter: 10,
+        n_initial_points: 5
+        n_points: 10
+        strategy: "cl_min"
+        energy_weight: 0.3
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "50G"
+            time: "48:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "50G"
+            time: "12:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+        }
+        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_grace.sh"]
+        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
+        optimizer_params: {
+            "cutoff": 6.0
+            "seed": 42
+            "metadata": {
+                "purpose": "Potential fit"
+                },
+            "data": {
+                "filename": "/home4/p319875/repos/POTline/src/data/ogata_extended_corrected.pckl.gzip",
+                "test_size": 0.10
+            },
+            "potential": {
+                "deltaSplineBins": 0.001,
+                "elements": ["Fe"],
+                preset: GRACE_1LAYER
+                kwargs: {lmax: 4, n_rad_max: 32, max_order: 4, n_mlp_dens: 12}
+                shift: "skopt.space.Categorical(categories=['True', 'False'])"
+                scale: "skopt.space.Categorical(categories=['True', 'False'])"
+                float_dtype: "skopt.space.Categorical(categories=['float64', 'float32'])"
+            },
+            "fit": {
+                loss: {
+                    energy: { 
+                        weight: 1, 
+                        type: huber
+                        delta: 0.01 
+                    },
+                    forces: {
+                        weight: 5,
+                        type: huber
+                        delta: 0.01 
+                    },
+                    l2_reg: "skopt.space.Real(0,1e-7)"
+                }
+                maxiter: 100 # Number of epochs / iterations
+
+                optimizer: Adam
+                opt_params: {
+                            learning_rate: "skopt.space.Real(1e-4,1e-1)",
+                            amsgrad: True,
+                            use_ema: True,
+                            ema_momentum: "skopt.space.Real(0.5,0.99999)",
+                            weight_decay: "skopt.space.Real(0,1e-8)",
+                            clipvalue: 1.0,
+                        }
+
+                # for learning-rate reduction
+                learning_rate_reduction: {
+                    patience: 5,
+                    factor: "skopt.space.Real(0.5,0.99999)",
+                    min: 1e-5,
+                    stop_at_min: True
+                    resume_lr: True
+                    loss_explosion_threshold: 2
+                    }
+
+                #  optimizer: L-BFGS-B
+                #  opt_params: { "maxcor": 100, "maxls": 20 }
+
+                ## needed for low-energy tier metrics and for "convex_hull"-based distance of energy-based weighting scheme
+                compute_convex_hull: False
+                batch_size: "skopt.space.Integer(32, 64)" # Important hyperparameter for Adam and irrelevant (but must be) for L-BFGS-B
+                test_batch_size: 128 # test batch size (optional)
+
+                jit_compile: True
+                #  eval_init_stats: True # to evaluate initial metrics
+
+                train_max_n_buckets: "skopt.space.Integer(1,50)" # max number of buckets (group of batches of same shape) in train set
+                test_max_n_buckets: "skopt.space.Integer(1,50)" # same for test
+
+                checkpoint_freq: 10 # frequency for **REGULAR** checkpoints.
+                # save_all_regular_checkpoints: True # to store ALL regular checkpoints
+                progressbar: False 
+                # show batch-evaluation progress bar
+                train_shuffle: "skopt.space.Categorical(categories=['True', 'False'])"
+                # shuffle train batches on every epoch
+                normalize_weights: "skopt.space.Categorical(categories=['True', 'False'])"
+            },
+        }
+    }
+}

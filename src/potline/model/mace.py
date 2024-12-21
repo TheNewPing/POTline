@@ -12,9 +12,8 @@ from pathlib import Path
 import yaml
 from mace.cli.create_lammps_model import main as create_lammps_model
 
-from .model import PotModel, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses
-from ..dispatcher import DispatcherFactory, SupportedModel
-from ..utils import gen_from_template
+from .model import PotModel, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses, gen_from_template
+from ..dispatcher import SupportedModel
 
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
 
@@ -22,22 +21,12 @@ class PotMACE(PotModel):
     """
     MACE implementation.
     """
-    def dispatch_fit(self,
-                     dispatcher_factory: DispatcherFactory,
-                     deep: bool = False,):
-        commands: list[str] = [
-            f'cd {self._out_path}',
-            ' '.join(['mace_run_train', f'--config {str(self._config_filepath)}'] +
+    @staticmethod
+    def get_fit_cmd(deep: bool = False,):
+        return ' '.join(['mace_run_train', f'--config {CONFIG_NAME}'] +
                      (['--restart_latest'] if deep else []))
-        ]
-        self._dispatcher = dispatcher_factory.create_dispatcher(
-            commands, self._out_path, SupportedModel.MACE.value)
-        self._dispatcher.dispatch()
 
     def collect_loss(self) -> Losses:
-        if self._dispatcher is None:
-            raise ValueError("Dispatcher not set.")
-        self._dispatcher.wait()
         results_path: Path = next((self._out_path / "results").glob("*.txt"))
         with results_path.open('r', encoding='utf-8') as file:
             lines = file.readlines()

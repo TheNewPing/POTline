@@ -2,5 +2,5 @@
 Dispatcher module for the potline package.
 """
 
-from .dispatcher import Dispatcher, SupportedModel, JobType, SlurmCluster
-from .dispatcher_factory import DispatcherFactory
+from .dispatcher_manager import DispatcherManager
+from .slurm_preset import SupportedModel, JobType, SlurmCluster

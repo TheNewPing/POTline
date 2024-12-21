@@ -9,9 +9,8 @@ import shutil
 
 import yaml
 
-from .model import PotModel, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses
-from ..dispatcher import DispatcherFactory, SupportedModel
-from ..utils import gen_from_template
+from .model import PotModel, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses, gen_from_template
+from ..dispatcher import SupportedModel
 
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
 
@@ -27,27 +26,16 @@ class PotGRACE(PotModel):
             self._seed_path: Path = out_path / 'seed' / f'{self._seed_number}'
         self._yace_path = self._seed_path / 'final_model'
 
-    def dispatch_fit(self,
-                     dispatcher_factory: DispatcherFactory,
-                     deep: bool = False):
-        commands: list[str] = [
-            f'cd {self._out_path}',
-            ' '.join(['gracemaker', str(self._config_filepath)] +
-                     (['-r'] if deep else []))
-        ]
-        self._dispatcher = dispatcher_factory.create_dispatcher(
-            commands, self._out_path, SupportedModel.GRACE.value)
-        self._dispatcher.dispatch()
+    @staticmethod
+    def get_fit_cmd(deep: bool = False):
+        return ' '.join(['gracemaker', CONFIG_NAME] + (['-r'] if deep else []))
 
     def collect_loss(self) -> Losses:
-        if self._dispatcher is None:
-            raise ValueError("Dispatcher not set.")
-        self._dispatcher.wait()
         train_metrics_path: Path = self._seed_path / 'train_metrics.yaml'
         with train_metrics_path.open('r', encoding='utf-8') as file:
             train_metrics: dict = yaml.safe_load(file)
 
-        rmse_de: float = train_metrics[-1]['rmse/de']
+        rmse_de: float = train_metrics[-1]['rmse/depa']
         rmse_f_comp: float = train_metrics[-1]['rmse/f_comp']
 
         return Losses(rmse_de, rmse_f_comp)
@@ -81,7 +69,7 @@ class PotGRACE(PotModel):
     def switch_out_path(self, out_path: Path):
         shutil.copytree(self._out_path, out_path, dirs_exist_ok=True)
         super().switch_out_path(out_path)
-        self._seed_path: Path = self._out_path / 'seed' / f'{self._seed_number}'
+        self._seed_path = self._out_path / 'seed' / f'{self._seed_number}'
         self._yace_path = self._seed_path / 'final_model'
 
     @staticmethod

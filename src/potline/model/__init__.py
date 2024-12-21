@@ -4,7 +4,6 @@ Models.
 
 from .model import (
     PotModel,
-    SupportedModel,
     Losses,
     YACE_NAME,
     POTENTIAL_NAME,

@@ -27,7 +27,7 @@ create_box      1 box
 create_atoms    1 box
 
 #-------Define interatomic potential-----------------------------------
-include         ../potential.in
+include         ./potential.in
 neighbor        2.0 bin
 neigh_modify    every 1 delay 0 check yes
 

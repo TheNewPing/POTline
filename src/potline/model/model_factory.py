@@ -3,7 +3,8 @@ XpotModel interface and factory function.
 """
 
 from pathlib import Path
-from .model import PotModel, SupportedModel
+from .model import PotModel
+from ..dispatcher.slurm_preset import SupportedModel
 
 def create_model(model_name: str,
                  config_filepath: Path,

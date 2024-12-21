@@ -1,0 +1,107 @@
+{
+    general: {
+        lammps_bin_path: "/home/erodaro/lammps_mace/lammps/build/lmp",
+        model_name: mace
+        best_n_models: 20
+        hpc: true
+        cluster: 'snellius'
+        sweep_path: "/home/erodaro/POTline/full_test/mace"
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "20G"
+            time: "119:00:00"
+        }
+        modules: ["/home4/p319875/repos/POTline/src/configs/snellius/modules/conda_mace.sh"]
+        py_scripts: []
+    }
+    deep_training: {
+        max_epochs: 200,
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "50G"
+            time: "36:00:00"
+            partition: "gpu_a100"
+            gpus: 1
+        }
+        modules: ["/home4/p319875/repos/POTline/src/configs/snellius/modules/conda_mace.sh"]
+        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/pyt_gpu_test.py"]
+    }
+    inference: {
+        prerun_steps: 100,
+        max_steps: 1100,
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "50G"
+            time: "3:00:00"
+            partition: "gpu_a100"
+            gpus: 1
+        }
+        modules: ["/home4/p319875/repos/POTline/src/configs/snellius/modules/conda_mace.sh",
+            "/home4/p319875/repos/POTline/src/configs/snellius/modules/module_mpi.sh",
+            "/home4/p319875/repos/POTline/src/configs/snellius/modules/module_mkl.sh"]
+        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/pyt_gpu_test.py"]
+    }
+    data_analysis: {
+        lammps_inps_path: "/home/erodaro/POTline/src/potline/properties_simulator/pot_testing/lmps_inputs",
+        pps_python_path: "/home/erodaro/POTline/src/potline/properties_simulator/pot_testing/py_pps",
+        ref_data_path: "/home/erodaro/POTline/src/potline/properties_simulator/pot_testing/REF_DATA",
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "50G"
+            time: "3:00:00"
+            partition: "gpu_a100"
+            gpus: 1
+            'mail_type': 'ALL',
+            'mail_user': "e.rodaro@rug.nl",
+        }
+        modules: ["/home4/p319875/repos/POTline/src/configs/snellius/modules/conda_mace.sh",
+            "/home4/p319875/repos/POTline/src/configs/snellius/modules/module_mpi.sh",
+            "/home4/p319875/repos/POTline/src/configs/snellius/modules/module_mkl.sh",
+            "/home4/p319875/repos/POTline/src/configs/snellius/modules/module_prop_sim.sh"]
+        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/pyt_gpu_test.py"]
+    }
+    hyper_search: {
+        max_iter: 10,
+        n_initial_points: 5
+        n_points: 20
+        strategy: "cl_min"
+        energy_weight: 0.3
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 1
+            mem: "50G"
+            time: "12:00:00"
+            partition: "gpu_a100"
+            gpus: 1
+        }
+        modules: ["/home4/p319875/repos/POTline/src/configs/snellius/modules/conda_mace.sh"]
+        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/pyt_gpu_test.py"]
+        optimizer_params: {
+            model: "MACE"
+            num_channels: 64
+            max_L: 1
+            r_max: 6.0
+            name: "mace_test"
+            train_file: "/home/erodaro/POTline/src/data/ogata-extended/ogata_extended.xyz"
+            valid_fraction: 0.10
+            energy_key: "energy"
+            forces_key: "forces"
+            device: cuda
+            batch_size: "skopt.space.Integer(32, 64)"
+            max_num_epochs: 100
+            seed: 123
+            default_dtype: "skopt.space.Categorical(categories=['float64', 'float32'])"
+            swa: "skopt.space.Categorical(categories=['True', 'False'])"
+            ema: "skopt.space.Categorical(categories=['True', 'False'])"
+            ema_decay: "skopt.space.Real(0, 1)"
+            amsgrad: "skopt.space.Categorical(categories=['True', 'False'])"
+            lr: "skopt.space.Real(0.0001, 0.1)"
+            interaction_first: "skopt.space.Categorical(categories=['RealAgnosticResidualInteractionBlock', 'RealAgnosticInteractionBlock'])"
+            interaction: "skopt.space.Categorical(categories=['RealAgnosticResidualInteractionBlock', 'RealAgnosticAttResidualInteractionBlock', 'RealAgnosticInteractionBlock'])"
+        }
+    }
+}

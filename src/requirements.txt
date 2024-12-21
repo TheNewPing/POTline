@@ -1,2 +1,0 @@
-hjson
-pandas-stubs

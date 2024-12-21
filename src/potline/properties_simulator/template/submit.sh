@@ -22,16 +22,11 @@
 #------------------------------
 
 # Collect the input parameters
-out_path=$1
-LMMP=$2
-lmp_inps=$3
-pps_python=$4
-ref_data_path=$5
-eaddress=$6
-n_cpu=$7
-
-# Change to the output directory
-cd ${out_path}
+LMMP=$1
+lmp_inps=$2
+pps_python=$3
+ref_data_path=$4
+n_cpu=$5
 
 # clear caches
 rm dump*
@@ -57,8 +52,8 @@ potential_name=`echo $(basename $fullpath)`
 # Grep the potential version and echo to results file
 echo '#**********************************' | tee -a  ./data/results.txt
 echo 'Potential basis set:' ${potential_name} | tee -a ./data/results.txt
-awk '/^pair_style*/' ../potential.in | tee -a ./data/results.txt
-awk '/^pair_coeff*/' ../potential.in | tee -a ./data/results.txt
+awk '/^pair_style*/' ./potential.in | tee -a ./data/results.txt
+awk '/^pair_coeff*/' ./potential.in | tee -a ./data/results.txt
 echo '#**********************************' | tee -a ./data/results.txt
 
 #**********************************
@@ -138,9 +133,9 @@ rm *.mod
 
 # Send email of the plots as the attached file.
 # Mail the results ---------------------------------------------------
-if [ "$hpc" = "True" ]; then
-    mail -s "Basic Properties of iron predicted by IAP" -a ./data/results.txt -a ./plots/eos_bp.png -a ./plots/sfe.png "${eaddress}" <<EOF
-Please check the performance of interatomic potential: ${potential_name}
-EOF
-    echo "Mail the results successful!"
-fi
+# if [ "$hpc" = "True" ]; then
+#     mail -s "Basic Properties of iron predicted by IAP" -a ./data/results.txt -a ./plots/eos_bp.png -a ./plots/sfe.png "${eaddress}" <<EOF
+# Please check the performance of interatomic potential: ${potential_name}
+# EOF
+#     echo "Mail the results successful!"
+# fi

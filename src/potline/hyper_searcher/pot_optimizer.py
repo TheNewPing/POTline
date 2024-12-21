@@ -12,9 +12,9 @@ from skopt import Optimizer # type: ignore
 import xpot.loaders as load # type: ignore
 
 from ..config_reader import HyperConfig
-from ..model import PotModel, create_model, CONFIG_NAME
+from ..model import create_model, CONFIG_NAME
 from ..loss_logger import LossLogger, ModelTracker
-from ..dispatcher import DispatcherFactory
+from ..dispatcher import DispatcherManager
 
 OPTIM_DIR_NAME: str = "hyper_search"
 
@@ -24,22 +24,23 @@ class PotOptimizer():
 
     Args:
         - config: configuration data.
-        - dispatcher_factory: factory for dispatching training
+        - dispatcher_manager: manager for dispatching training
     """
     def __init__(
         self,
         config: HyperConfig,
-        dispatcher_factory: DispatcherFactory,
+        dispatcher_manager: DispatcherManager,
     ):
         self._config = config
-        self._dispatcher_factory = dispatcher_factory
+        self._dispatcher_manager = dispatcher_manager
         self._iteration = 0
         self._subiter = 0
-        self._iter_path = self._config.sweep_path / str(self._iteration) / str(self._subiter) / OPTIM_DIR_NAME
+        self._out_path = self._config.sweep_path / OPTIM_DIR_NAME
+        self._out_path.mkdir(parents=True, exist_ok=True)
+        self._iter_path = self._out_path / str(self._iteration) / str(self._subiter)
         self._fitted_models: list[ModelTracker] = []
 
-        self._defaults = PotModel.get_defaults(self._config.model_name)
-        self._mlp_total = load.merge_hypers(self._defaults, self._config.optimizer_params)
+        self._mlp_total = load.merge_hypers({}, self._config.optimizer_params)
         load.validate_hypers(self._mlp_total, self._config.optimizer_params)
         self._optimizable_params = load.get_optimisable_params(self._mlp_total)
         self._optimizer: Optimizer = Optimizer(
@@ -48,7 +49,7 @@ class PotOptimizer():
             n_initial_points=self._config.n_initial_points,
         )
 
-        self._loss_logger = LossLogger(self._config.sweep_path, self._get_keys())
+        self._loss_logger = LossLogger(self._out_path, self._get_keys())
 
     def run(self) -> list[ModelTracker]:
         """
@@ -57,6 +58,7 @@ class PotOptimizer():
         for _ in range(self._config.max_iter):
             self._fitted_models += self._optimize()
         self._loss_logger.tabulate_final_results()
+        self.dump_optimizer()
         return self._fitted_models
 
     def _optimize(self) -> list[ModelTracker]:
@@ -70,21 +72,33 @@ class PotOptimizer():
         # Initialize all the models
         for next_params in next_params_list:
             self._subiter += 1
-            self._iter_path = \
-                self._config.sweep_path / str(self._iteration) / str(self._subiter) / OPTIM_DIR_NAME
+            self._iter_path = self._out_path / str(self._iteration) / str(self._subiter)
             config_path: Path = self._prep_fit(next_params)
             fit_trackers.append(ModelTracker(
                 create_model(self._config.model_name, config_path, self._iter_path),
                 self._iteration, self._subiter, next_params))
 
         # Start the fitting process
-        for fit_tr in fit_trackers:
-            fit_tr.model.dispatch_fit(self._dispatcher_factory)
+        fit_cmd: str = fit_trackers[0].model.get_fit_cmd(deep=False)
+        self._dispatcher_manager.set_job([fit_cmd],
+                                         self._out_path / str(self._iteration),
+                                         self._config.job_config,
+                                         list(range(1,self._subiter+1)))
+        self._dispatcher_manager.dispatch_job()
 
-        # Collect the loss values
-        for fit_tr in fit_trackers:
-            fit_tr.valid_losses = fit_tr.model.collect_loss()
-            self._loss_logger.write_error_file(fit_tr)
+        try:
+            # Collect the loss values
+            self._dispatcher_manager.wait_job()
+            for fit_tr in fit_trackers:
+                fit_tr.valid_losses = fit_tr.model.collect_loss()
+                self._loss_logger.write_error_file(fit_tr)
+                fit_tr.save_info(fit_tr.model.get_out_path())
+        except Exception as e:
+            print(f"Something went wrong collecting iteration {self._iteration}, subiteration {self._subiter}")
+            print(f'Error: {e}')
+            print('Dumping optimizer...')
+            self.dump_optimizer()
+            raise e
 
         # Tell the optimizer the results
         self._tell([fit_tr.params for fit_tr in fit_trackers],
@@ -163,7 +177,7 @@ class PotOptimizer():
         """
         Dump the optimizer to a file.
         """
-        filepath: Path = self._config.sweep_path / filename
+        filepath: Path = self._out_path / filename
         with filepath.open("wb") as f:
             pickle.dump(self._optimizer, f)
 
@@ -171,7 +185,7 @@ class PotOptimizer():
         """
         Load the optimizer from a file.
         """
-        filepath: Path = self._config.sweep_path / filename
+        filepath: Path = self._out_path / filename
         with filepath.open("rb") as f:
             self._optimizer = pickle.load(f)
 
