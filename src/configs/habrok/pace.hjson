@@ -2,7 +2,7 @@
     general: {
         lammps_bin_path: "/home4/p319875/lammps_pace/lammps/build/lmp",
         model_name: pacemaker
-        best_n_models: 3
+        best_n_models: 20
         hpc: true
         cluster: 'habrok'
         sweep_path: "/home4/p319875/repos/POTline/full_test/pace"
@@ -161,7 +161,7 @@
                 "trainable_parameters": "ALL",
                 min_relative_train_loss_per_iter: 5e-5
                 min_relative_test_loss_per_iter: 1e-5
-                early_stopping_patience: 200
+                early_stopping_patience: 10
             },
             "backend": {
                 "evaluator": "tensorpot",

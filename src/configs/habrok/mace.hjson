@@ -126,6 +126,8 @@
             lr: "skopt.space.Real(0.0001, 0.1)"
             interaction_first: "skopt.space.Categorical(categories=['RealAgnosticResidualInteractionBlock', 'RealAgnosticInteractionBlock'])"
             interaction: "skopt.space.Categorical(categories=['RealAgnosticResidualInteractionBlock', 'RealAgnosticAttResidualInteractionBlock', 'RealAgnosticInteractionBlock'])"
+            eval_interval: 1
+            patience: 10
         }
     }
 }

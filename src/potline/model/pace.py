@@ -6,15 +6,12 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from collections.abc import Callable
 import shutil
 
 import yaml
-import numpy as np
 import pandas as pd
-from xpot import maths # type: ignore
 
-from .model import PotModel, RawLosses, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses, gen_from_template
+from .model import PotModel, POTENTIAL_TEMPLATE_PATH, CONFIG_NAME, Losses, gen_from_template
 from ..dispatcher import SupportedModel
 
 LAST_POTENTIAL_NAME: str = 'output_potential.yaml'
@@ -28,7 +25,14 @@ class PotPACE(PotModel):
         return  ' '.join(['pacemaker', CONFIG_NAME] + ([f'-p {LAST_POTENTIAL_NAME}'] if deep else []))
 
     def collect_loss(self) -> Losses:
-        return self._validate_errors(self._calculate_errors())
+        test_metrics_path: Path = self._out_path / 'test_metrics.txt'
+        with test_metrics_path.open('r', encoding='utf-8') as file:
+            train_metrics = pd.read_csv(file, delim_whitespace=True).to_dict(orient='records')
+
+        rmse_de: float = train_metrics[-1]['rmse_epa']
+        rmse_f_comp: float = train_metrics[-1]['rmse_f_comp']
+
+        return Losses(rmse_de, rmse_f_comp)
 
     def lampify(self) -> Path:
         subprocess.run(['pace_yaml2yace', '-o',
@@ -39,7 +43,7 @@ class PotPACE(PotModel):
 
     def create_potential(self) -> Path:
         potential_values: dict = {
-            'pstyle': 'pace product',
+            'pstyle': 'pace/kk product',
             'yace_path': str(self._yace_path),
         }
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)
@@ -74,54 +78,6 @@ class PotPACE(PotModel):
         errors_filepath: Path = self._out_path / "test_pred.pckl.gzip"
         df = pd.read_pickle(errors_filepath, compression="gzip")
         return df
-
-    def _calculate_errors(self) -> RawLosses:
-        """
-        Validate the potential from pickle files produced by :code:`pacemaker`
-        during the fitting process.
-
-        Returns
-            RawLosses: the raw losses for each prediction.
-        """
-        errors = self._collect_raw_errors()
-
-        n_per_structure = errors["NUMBER_OF_ATOMS"].values.tolist()
-
-        ref_energy = errors["energy_corrected"].values.tolist()
-        pred_energy = errors["energy_pred"].values.tolist()
-
-        energy_diff = [pred - ref for pred, ref in zip(pred_energy, ref_energy)]
-
-        ref_forces = np.concatenate(errors["forces"].to_numpy(), axis=None)
-        pred_forces = np.concatenate(
-            errors["forces_pred"].to_numpy(), axis=None
-        )
-        forces_diff = [pred - ref for pred, ref in zip(pred_forces, ref_forces)]
-
-        return RawLosses(energy_diff, forces_diff, n_per_structure)
-
-    def _validate_errors(
-        self,
-        errors: RawLosses,
-        metric: Callable = maths.get_rmse,
-        n_scaling: float = 1,
-    ) -> Losses:
-        """
-        Calculate the loss resulting loss.
-
-        Args:
-            - errors: the raw errors from the fitting process.
-            - metric: the metric to use for the loss.
-            - n_scaling: the scaling factor for the atom count.
-
-        Returns:
-            Losses: the losses from the fitting process.
-        """
-        energy_diff = (
-            errors.energies
-            / np.array(errors.atom_counts) ** n_scaling
-        )
-        return Losses(metric(energy_diff), metric(errors.forces))
 
     @staticmethod
     def from_path(out_path):

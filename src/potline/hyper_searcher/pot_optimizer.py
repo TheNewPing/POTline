@@ -58,6 +58,7 @@ class PotOptimizer():
         for _ in range(self._config.max_iter):
             self._fitted_models += self._optimize()
         self._loss_logger.tabulate_final_results()
+        self.dump_optimizer()
         return self._fitted_models
 
     def _optimize(self) -> list[ModelTracker]:
@@ -85,12 +86,19 @@ class PotOptimizer():
                                          list(range(1,self._subiter+1)))
         self._dispatcher_manager.dispatch_job()
 
-        # Collect the loss values
-        self._dispatcher_manager.wait_job()
-        for fit_tr in fit_trackers:
-            fit_tr.valid_losses = fit_tr.model.collect_loss()
-            self._loss_logger.write_error_file(fit_tr)
-            fit_tr.save_info(fit_tr.model.get_out_path())
+        try:
+            # Collect the loss values
+            self._dispatcher_manager.wait_job()
+            for fit_tr in fit_trackers:
+                fit_tr.valid_losses = fit_tr.model.collect_loss()
+                self._loss_logger.write_error_file(fit_tr)
+                fit_tr.save_info(fit_tr.model.get_out_path())
+        except Exception as e:
+            print(f"Something went wrong collecting iteration {self._iteration}, subiteration {self._subiter}")
+            print(f'Error: {e}')
+            print('Dumping optimizer...')
+            self.dump_optimizer()
+            raise e
 
         # Tell the optimizer the results
         self._tell([fit_tr.params for fit_tr in fit_trackers],

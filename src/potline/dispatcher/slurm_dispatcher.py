@@ -56,7 +56,6 @@ class SlurmDispatcher():
         if result.returncode != 0:
             raise RuntimeError(f"Error running squeue: {result.stderr.strip()}")
 
-        print(result.stdout.strip())
         SlurmDispatcher.jobs = SlurmDispatcher._parse_output(result.stdout.strip())
 
     @staticmethod
@@ -69,6 +68,5 @@ class SlurmDispatcher():
         reader = csv.DictReader(csv_file, delimiter=',', quotechar='"', skipinitialspace=True)
         jobs = {}
         for row in reader:
-            print(row)
             jobs[int(row["ARRAY_JOB_ID"])] = row
         return jobs

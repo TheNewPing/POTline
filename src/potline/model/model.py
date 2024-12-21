@@ -4,6 +4,7 @@ Base class for MLPs in XPOT using HPC.
 
 from __future__ import annotations
 
+import math
 import shutil
 from pathlib import Path
 from abc import ABC, abstractmethod
@@ -25,8 +26,8 @@ class Losses():
         - force: force loss
     """
     def __init__(self, energy: float, force: float):
-        self.energy: float = energy
-        self.force: float = force
+        self.energy: float = energy if not math.isnan(energy) else math.inf
+        self.force: float = force if not math.isnan(force) else math.inf
 
 class RawLosses():
     """
