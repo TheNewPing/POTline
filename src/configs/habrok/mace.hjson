@@ -106,9 +106,9 @@
         py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/pyt_gpu_test.py"]
         optimizer_params: {
             model: "MACE"
-            num_channels: 64
+            num_channels: 32
             max_L: 1
-            r_max: 6.0
+            r_max: 5.0
             name: "mace_test"
             train_file: "/home4/p319875/repos/POTline/src/data/ogata_extended.xyz"
             valid_fraction: 0.10

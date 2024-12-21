@@ -38,11 +38,8 @@ class PotMACE(PotModel):
         last_eval = eval_lines[-1]
         last_eval_data: dict = json.loads(last_eval)
 
-        rmse_e: float | None = last_eval_data.get("rmse_e")
-        rmse_f: float | None = last_eval_data.get("rmse_f")
-
-        if rmse_e is None or rmse_f is None:
-            raise ValueError("RMSE values not found in the last evaluation data.")
+        rmse_e: float = float(last_eval_data["rmse_e"])
+        rmse_f: float = float(last_eval_data["rmse_f"])
 
         return Losses(rmse_e, rmse_f)
 

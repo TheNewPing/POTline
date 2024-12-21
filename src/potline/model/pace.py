@@ -29,8 +29,8 @@ class PotPACE(PotModel):
         with test_metrics_path.open('r', encoding='utf-8') as file:
             train_metrics = pd.read_csv(file, delim_whitespace=True).to_dict(orient='records')
 
-        rmse_de: float = train_metrics[-1]['rmse_epa']
-        rmse_f_comp: float = train_metrics[-1]['rmse_f_comp']
+        rmse_de: float = float(train_metrics[-1]['rmse_epa'])
+        rmse_f_comp: float = float(train_metrics[-1]['rmse_f_comp'])
 
         return Losses(rmse_de, rmse_f_comp)
 

@@ -35,8 +35,8 @@ class PotGRACE(PotModel):
         with train_metrics_path.open('r', encoding='utf-8') as file:
             train_metrics: dict = yaml.safe_load(file)
 
-        rmse_de: float = train_metrics[-1]['rmse/depa']
-        rmse_f_comp: float = train_metrics[-1]['rmse/f_comp']
+        rmse_de: float = float(train_metrics[-1]['rmse/depa'])
+        rmse_f_comp: float = float(train_metrics[-1]['rmse/f_comp'])
 
         return Losses(rmse_de, rmse_f_comp)
 
