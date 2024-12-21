@@ -19,45 +19,47 @@ To understand the following sections, it is important to know how the workflow i
 
 4. The results will be available in the defined sweep path using the following structure:
 
-`sweep_path`
-|---`hyper_search`
-|   |---`loss_function_errors.csv` (summary of losses divided in energy and force)
-|   |---`parameters.csv` (summary of loss and used parameters from the optimization space)
-|   |---`1`
+```
+sweep_path
+|---hyper_search
+|   |---loss_function_errors.csv (summary of losses divided in energy and force)
+|   |---parameters.csv (summary of loss and used parameters from the optimization space)
+|   |---1
 |   ...
-|   |---`itern_n`
-|       |---`1`
+|   |---itern_n
+|       |---1
 |       ...
-|       |---`subiter_n`
-|           |---`training_files`
-|           |---`optimized_params.yaml` (parameters used for that subiteration)
-|           |---`model_info.csv` (iter, subiter, loss, used for identification in the next phases)
-|           |---`potential.in`(only if `--nodeep` is used)
+|       |---subiter_n
+|           |---training_files
+|           |---optimized_params.yaml (parameters used for that subiteration)
+|           |---model_info.csv (iter, subiter, loss, used for identification in the next phases)
+|           |---potential.in (only if --nodeep is used)
 |
-|---`deep_train`
-|   |---`1`
+|---deep_train
+|   |---1
 |   ...
-|   |---`best_n`
-|       |---`training_files`
-|       |---`optimized_params.yaml`
-|       |---`model_info.csv`
-|       |---`potential.in`
+|   |---best_n
+|       |---training_files
+|       |---optimized_params.yaml
+|       |---model_info.csv
+|       |---potential.in
 |
-|---`inference_bench`
-|   |---`1`
+|---inference_bench
+|   |---1
 |   ...
-|   |---`best_n`
-|       |---`bench_files`
-|       |---`model_info.csv`
-|       |---`timings.csv`
+|   |---best_n
+|       |---bench_files
+|       |---model_info.csv
+|       |---timings.csv
 |
-|---`properties_simulation`
-    |---`1`
+|---properties_simulation
+    |---1
     ...
-    |---`best_n`
-        |---`simulation_files`
-        |---`model_info.csv`
-        |---`plots`
+    |---best_n
+        |---simulation_files
+        |---model_info.csv
+        |---plots
+```
 
 ## Installation
 
