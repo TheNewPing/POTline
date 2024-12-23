@@ -7,12 +7,13 @@ from pathlib import Path
 
 from tabulate import tabulate
 from xpot import maths # type: ignore
+import yaml
 
-from ..model import PotModel, Losses, create_model_from_path
+from ..model import PotModel, Losses, create_model
 
 ERROR_FILENAME = "loss_function_errors.csv"
 PARAMETER_FILENAME = "parameters.csv"
-INFO_FILENAME = "model_info.csv"
+INFO_FILENAME = "model_info.yaml"
 
 class ModelTracker():
     """
@@ -54,8 +55,14 @@ class ModelTracker():
         if self.valid_losses is None:
             raise ValueError("Losses not calculated.")
         with (out_path / INFO_FILENAME).open("w", encoding='utf-8') as f:
-            f.write("iteration,subiteration,valid_energy_loss,valid_force_loss\n")
-            f.write(f"{self.iteration},{self.subiter},{self.valid_losses.energy},{self.valid_losses.force}\n")
+            data = {
+                'iteration': self.iteration,
+                'subiteration': self.subiter,
+                'valid_energy_loss': self.valid_losses.energy,
+                'valid_force_loss': self.valid_losses.force,
+                'params': self.params
+            }
+            yaml.dump(data, f)
 
     @staticmethod
     def from_path(model_name: str, model_path: Path) -> 'ModelTracker':
@@ -69,15 +76,14 @@ class ModelTracker():
         Returns:
             ModelTracker: the model tracker
         """
-        model = create_model_from_path(model_name, model_path)
-        params = model.get_params()
+        model = create_model(model_name, model_path)
         with (model_path / INFO_FILENAME).open("r", encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                iteration = int(row['iteration'])
-                subiter = int(row['subiteration'])
-                valid_losses = Losses(float(row['valid_energy_loss']), float(row['valid_force_loss']))
-                return ModelTracker(model, iteration, subiter, params, valid_losses)
+            data = yaml.safe_load(f)
+            iteration = int(data['iteration'])
+            subiter = int(data['subiteration'])
+            params = data['params']
+            valid_losses = Losses(float(data['valid_energy_loss']), float(data['valid_force_loss']))
+            return ModelTracker(model, iteration, subiter, params, valid_losses)
         raise ValueError("Model not found in error file.")
 
 class LossLogger():
@@ -88,12 +94,13 @@ class LossLogger():
         - sweep_path: path to the sweep
         - keys: keys of the optimized parameters
     """
-    def __init__(self, sweep_path: Path, keys: list[str] | None = None):
+    def __init__(self, sweep_path: Path, keys: list[str] | None = None, no_init: bool = False):
         self._sweep_path = sweep_path
         self._error_filepath = sweep_path / ERROR_FILENAME
         self._param_filepath = sweep_path / PARAMETER_FILENAME
         self._keys = keys
-        self._initialise_csvs()
+        if not no_init:
+            self._initialise_csvs()
 
     def tabulate_final_results(self):
         """

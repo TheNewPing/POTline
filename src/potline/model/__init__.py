@@ -11,4 +11,4 @@ from .model import (
     POTENTIAL_TEMPLATE_PATH,
     )
 from .pace import PotPACE
-from .model_factory import create_model, create_model_from_path
+from .model_factory import create_model, get_fit_cmd, get_lammps_params

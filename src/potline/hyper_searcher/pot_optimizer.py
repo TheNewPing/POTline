@@ -6,15 +6,15 @@ from __future__ import annotations
 
 import pickle
 from pathlib import Path
+import math
 
 import yaml
 from skopt import Optimizer # type: ignore
 import xpot.loaders as load # type: ignore
 
-from ..config_reader import HyperConfig
-from ..model import create_model, CONFIG_NAME
+from ..config_reader import ConfigReader
+from ..model import create_model, CONFIG_NAME, Losses
 from ..loss_logger import LossLogger, ModelTracker
-from ..dispatcher import DispatcherManager
 
 OPTIM_DIR_NAME: str = "hyper_search"
 
@@ -23,82 +23,88 @@ class PotOptimizer():
     Custom optimizer class for XPOT, based on the skopt.Optimizer class.
 
     Args:
-        - config: configuration data.
-        - dispatcher_manager: manager for dispatching training
+        - config_path: path to the configuration file.
+        - restart_optimizer: whether to restart the optimizer.
+        - iteration: iteration number.
     """
-    def __init__(
-        self,
-        config: HyperConfig,
-        dispatcher_manager: DispatcherManager,
-    ):
-        self._config = config
-        self._dispatcher_manager = dispatcher_manager
-        self._iteration = 0
-        self._subiter = 0
+    def __init__(self, config_path: Path, restart_optimizer: bool = False, iteration: int = 1):
+        self._config = ConfigReader(config_path).get_optimizer_config()
+        self._config_path = config_path
+        self._restart_optimizer = restart_optimizer
+        self._iteration = iteration
+        self._subiter = 1
         self._out_path = self._config.sweep_path / OPTIM_DIR_NAME
-        self._out_path.mkdir(parents=True, exist_ok=True)
         self._iter_path = self._out_path / str(self._iteration) / str(self._subiter)
-        self._fitted_models: list[ModelTracker] = []
 
         self._mlp_total = load.merge_hypers({}, self._config.optimizer_params)
         load.validate_hypers(self._mlp_total, self._config.optimizer_params)
         self._optimizable_params = load.get_optimisable_params(self._mlp_total)
-        self._optimizer: Optimizer = Optimizer(
-            dimensions=list(self._optimizable_params.values()),
-            random_state=42,
-            n_initial_points=self._config.n_initial_points,
-        )
+        if not restart_optimizer:
+            self._out_path.mkdir(parents=True, exist_ok=True)
+            self._optimizer: Optimizer = Optimizer(
+                dimensions=list(self._optimizable_params.values()),
+                random_state=42,
+                n_initial_points=self._config.n_initial_points,
+            )
+        else:
+            self.load_optimizer()
 
-        self._loss_logger = LossLogger(self._out_path, self._get_keys())
+        self._loss_logger = LossLogger(self._out_path, self._get_keys(), no_init=restart_optimizer)
 
-    def run(self) -> list[ModelTracker]:
-        """
-        Run the optimisation sweep.
-        """
-        for _ in range(self._config.max_iter):
-            self._fitted_models += self._optimize()
-        self._loss_logger.tabulate_final_results()
-        self.dump_optimizer()
-        return self._fitted_models
-
-    def _optimize(self) -> list[ModelTracker]:
+    def run(self) -> None:
         """
         Function for running optimisation sweep.
         """
-        self._iteration += 1
+
+        if self._restart_optimizer:
+            self._collect_losses()
+
+        if self._iteration <= self._config.max_iter:
+            self._setup_trackers()
+        else:
+            # Tabulate the final results
+            self._loss_logger.tabulate_final_results()
+            self.dump_optimizer()
+            print("Optimization completed.")
+
+    def _setup_trackers(self) -> list[ModelTracker]:
         # Get parameters sets to evaluate
         next_params_list: list[dict] = self._ask()
         fit_trackers: list[ModelTracker] = []
         # Initialize all the models
         for next_params in next_params_list:
-            self._subiter += 1
             self._iter_path = self._out_path / str(self._iteration) / str(self._subiter)
-            config_path: Path = self._prep_fit(next_params)
+            self._prep_fit(next_params)
             fit_trackers.append(ModelTracker(
-                create_model(self._config.model_name, config_path, self._iter_path),
+                create_model(self._config.model_name, self._iter_path),
                 self._iteration, self._subiter, next_params))
+            self._subiter += 1
+        return fit_trackers
 
-        # Start the fitting process
-        fit_cmd: str = fit_trackers[0].model.get_fit_cmd(deep=False)
-        self._dispatcher_manager.set_job([fit_cmd],
-                                         self._out_path / str(self._iteration),
-                                         self._config.job_config,
-                                         list(range(1,self._subiter+1)))
-        self._dispatcher_manager.dispatch_job()
+    def _collect_losses(self) -> None:
+        # Get the model trackers
+        fit_trackers: list[ModelTracker] = PotOptimizer.get_model_trackers(self._config.sweep_path,
+                                                                           self._config.model_name)
+        # Filter models with the previous iteration
+        fit_trackers = [fit_tr for fit_tr in fit_trackers if fit_tr.iteration == self._iteration-1]
 
-        try:
-            # Collect the loss values
-            self._dispatcher_manager.wait_job()
-            for fit_tr in fit_trackers:
+        # Collect the loss values
+        for fit_tr in fit_trackers:
+            try:
                 fit_tr.valid_losses = fit_tr.model.collect_loss()
+            except Exception as e:
+                handle_errors = True # TODO: make this a config option
+                print(f"Error collecting [{fit_tr.iteration};{fit_tr.subiter}]")
+                print(e)
+                if handle_errors:
+                    fit_tr.valid_losses = Losses(math.nan, math.nan)
+                else:
+                    print('Dumping optimizer...')
+                    self.dump_optimizer()
+                    raise e
+            finally:
                 self._loss_logger.write_error_file(fit_tr)
                 fit_tr.save_info(fit_tr.model.get_out_path())
-        except Exception as e:
-            print(f"Something went wrong collecting iteration {self._iteration}, subiteration {self._subiter}")
-            print(f'Error: {e}')
-            print('Dumping optimizer...')
-            self.dump_optimizer()
-            raise e
 
         # Tell the optimizer the results
         self._tell([fit_tr.params for fit_tr in fit_trackers],
@@ -110,9 +116,6 @@ class PotOptimizer():
             loss: float = fit_tr.get_total_valid_loss(self._config.energy_weight)
             key_values: list[str] = [str(i) for i in self._optimizer.Xi[-i]]
             self._loss_logger.write_param_result(fit_tr.iteration, fit_tr.subiter, loss, key_values)
-
-        self._subiter = 0
-        return fit_trackers
 
     def _get_keys(self) -> list[str]:
         """
@@ -195,3 +198,25 @@ class PotOptimizer():
                 "have different lengths. The optimizer cannot be "
                 "loaded."
             )
+
+    @staticmethod
+    def get_model_trackers(sweep_path: Path, model_name: str) -> list[ModelTracker]:
+        """
+        Get the model trackers from the sweep path.
+
+        Args:
+            - sweep_path: path to the sweep
+            - model_name: name of the model
+
+        Returns:
+            - list of model trackers from the hyperparameter search directory
+        """
+        hyp_path: Path = sweep_path / OPTIM_DIR_NAME
+        iter_dirs: list[Path] = [d for d in hyp_path.iterdir() if d.is_dir()]
+        model_dirs: list[Path] = [d for d in iter_dirs for d in d.iterdir() if d.is_dir()]
+        models: list[ModelTracker] = []
+        for model_path in model_dirs:
+            if model_path.is_dir():
+                model_tracker = ModelTracker.from_path(model_name, model_path)
+                models.append(model_tracker)
+        return models

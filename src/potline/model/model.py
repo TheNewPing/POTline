@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from string import Template
 
 import yaml
+import numpy as np
 
 YACE_NAME: str = 'model.yace'
 POTENTIAL_NAME: str = 'potential.in'
@@ -26,8 +27,8 @@ class Losses():
         - force: force loss
     """
     def __init__(self, energy: float, force: float):
-        self.energy: float = energy if not math.isnan(energy) else math.inf
-        self.force: float = force if not math.isnan(force) else math.inf
+        self.energy: float = energy if not math.isnan(energy) else float(np.finfo(np.float32).max)
+        self.force: float = force if not math.isnan(force) else float(np.finfo(np.float32).max)
 
 class RawLosses():
     """
@@ -59,13 +60,11 @@ class PotModel(ABC):
     Base class for MLIAP models.
 
     Args:
-        - config_filepath: path to the configuration file.
         - out_path: path to the output directory.
     """
-    def __init__(self, config_filepath: Path,
-                 out_path: Path):
-        self._config_filepath: Path = config_filepath
+    def __init__(self, out_path: Path):
         self._out_path: Path = out_path
+        self._config_filepath: Path = self._out_path / CONFIG_NAME
         self._yace_path: Path = self._out_path / YACE_NAME
         self._lmp_pot_path: Path = self._out_path / POTENTIAL_NAME
 
@@ -116,8 +115,9 @@ class PotModel(ABC):
             - maxiter: the maximum number of iterations.
         """
 
+    @staticmethod
     @abstractmethod
-    def get_lammps_params(self) -> str:
+    def get_lammps_params() -> str:
         """
         Get model specific LAMMPS parameters.
 
@@ -160,16 +160,3 @@ class PotModel(ABC):
         Get the path to the potential file.
         """
         return self._lmp_pot_path
-
-    @staticmethod
-    @abstractmethod
-    def from_path(out_path: Path) -> PotModel:
-        """
-        Create a model from a path. The model must be already trained.
-
-        Args:
-            - out_path: path to the model.
-
-        Returns:
-            PotModel: the model.
-        """

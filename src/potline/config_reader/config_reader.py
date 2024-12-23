@@ -93,12 +93,16 @@ class BenchConfig():
                  prerun_steps: int,
                  max_steps: int,
                  sweep_path: Path,
-                 job_config: JobConfig):
+                 job_config: JobConfig,
+                 model_name: str,
+                 best_n_models: int):
         self.lammps_bin_path: Path = lammps_bin_path
         self.prerun_steps: int = prerun_steps
         self.max_steps: int = max_steps
         self.sweep_path: Path = sweep_path
         self.job_config: JobConfig = job_config
+        self.model_name: str = model_name
+        self.best_n_models: int = best_n_models
 
 class PropConfig():
     """
@@ -109,13 +113,17 @@ class PropConfig():
                  pps_python_path: Path,
                  ref_data_path: Path,
                  sweep_path: Path,
-                 job_config: JobConfig):
+                 job_config: JobConfig,
+                 model_name: str,
+                 best_n_models: int):
         self.lammps_bin_path: Path = lammps_bin_path
         self.lammps_inps_path: Path = lammps_inps_path
         self.pps_python_path: Path = pps_python_path
         self.ref_data_path: Path = ref_data_path
         self.sweep_path: Path = sweep_path
         self.job_config: JobConfig = job_config
+        self.model_name: str = model_name
+        self.best_n_models: int = best_n_models
 
 class HyperConfig():
     """
@@ -146,10 +154,16 @@ class DeepTrainConfig():
     """
     def __init__(self, max_epochs: int,
                  sweep_path: Path,
-                 job_config: JobConfig):
+                 job_config: JobConfig,
+                 model_name: str,
+                 energy_weight: float,
+                 best_n_models: int):
         self.max_epochs: int = max_epochs
         self.sweep_path: Path = sweep_path
         self.job_config: JobConfig = job_config
+        self.model_name: str = model_name
+        self.energy_weight: float = energy_weight
+        self.best_n_models: int = best_n_models
 
 class GeneralConfig():
     """
@@ -246,7 +260,9 @@ class ConfigReader():
             int(str(self.get_config_section(MainSectionKW.INFERENCE.value)[InferenceKW.PRE_STEPS.value])),
             int(str(self.get_config_section(MainSectionKW.INFERENCE.value)[InferenceKW.MAX_STEPS.value])),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
-            self.get_slurm_config(MainSectionKW.INFERENCE.value)
+            self.get_slurm_config(MainSectionKW.INFERENCE.value),
+            str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
+            int(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.BEST_N.value])),
         )
 
     def get_prop_config(self) -> PropConfig:
@@ -258,7 +274,9 @@ class ConfigReader():
             Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.PPS_PYTHON.value])),
             Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.REF_DATA.value])),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
-            self.get_slurm_config(MainSectionKW.PROP_SIM.value)
+            self.get_slurm_config(MainSectionKW.PROP_SIM.value),
+            str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
+            int(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.BEST_N.value])),
         )
 
     def get_deep_train_config(self) -> DeepTrainConfig:
@@ -267,7 +285,10 @@ class ConfigReader():
         return DeepTrainConfig(
             int(str(self.get_config_section(MainSectionKW.DEEP_TRAINING.value)[DeepTrainKW.MAX_EPOCHS.value])),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
-            self.get_slurm_config(MainSectionKW.DEEP_TRAINING.value)
+            self.get_slurm_config(MainSectionKW.DEEP_TRAINING.value),
+            str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
+            float(str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.ENERGY_WEIGHT.value])),
+            int(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.BEST_N.value]))
         )
 
     def get_general_config(self) -> GeneralConfig:

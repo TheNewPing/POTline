@@ -3,6 +3,7 @@ dispatcher factory
 """
 
 from pathlib import Path
+import subprocess
 
 from .slurm_preset import get_slurm_options
 from .slurm_dispatcher import SlurmDispatcher
@@ -29,7 +30,8 @@ class DispatcherManager():
     def set_job(self, commands: list[str], out_path: Path,
                 job_config: JobConfig,
                 array_ids: list[int] | None = None,
-                dependency: int | None = None):
+                dependency: int | None = None,
+                hold: bool = False):
         """
         Create a dispatcher based on the options.
 
@@ -39,6 +41,7 @@ class DispatcherManager():
             - job_config: job configuration
             - array_ids: array ids to run
             - dependency: job dependency
+            - hold: whether to hold the job
 
         Returns:
             Dispatcher: the dispatcher to use.
@@ -50,6 +53,7 @@ class DispatcherManager():
         options = get_slurm_options(
             self._cluster, self._job_type, out_path, self._model,
             slurm_dict, array_ids, dependency)
+        options.update({'hold': hold})
 
         # Setup environment
         source_cmds = [f'source {cmd}' for cmd in job_config.modules]
@@ -76,3 +80,24 @@ class DispatcherManager():
         if self._dispatcher is None:
             raise ValueError("No job has been set yet.")
         self._dispatcher.wait()
+
+    @staticmethod
+    def release_id(job_id: int, dependency: int | None = None, array_id: int | None = None):
+        """
+        Release a job.
+        """
+        squeue_cmd: str = 'squeue -r -t PD -u $USER -o '
+        grep_cmd: str = f'grep "{job_id}_{array_id}$"' if array_id else f'grep "{job_id}$"'
+
+        if dependency:
+            subprocess.run(
+                squeue_cmd +
+                f'"scontrol update %i Dependency=afterok:{dependency}" | ' +
+                grep_cmd + ' | sh',
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+
+        subprocess.run(
+            squeue_cmd +
+            '"scontrol release %i" | ' +
+            grep_cmd + ' | sh',
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)

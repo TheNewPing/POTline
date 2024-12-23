@@ -6,9 +6,7 @@ from pathlib import Path
 from .model import PotModel
 from ..dispatcher.slurm_preset import SupportedModel
 
-def create_model(model_name: str,
-                 config_filepath: Path,
-                 out_path: Path) -> PotModel:
+def create_model(model_name: str, out_path: Path) -> PotModel:
     """
     Create a model.
 
@@ -19,33 +17,51 @@ def create_model(model_name: str,
     """
     if model_name == SupportedModel.PACE.value:
         from .pace import PotPACE
-        return PotPACE(config_filepath, out_path)
+        return PotPACE(out_path)
     elif model_name == SupportedModel.MACE.value:
         from .mace import PotMACE
-        return PotMACE(config_filepath, out_path)
+        return PotMACE(out_path)
     elif model_name == SupportedModel.GRACE.value:
         from .grace import PotGRACE
-        return PotGRACE(config_filepath, out_path)
+        return PotGRACE(out_path)
 
     raise ValueError(f"Unsupported model: {model_name}")
 
-def create_model_from_path(model_name: str,
-                           out_path: Path) -> PotModel:
+def get_fit_cmd(model_name: str, deep: bool) -> str:
     """
-    Create a model from a path. Thee model must be already trained.
+    Get the fitting command for a model
 
     Args:
         - model_name: name of the model
-        - out_path: path to the output directory
+        - deep: flag for deep training
     """
     if model_name == SupportedModel.PACE.value:
         from .pace import PotPACE
-        return PotPACE.from_path(out_path)
+        return PotPACE.get_fit_cmd(deep)
     elif model_name == SupportedModel.MACE.value:
         from .mace import PotMACE
-        return PotMACE.from_path(out_path)
+        return PotMACE.get_fit_cmd(deep)
     elif model_name == SupportedModel.GRACE.value:
         from .grace import PotGRACE
-        return PotGRACE.from_path(out_path)
+        return PotGRACE.get_fit_cmd(deep)
+
+    raise ValueError(f"Unsupported model: {model_name}")
+
+def get_lammps_params(model_name: str) -> str:
+    """
+    Get the LAMMPS parameters for a model
+
+    Args:
+        - model_name: name of the model
+    """
+    if model_name == SupportedModel.PACE.value:
+        from .pace import PotPACE
+        return PotPACE.get_lammps_params()
+    elif model_name == SupportedModel.MACE.value:
+        from .mace import PotMACE
+        return PotMACE.get_lammps_params()
+    elif model_name == SupportedModel.GRACE.value:
+        from .grace import PotGRACE
+        return PotGRACE.get_lammps_params()
 
     raise ValueError(f"Unsupported model: {model_name}")

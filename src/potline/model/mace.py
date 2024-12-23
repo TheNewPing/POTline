@@ -44,7 +44,6 @@ class PotMACE(PotModel):
         return Losses(rmse_e, rmse_f)
 
     def lampify(self) -> Path:
-        # TODO: insert path in config
         with self._config_filepath.open('r', encoding='utf-8') as file:
             model_name: str = yaml.safe_load(file)['name']
 
@@ -73,7 +72,8 @@ class PotMACE(PotModel):
         with self._config_filepath.open('w', encoding='utf-8') as file:
             yaml.safe_dump(config, file)
 
-    def get_lammps_params(self) -> str:
+    @staticmethod
+    def get_lammps_params() -> str:
         return '-k on g 1 -sf kk -pk kokkos newton on neigh half'
 
     def get_name(self) -> SupportedModel:
@@ -82,7 +82,3 @@ class PotMACE(PotModel):
     def switch_out_path(self, out_path: Path):
         shutil.copytree(self._out_path / 'checkpoints', out_path / 'checkpoints', dirs_exist_ok=True)
         super().switch_out_path(out_path)
-
-    @staticmethod
-    def from_path(out_path):
-        return PotMACE(out_path / CONFIG_NAME, out_path)

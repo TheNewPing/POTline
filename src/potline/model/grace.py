@@ -18,9 +18,9 @@ class PotGRACE(PotModel):
     """
     GRACE implementation.
     """
-    def __init__(self, config_filepath, out_path):
-        super().__init__(config_filepath, out_path)
-        with config_filepath.open('r', encoding='utf-8') as file:
+    def __init__(self, out_path):
+        super().__init__(out_path)
+        with self._config_filepath.open('r', encoding='utf-8') as file:
             config: dict = yaml.safe_load(file)
             self._seed_number: int = config['seed']
             self._seed_path: Path = out_path / 'seed' / f'{self._seed_number}'
@@ -60,7 +60,8 @@ class PotGRACE(PotModel):
         with self._config_filepath.open('w', encoding='utf-8') as file:
             yaml.safe_dump(config, file)
 
-    def get_lammps_params(self) -> str:
+    @staticmethod
+    def get_lammps_params() -> str:
         return ''
 
     def get_name(self) -> SupportedModel:
@@ -71,7 +72,3 @@ class PotGRACE(PotModel):
         super().switch_out_path(out_path)
         self._seed_path = self._out_path / 'seed' / f'{self._seed_number}'
         self._yace_path = self._seed_path / 'final_model'
-
-    @staticmethod
-    def from_path(out_path):
-        return PotGRACE(out_path / CONFIG_NAME, out_path)

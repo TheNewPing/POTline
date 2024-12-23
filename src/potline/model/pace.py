@@ -58,7 +58,8 @@ class PotPACE(PotModel):
         with self._config_filepath.open('w', encoding='utf-8') as file:
             yaml.safe_dump(config, file)
 
-    def get_lammps_params(self) -> str:
+    @staticmethod
+    def get_lammps_params() -> str:
         return '-k on g 1 -sf kk -pk kokkos newton on neigh half'
 
     def get_name(self) -> SupportedModel:
@@ -78,7 +79,3 @@ class PotPACE(PotModel):
         errors_filepath: Path = self._out_path / "test_pred.pckl.gzip"
         df = pd.read_pickle(errors_filepath, compression="gzip")
         return df
-
-    @staticmethod
-    def from_path(out_path):
-        return PotPACE(out_path / CONFIG_NAME, out_path)
