@@ -6,13 +6,13 @@ This Python framework is designed to run a pipeline to train Machine Learning In
 
 To understand the following sections, it is important to know how the workflow is designed:
 
-1. The user has to define a configuration file, its content will be illustrated in section [Configuration File Syntax](#configuration-file-syntax). The main idea is to set the parameters for eache phase of the pipeline, while also defining the requirements for each Slurm job.
+1. The user has to define a configuration file, its content will be illustrated in section [Configuration File Syntax](#configuration-file-syntax). The main idea is to set the parameters for each phase of the pipeline, while also defining the requirements for each Slurm job.
 
-2. Run the pipeline passing the configuration file, this step will create all the "watcher" jobs with their dependencies. A "watcher" job is a Slurm job that dispatches the real jobs for its phase, it is also used to run common processes and mark the end of a phase (when needed).
+2. Run the pipeline passing the configuration file, this step will create all the jobs with their dependencies.
 
 3. Without any additional flags, the pipeline will execute the following workflow:
     1. Find the best hyperparameters in the provided optimization space
-    2. Get the best n models
+    2. Get the best n models using their validation loss
     3. Train for additional epochs the best models
     4. Create the LAMMPS potentials using the best models
     5. Run the simulations using the obtained potentials
@@ -108,7 +108,9 @@ python src/run.py --config <path_to_config> [options]
 
 ### Configuration File Syntax
 
-The configuration file for POTline is written in HJSON format, which is a user-friendly extension of JSON. Some examples are provided in the folder `src/configs` (currently only Habrok configuration are updated), remember that when writing a configuration you have to keep in mind both the model and the cluster used.
+The configuration file for POTline is written in HJSON format, which is a user-friendly extension of JSON. Some examples are provided in the folder `src/configs` (currently only Habrok configurations are updated), remember that when writing a configuration you have to keep in mind both the model and the cluster used.
+
+REMEMBER: In every section, `modules` and `py_scripts` should be lists of filenames from the files contained in `[repo_path]/src/configs/[cluster_name]/modules` and `[repo_path]/src/configs/global` respectively.
 
 Below is a description of the main sections and their respective parameters:
 
@@ -117,8 +119,9 @@ Below is a description of the main sections and their respective parameters:
 - `model_name`: Name of the model (currently supports `pacemaker, mace, gracemaker`).
 - `best_n_models`: Number of best models to use in inference and simulation step.
 - `hpc`: HPC mode, keep always True.
-- `cluster`: Cluster configuration to use (currently supports only `snellius`).
+- `cluster`: Cluster configuration to use (currently supports `snellius`, `habrok`).
 - `sweep_path`: Output path for the experiments.
+- `repo_path`: Path where POTLine has been cloned, used to handle modules and python scripts for Slurm jobs
 - `slurm_watcher`: Slurm options for general watcher, currently used only in the conversion phase.
 - `slurm_opts`: Currently not used, keep always `{}`
 - `modules`: Scripts to source for general jobs, currently used only in the conversion phase.
@@ -126,25 +129,22 @@ Below is a description of the main sections and their respective parameters:
 
 ### Deep training
 - `max_epochs`: Max number of epochs for deeper training on best models.
-- `slurm_watcher`: Slurm options for best models training watcher, has only to dispatch the training jobs and wait until they are all completed, so it needs a lot of time but low resources.
-- `slurm_opts`: Slurm options for best models training jobs, allocate resources according to the model, GPU usage is reccomended.
+- `slurm_watcher`: Slurm options for best models training watcher, has only to dispatch the training jobs and collect their results, so it needs a **low time and resources**.
+- `slurm_opts`: Slurm options for best models training jobs, **allocate resources according to the model, GPU usage is reccomended**.
 - `modules`: Scripts to source for best models training.
 - `py_scripts`: Python scripts to run before best models training.
 
 #### Inference
 - `prerun_steps`: Number of pre-run steps.
 - `max_steps`: Maximum number of steps.
-- `slurm_watcher`: Slurm options for inference watcher, has only to dispatch the inference jobs, currently no jobs deepend on this phase, so it requires low time and resources.
-- `slurm_opts`: Slurm options for inference jobs, allocate resources according to the model, GPU usage is reccomended.
+- `slurm_watcher`: Slurm options for inference watcher, has only to dispatch the inference jobs, so it requires **low time and resources**.
+- `slurm_opts`: Slurm options for inference jobs, **allocate resources according to the model, GPU usage is reccomended**.
 - `modules`: Scripts to source for inference.
 - `py_scripts`: Python scripts to run before inference.
 
 #### Data Analysis
-- `lammps_inps_path`: Path to LAMMPS input files (from Potential_benchmark_iron).
-- `pps_python_path`: Path to Python scripts for post-processing (from Potential_benchmark_iron).
-- `ref_data_path`: Path to reference data (from Potential_benchmark_iron).
-- `slurm_watcher`: Slurm options for simulation watcher, has only to dispatch the simulation jobs, currently no jobs deepend on this phase, so it requires low time and resources.
-- `slurm_opts`: Slurm options for simulation jobs, allocate resources according to the model, GPU usage is reccomended.
+- `slurm_watcher`: Slurm options for simulation watcher, has only to dispatch the simulation jobs, so it requires **low time and resources**.
+- `slurm_opts`: Slurm options for simulation jobs, **allocate resources according to the model, GPU usage is reccomended**.
 - `modules`: Scripts to source for simulation.
 - `py_scripts`: Python scripts to run before simulation.
 
@@ -154,8 +154,9 @@ Below is a description of the main sections and their respective parameters:
 - `n_points`: Number of parameters sets asked at each iteration to the optimizer.
 - `strategy`: Strategy for the optimizer, consult `skopt.Optimizer`.
 - `energy_weight`: Loss weight of the energy component (0.0 - 1.0).
-- `slurm_watcher`: Slurm options for optimization watcher, used to dispatch the fitting jobs and to host the Bayesian optimizer. Requires "medium resources" and a lot of time. GPU is not needed.
-- `slurm_opts`: Slurm options for optimization jobs, allocate resources according to the model, GPU usage is reccomended.
+- `handle_collect_errors`: Boolean flag used to replace the loss with max value of float32 when an error happens in the collection phase. If false the optimizer will be dumped and the execution will stop.
+- `slurm_watcher`: Slurm options for optimization watcher, used to dispatch the fitting jobs and to host the Bayesian optimizer. **Requires "medium resources" and and low time. GPU is not needed**.
+- `slurm_opts`: Slurm options for optimization jobs, **allocate resources according to the model, GPU usage is reccomended**.
 - `modules`: Scripts to source for optimization.
 - `py_scripts`: Python scripts to run before optimization.
 - `optimizer_params`: Model-specific configuration:
