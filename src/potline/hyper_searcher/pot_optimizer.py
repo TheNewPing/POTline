@@ -75,10 +75,13 @@ class PotOptimizer():
         for next_params in next_params_list:
             self._iter_path = self._out_path / str(self._iteration) / str(self._subiter)
             self._prep_fit(next_params)
-            fit_trackers.append(ModelTracker(
+            new_tracker = ModelTracker(
                 create_model(self._config.model_name, self._iter_path),
-                self._iteration, self._subiter, next_params))
+                self._iteration, self._subiter, next_params)
+            new_tracker.save_info(self._iter_path)
+            fit_trackers.append(new_tracker)
             self._subiter += 1
+        self.dump_optimizer()
         return fit_trackers
 
     def _collect_losses(self) -> None:
@@ -93,10 +96,9 @@ class PotOptimizer():
             try:
                 fit_tr.valid_losses = fit_tr.model.collect_loss()
             except Exception as e:
-                handle_errors = True # TODO: make this a config option
                 print(f"Error collecting [{fit_tr.iteration};{fit_tr.subiter}]")
                 print(e)
-                if handle_errors:
+                if self._config.handle_collect_errors:
                     fit_tr.valid_losses = Losses(math.nan, math.nan)
                 else:
                     print('Dumping optimizer...')

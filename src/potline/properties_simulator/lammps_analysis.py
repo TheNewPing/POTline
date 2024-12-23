@@ -21,6 +21,11 @@ class PropertiesSimulator():
         - config: configuration for the simulations
         - tracker_list: trackers to simulate
     """
+
+    LAMMPS_INPS_PATH: Path = Path(__file__).parent / 'pot_testing' / 'lmps_inputs'
+    PPS_PYTHON_PATH: Path = Path(__file__).parent / 'pot_testing' / 'py_pps'
+    REF_DATA_PATH: Path = Path(__file__).parent / 'pot_testing' / 'REF_DATA'
+
     def __init__(self, config_path: Path, tracker_list: list[ModelTracker]):
         self._config = ConfigReader(config_path).get_prop_config()
         self._tracker_list = tracker_list

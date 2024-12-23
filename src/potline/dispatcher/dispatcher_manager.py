@@ -56,8 +56,8 @@ class DispatcherManager():
         options.update({'hold': hold})
 
         # Setup environment
-        source_cmds = [f'source {cmd}' for cmd in job_config.modules]
-        py_cmds = [f'python {cmd}' for cmd in job_config.py_scripts] if is_array_job else []
+        source_cmds = [f'source {str(cmd)}' for cmd in job_config.modules]
+        py_cmds = [f'python {str(script)}' for script in job_config.py_scripts] if is_array_job else []
         array_cmds = ['cd $SLURM_ARRAY_TASK_ID'] if array_ids else []
         export_cmds = ['export OMP_PROC_BIND=spread', 'export OMP_PLACES=threads']
         tot_cmds = export_cmds + array_cmds + source_cmds + py_cmds + commands

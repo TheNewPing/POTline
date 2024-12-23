@@ -36,6 +36,7 @@ class GeneralKW(Enum):
     HPC = 'hpc'
     CLUSTER = 'cluster'
     SWEEP_PATH = 'sweep_path'
+    REPO_PATH = 'repo_path'
 
 class DeepTrainKW(Enum):
     """
@@ -54,10 +55,6 @@ class PropSimKW(Enum):
     """
     Keywords for the property simulation configuration.
     """
-    LAMMPS_INPS = 'lammps_inps_path'
-    PPS_PYTHON = 'pps_python_path'
-    REF_DATA = 'ref_data_path'
-    EMAIL = 'email'
 
 class HyperSearchKW(Enum):
     """
@@ -69,6 +66,7 @@ class HyperSearchKW(Enum):
     STRAT = 'strategy'
     ENERGY_WEIGHT = 'energy_weight'
     OPTIMIZER_PARAMS = 'optimizer_params'
+    HANDLE_COLLECT_ERRORS = 'handle_collect_errors'
 
 class JobConfig():
     """
@@ -76,13 +74,13 @@ class JobConfig():
     """
     def __init__(self, slurm_watcher: dict,
                  slurm_opts: dict,
-                 modules: list[str],
-                 py_scripts: list[str],
+                 modules: list[Path],
+                 py_scripts: list[Path],
                  cluster: str):
         self.slurm_watcher: dict = slurm_watcher
         self.slurm_opts: dict = slurm_opts
-        self.modules: list[str] = modules
-        self.py_scripts: list[str] = py_scripts
+        self.modules: list[Path] = modules
+        self.py_scripts: list[Path] = py_scripts
         self.cluster: str = cluster
 
 class BenchConfig():
@@ -109,17 +107,11 @@ class PropConfig():
     Configuration class for the data analysis step.
     """
     def __init__(self, lammps_bin_path: Path,
-                 lammps_inps_path: Path,
-                 pps_python_path: Path,
-                 ref_data_path: Path,
                  sweep_path: Path,
                  job_config: JobConfig,
                  model_name: str,
                  best_n_models: int):
         self.lammps_bin_path: Path = lammps_bin_path
-        self.lammps_inps_path: Path = lammps_inps_path
-        self.pps_python_path: Path = pps_python_path
-        self.ref_data_path: Path = ref_data_path
         self.sweep_path: Path = sweep_path
         self.job_config: JobConfig = job_config
         self.model_name: str = model_name
@@ -137,7 +129,8 @@ class HyperConfig():
                  strategy: str,
                  energy_weight: float,
                  optimizer_params: dict,
-                 job_config: JobConfig,):
+                 job_config: JobConfig,
+                 handle_collect_errors: bool,):
         self.model_name: str = model_name
         self.sweep_path: Path = sweep_path
         self.max_iter: int = max_iter
@@ -147,6 +140,7 @@ class HyperConfig():
         self.energy_weight: float = energy_weight
         self.optimizer_params: dict = optimizer_params
         self.job_config: JobConfig = job_config
+        self.handle_collect_errors: bool = handle_collect_errors
 
 class DeepTrainConfig():
     """
@@ -175,7 +169,8 @@ class GeneralConfig():
                  hpc: bool,
                  cluster: str,
                  sweep_path: Path,
-                 job_config: JobConfig):
+                 job_config: JobConfig,
+                 repo_path: Path):
         self.lammps_bin_path: Path = lammps_bin_path
         self.model_name: str = model_name
         self.best_n_models: int = best_n_models
@@ -183,6 +178,7 @@ class GeneralConfig():
         self.cluster: str = cluster
         self.sweep_path: Path = sweep_path
         self.job_config: JobConfig = job_config
+        self.repo_path: Path = repo_path
 
 def patify(config_dict: dict[str, Any]) -> dict:
     """
@@ -222,14 +218,27 @@ class ConfigReader():
         """
         Get the SLURM configuration for a specific job type.
         """
-        gen_config: dict = self.get_config_section(MainSectionKW.GENERAL.value)
+        gen_config: GeneralConfig = self.get_general_config()
         section_config: dict = self.get_config_section(section_name)
+
+        modules: list[str] = section_config[SlurmJobKW.MODULES.value]
+        modules_dir: Path = gen_config.repo_path / 'src/configs' / gen_config.cluster / 'modules'
+        module_paths: list[Path] = []
+        for module in modules:
+            module_paths.append(modules_dir / module)
+
+        py_scripts: list[str] = section_config[SlurmJobKW.PY_SCRIPTS.value]
+        scripts_dir: Path = gen_config.repo_path / 'src/configs' / 'global'
+        script_paths: list[Path] = []
+        for script in py_scripts:
+            script_paths.append(scripts_dir / script)
+
         return JobConfig(
             section_config[SlurmJobKW.SLURM_WATCHER.value],
             section_config[SlurmJobKW.SLURM_OPTS.value],
-            section_config[SlurmJobKW.MODULES.value],
-            section_config[SlurmJobKW.PY_SCRIPTS.value],
-            gen_config[GeneralKW.CLUSTER.value]
+            module_paths,
+            script_paths,
+            gen_config.cluster
         )
 
     def get_optimizer_config(self) -> HyperConfig:
@@ -249,7 +258,8 @@ class ConfigReader():
             float(str(self.get_config_section(
                 MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.ENERGY_WEIGHT.value])),
             self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.OPTIMIZER_PARAMS.value],
-            self.get_slurm_config(MainSectionKW.HYPER_SEARCH.value)
+            self.get_slurm_config(MainSectionKW.HYPER_SEARCH.value),
+            bool(str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.HANDLE_COLLECT_ERRORS.value])),
         )
 
     def get_bench_config(self) -> BenchConfig:
@@ -270,9 +280,6 @@ class ConfigReader():
             raise ValueError('No property simulation configuration found in the config file.')
         return PropConfig(
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.LMP_BIN.value])),
-            Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.LAMMPS_INPS.value])),
-            Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.PPS_PYTHON.value])),
-            Path(str(self.get_config_section(MainSectionKW.PROP_SIM.value)[PropSimKW.REF_DATA.value])),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
             self.get_slurm_config(MainSectionKW.PROP_SIM.value),
             str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
@@ -301,5 +308,6 @@ class ConfigReader():
             bool(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.HPC.value])),
             str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.CLUSTER.value]),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
-            self.get_slurm_config(MainSectionKW.GENERAL.value)
+            self.get_slurm_config(MainSectionKW.GENERAL.value),
+            Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.REPO_PATH.value]))
         )

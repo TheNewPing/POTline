@@ -4,6 +4,7 @@ Loss logger
 
 import csv
 from pathlib import Path
+import pickle
 
 from tabulate import tabulate
 from xpot import maths # type: ignore
@@ -12,8 +13,9 @@ import yaml
 from ..model import PotModel, Losses, create_model
 
 ERROR_FILENAME = "loss_function_errors.csv"
-PARAMETER_FILENAME = "parameters.csv"
+ERROR_PARAMETER_FILENAME = "parameters.csv"
 INFO_FILENAME = "model_info.yaml"
+INFO_PARM_FILENAME = "model_params.pckl"
 
 class ModelTracker():
     """
@@ -52,17 +54,20 @@ class ModelTracker():
         Args:
             - out_path: path to save the information
         """
-        if self.valid_losses is None:
-            raise ValueError("Losses not calculated.")
         with (out_path / INFO_FILENAME).open("w", encoding='utf-8') as f:
+            loss = {
+                'valid_energy_loss': self.valid_losses.energy,
+                'valid_force_loss': self.valid_losses.force
+            } if self.valid_losses is not None else {}
             data = {
                 'iteration': self.iteration,
                 'subiteration': self.subiter,
-                'valid_energy_loss': self.valid_losses.energy,
-                'valid_force_loss': self.valid_losses.force,
-                'params': self.params
+                **loss,
             }
             yaml.dump(data, f)
+
+        with (out_path / INFO_PARM_FILENAME).open("wb") as f:
+            pickle.dump(self.params, f)
 
     @staticmethod
     def from_path(model_name: str, model_path: Path) -> 'ModelTracker':
@@ -78,13 +83,17 @@ class ModelTracker():
         """
         model = create_model(model_name, model_path)
         with (model_path / INFO_FILENAME).open("r", encoding='utf-8') as f:
-            data = yaml.safe_load(f)
+            data: dict = yaml.safe_load(f)
             iteration = int(data['iteration'])
             subiter = int(data['subiteration'])
-            params = data['params']
-            valid_losses = Losses(float(data['valid_energy_loss']), float(data['valid_force_loss']))
-            return ModelTracker(model, iteration, subiter, params, valid_losses)
-        raise ValueError("Model not found in error file.")
+            energy_loss: str | None = data.get('valid_energy_loss')
+            force_loss: str | None = data.get('valid_force_loss')
+            valid_losses = Losses(float(data['valid_energy_loss']), float(data['valid_force_loss'])) \
+                if energy_loss and force_loss else None
+        with (model_path / INFO_PARM_FILENAME).open("rb") as f:
+            params = pickle.load(f)
+
+        return ModelTracker(model, iteration, subiter, params, valid_losses)
 
 class LossLogger():
     """
@@ -97,7 +106,7 @@ class LossLogger():
     def __init__(self, sweep_path: Path, keys: list[str] | None = None, no_init: bool = False):
         self._sweep_path = sweep_path
         self._error_filepath = sweep_path / ERROR_FILENAME
-        self._param_filepath = sweep_path / PARAMETER_FILENAME
+        self._param_filepath = sweep_path / ERROR_PARAMETER_FILENAME
         self._keys = keys
         if not no_init:
             self._initialise_csvs()
@@ -176,21 +185,3 @@ class LossLogger():
                 + ",".join(key_values)
                 + "\n"
             )
-
-    # TODO: Fix this
-    # def plot_results(self, path: str) -> None:
-    #     """
-    #     Function to create scikit-optimize results using inbuilt functions.
-
-    #     Parameters
-    #     ----------
-    #     path : str
-    #         Path of directory to save plots to.
-    #     """
-    #     data = self._optimizer.get_result()
-    #     a = plots.plot_objective(data, levels=20, size=3)
-    #     plt.tight_layout()
-    #     a.figure.savefig(f"{path}/objective.pdf")
-
-    #     b = plots.plot_evaluations(data)
-    #     b.figure.savefig(f"{path}/evaluations.pdf")

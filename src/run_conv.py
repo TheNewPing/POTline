@@ -2,11 +2,19 @@
 CLI entry point for running model conversion.
 """
 
-from argparse import Namespace
+from argparse import Namespace, ArgumentParser
 from pathlib import Path
 
-from potline.utils import parse_config, get_model_trackers, filter_best_loss
+from potline.utils import get_model_trackers, filter_best_loss
 from potline.config_reader import ConfigReader
+
+def parse_config() -> Namespace:
+    """
+    Parse the command line arguments.
+    """
+    parser: ArgumentParser = ArgumentParser(description='Process some parameters.')
+    parser.add_argument('--config', type=str, help='Path to the config file')
+    return parser.parse_args()
 
 if __name__ == '__main__':
     args: Namespace = parse_config()

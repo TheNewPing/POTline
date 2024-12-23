@@ -43,7 +43,7 @@ class PotPACE(PotModel):
 
     def create_potential(self) -> Path:
         potential_values: dict = {
-            'pstyle': 'pace/kk product',
+            'pstyle': 'pace product',
             'yace_path': str(self._yace_path),
         }
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)

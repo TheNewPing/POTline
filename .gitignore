@@ -176,6 +176,7 @@ hyper_search/*
 test/*
 test_refactor/*
 full_test/*
+reworked_test/*
 REF_DATA/*
 plots/*
 potential/*

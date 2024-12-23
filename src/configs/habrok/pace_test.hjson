@@ -2,10 +2,11 @@
     general: {
         lammps_bin_path: "/home4/p319875/lammps_pace/lammps/build/lmp",
         model_name: pacemaker
-        best_n_models: 3
+        best_n_models: 2
         hpc: true
         cluster: 'habrok'
-        sweep_path: "/home4/p319875/repos/POTline/full_test/pace"
+        sweep_path: "/home4/p319875/repos/POTline/reworked_test/pace"
+        repo_path: "/home4/p319875/repos/POTline"
         slurm_watcher: {
             ntasks: 1
             cpus_per_task: 1
@@ -13,7 +14,7 @@
             time: "1:00:00"
         }
         slurm_opts: {}
-        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_pace.sh"]
+        modules: ["conda_pace.sh"]
         py_scripts: []
     }
     deep_training: {
@@ -32,8 +33,8 @@
             partition: "gpu"
             gpus_per_node:"a100:1"
         }
-        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_pace.sh"]
-        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
+        modules: ["conda_pace.sh"]
+        py_scripts: ["tf_gpu_test.py"]
     }
     inference: {
         prerun_steps: 100,
@@ -52,14 +53,10 @@
             partition: "gpu"
             gpus_per_node:"a100:1"
         }
-        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_pace.sh",
-            "/home4/p319875/repos/POTline/src/configs/habrok/modules/module_mpi.sh"]
-        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
+        modules: ["conda_pace.sh", "module_mpi.sh"]
+        py_scripts: ["tf_gpu_test.py"]
     }
     data_analysis: {
-        lammps_inps_path: "/home4/p319875/repos/POTline/src/potline/properties_simulator/pot_testing/lmps_inputs",
-        pps_python_path: "/home4/p319875/repos/POTline/src/potline/properties_simulator/pot_testing/py_pps",
-        ref_data_path: "/home4/p319875/repos/POTline/src/potline/properties_simulator/pot_testing/REF_DATA",
         slurm_watcher: {
             ntasks: 1
             cpus_per_task: 1
@@ -76,9 +73,8 @@
             'mail_type': 'ALL',
             'mail_user': "e.rodaro@rug.nl",
         }
-        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_pace.sh",
-            "/home4/p319875/repos/POTline/src/configs/habrok/modules/module_mpi.sh",]
-        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
+        modules: ["conda_pace.sh", "module_mpi.sh",]
+        py_scripts: ["tf_gpu_test.py"]
     }
     hyper_search: {
         max_iter: 2,
@@ -102,8 +98,8 @@
             partition: "gpu"
             gpus_per_node:"a100:1"
         }
-        modules: ["/home4/p319875/repos/POTline/src/configs/habrok/modules/conda_pace.sh"]
-        py_scripts: ["/home4/p319875/repos/POTline/src/configs/global/tf_gpu_test.py"]
+        modules: ["conda_pace.sh"]
+        py_scripts: ["tf_gpu_test.py"]
         optimizer_params: {
             "cutoff": 6.0,
             "seed": 42
