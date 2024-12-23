@@ -218,17 +218,20 @@ class ConfigReader():
         """
         Get the SLURM configuration for a specific job type.
         """
-        gen_config: GeneralConfig = self.get_general_config()
+        gen_config: dict = self.get_config_section(MainSectionKW.GENERAL.value)
         section_config: dict = self.get_config_section(section_name)
 
         modules: list[str] = section_config[SlurmJobKW.MODULES.value]
-        modules_dir: Path = gen_config.repo_path / 'src/configs' / gen_config.cluster / 'modules'
+        modules_dir: Path = gen_config[GeneralKW.REPO_PATH.value] \
+            / 'src/configs' \
+            / gen_config[GeneralKW.CLUSTER.value] \
+            / 'modules'
         module_paths: list[Path] = []
         for module in modules:
             module_paths.append(modules_dir / module)
 
         py_scripts: list[str] = section_config[SlurmJobKW.PY_SCRIPTS.value]
-        scripts_dir: Path = gen_config.repo_path / 'src/configs' / 'global'
+        scripts_dir: Path = gen_config[GeneralKW.REPO_PATH.value] / 'src/configs' / 'global'
         script_paths: list[Path] = []
         for script in py_scripts:
             script_paths.append(scripts_dir / script)
@@ -238,7 +241,7 @@ class ConfigReader():
             section_config[SlurmJobKW.SLURM_OPTS.value],
             module_paths,
             script_paths,
-            gen_config.cluster
+            gen_config[GeneralKW.CLUSTER.value]
         )
 
     def get_optimizer_config(self) -> HyperConfig:

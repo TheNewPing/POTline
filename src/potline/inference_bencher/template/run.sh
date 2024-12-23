@@ -10,10 +10,10 @@ export OMP_NUM_THREADS=${n_cpu}
 
 echo "start"
 start_time=`date +%s`
-eval mpirun -np ${n_cpu} ${lammps_bin_path} -in "bench.in" -v steps ${prerun_steps}
+eval srun mpirun -np ${n_cpu} ${lammps_bin_path} -in "bench.in" -v steps ${prerun_steps}
 echo "prerun done"
 mid_time=`date +%s`
-eval mpirun -np ${n_cpu} ${lammps_bin_path} -in "bench.in" -v steps ${max_steps}
+eval srun mpirun -np ${n_cpu} ${lammps_bin_path} -in "bench.in" -v steps ${max_steps}
 end_time=`date +%s`
 echo "finished"
 

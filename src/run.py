@@ -202,7 +202,7 @@ if __name__ == '__main__':
         next_id = run_conv(conf_path, dependency=next_id)
 
     if args.noinference:
-        next_id = run_inf(conf_path, dependency=next_id)
+        run_inf(conf_path, dependency=next_id)
 
     if args.noproperties:
-        next_id = run_sim(conf_path, dependency=next_id)
+        run_sim(conf_path, dependency=next_id)

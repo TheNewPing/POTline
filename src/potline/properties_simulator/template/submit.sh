@@ -71,40 +71,40 @@ a0=$(grep 'a0 =' ./data/results.txt | awk '{print $3}')
 
 # Vacancy formation energy
 cp ${lmp_inps}/in.vac .
-eval ${LMMP} -in in.vac -v lat ${a0}
+eval srun ${LMMP} -in in.vac -v lat ${a0}
 
 # Calculation of elastic constants.--------------------------------
 cp ${lmp_inps}/in.elastic .
 cp ${lmp_inps}/*.mod .
-eval ${LMMP} -in in.elastic -v lat ${a0}
+eval srun ${LMMP} -in in.elastic -v lat ${a0}
 
 # Calculation of surface energies.---------------------------------
 cp ${lmp_inps}/in.surf* .
 # (100) plane
-eval ${LMMP} -in in.surf1 -v lat ${a0}
+eval srun ${LMMP} -in in.surf1 -v lat ${a0}
 # (110) plane
-eval ${LMMP} -in in.surf2 -v lat ${a0}
+eval srun ${LMMP} -in in.surf2 -v lat ${a0}
 # (111) plane
-eval ${LMMP} -in in.surf3 -v lat ${a0}
+eval srun ${LMMP} -in in.surf3 -v lat ${a0}
 # (112) plane
-eval ${LMMP} -in in.surf4 -v lat ${a0}
+eval srun ${LMMP} -in in.surf4 -v lat ${a0}
 
 # Bain path calculation.------------------------------------------
 cp ${lmp_inps}/in.bain_path .
-eval ${LMMP} -in in.bain_path -v lat ${a0}
+eval srun ${LMMP} -in in.bain_path -v lat ${a0}
 cp bain_path.csv ./data
 
 # Stacking fault energy---------------------------------------------
 cp ${lmp_inps}/in.sfe_* .
-eval ${LMMP} -in in.sfe_110 -v lat ${a0}
-eval ${LMMP} -in in.sfe_112 -v lat ${a0}
+eval srun ${LMMP} -in in.sfe_110 -v lat ${a0}
+eval srun ${LMMP} -in in.sfe_112 -v lat ${a0}
 cp ./sfe_110.csv ./data
 cp ./sfe_112.csv ./data
 
 # Traction-separatio curve------------------------------------------
 cp ${lmp_inps}/in.ts_* .
-eval ${LMMP} -in in.ts_100 -v lat ${a0}
-eval ${LMMP} -in in.ts_110 -v lat ${a0}
+eval srun ${LMMP} -in in.ts_100 -v lat ${a0}
+eval srun ${LMMP} -in in.ts_110 -v lat ${a0}
 cp ./ts_100.csv ./data
 cp ./ts_110.csv ./data
 
