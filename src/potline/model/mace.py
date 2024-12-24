@@ -74,7 +74,7 @@ class PotMACE(PotModel):
 
     @staticmethod
     def get_lammps_params() -> str:
-        return '-k on g 1 -sf kk -pk kokkos newton on neigh half'
+        return ''
 
     def get_name(self) -> SupportedModel:
         return SupportedModel.MACE

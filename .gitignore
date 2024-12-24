@@ -166,7 +166,12 @@ cython_debug/
 *.gzip
 *.ipynb
 
+# LAMMPS installation
+lammps_versions/
+
 # output
+*.err
+*.out
 out/*
 first_test/*
 baseline/*

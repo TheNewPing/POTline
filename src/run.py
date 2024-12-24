@@ -140,7 +140,7 @@ def run_inf(config_path: Path, dependency: int | None = None) -> int:
     init_id = watch_manager.dispatch_job()
 
     # run jobs
-    n_cpu = 1
+    n_cpu = int(inf_config.job_config.slurm_opts['cpus_per_task'])
     bench_cmd: str = ' '.join([str(cmd) for cmd in [
         'srun', BENCH_SCRIPT_NAME, n_cpu,
         f'"{inf_config.lammps_bin_path} {get_lammps_params(inf_config.model_name)}"',
@@ -175,9 +175,9 @@ def run_sim(config_path: Path, dependency: int | None = None) -> int:
     init_id = watch_manager.dispatch_job()
 
     # run jobs
-    n_cpu = 1
+    n_cpu = int(sim_config.job_config.slurm_opts['cpus_per_task'])
     sim_cmd: str = ' '.join([str(cmd) for cmd in [
-        'srun', SUBMIT_SCRIPT_NAME,
+        'bash', SUBMIT_SCRIPT_NAME,
         f'"{sim_config.lammps_bin_path} {get_lammps_params(sim_config.model_name)}"',
         PropertiesSimulator.LAMMPS_INPS_PATH,
         PropertiesSimulator.PPS_PYTHON_PATH,

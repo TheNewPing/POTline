@@ -142,8 +142,10 @@ class PotModel(ABC):
             - out_path: the new output path.
         """
         shutil.copy(self._config_filepath, out_path)
-        self._config_filepath = out_path / self._config_filepath.name
         self._out_path = out_path
+        self._config_filepath = self._out_path / self._config_filepath.name
+        self._yace_path = self._out_path / YACE_NAME
+        self._lmp_pot_path = self._out_path / POTENTIAL_NAME
 
     def get_params(self) -> dict:
         """

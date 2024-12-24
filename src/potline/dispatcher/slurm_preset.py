@@ -60,7 +60,7 @@ def make_base_options(job: str, model: str, out_path: Path, slurm_opts: dict,
         **slurm_opts,
     }
     if dependency is not None:
-        options['dependency'] = f"afterok:{dependency}"
+        options['dependency'] = f"afterany:{dependency}"
     return options
 
 def make_array_options(job: str, model: str, out_path: Path,

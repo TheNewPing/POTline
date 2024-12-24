@@ -3,7 +3,6 @@ CLI utilities for PotLine.
 """
 
 from pathlib import Path
-from argparse import Namespace, ArgumentParser
 
 from .loss_logger import ModelTracker
 from .hyper_searcher import PotOptimizer
@@ -33,5 +32,7 @@ def get_model_trackers(sweep_path: Path, model_name: str,
 
     try:
         return DeepTrainer.get_model_trackers(sweep_path, model_name)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        print("Model not found in DeepTrainer. Attempting to load from PotOptimizer.")
+        print(e)
         return PotOptimizer.get_model_trackers(sweep_path, model_name)

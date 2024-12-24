@@ -80,7 +80,7 @@ In the same environments install [simple_slurm](https://github.com/amq92/simple_
     cd POTline
     ```
 
-3. Install LAMMPS accordingly to the model's documentation. Ensure to enable GPU support.
+3. Install LAMMPS accordingly to the model's documentation.
 You can also use the Slurm scripts under `src/configs/[cluster_name]/install_lammps/[model_name]` to start the installation after having completed the LAMMPS setup. Note that they are tailored for [Snellius](https://servicedesk.surf.nl/wiki/display/WIKI/Snellius) or [Habrok](https://wiki.hpc.rug.nl/habrok/start), adjust them to your needs.
     - [PACE](https://pacemaker.readthedocs.io/en/latest/pacemaker/quickstart/#lammps)
     - [MACE](https://mace-docs.readthedocs.io/en/latest/guide/lammps.html)
@@ -122,14 +122,14 @@ Below is a description of the main sections and their respective parameters:
 - `cluster`: Cluster configuration to use (currently supports `snellius`, `habrok`).
 - `sweep_path`: Output path for the experiments.
 - `repo_path`: Path where POTLine has been cloned, used to handle modules and python scripts for Slurm jobs
-- `slurm_watcher`: Slurm options for general watcher, currently used only in the conversion phase.
+- `slurm_watcher`: Slurm options for general watcher, currently used only in the conversion phase. **NOTE: MACE needs a GPU for the conversion phase**
 - `slurm_opts`: Currently not used, keep always `{}`
 - `modules`: Scripts to source for general jobs, currently used only in the conversion phase.
 - `py_scripts`: Python scripts to run before general jobs execution, currently used only in the conversion phase.
 
 ### Deep training
 - `max_epochs`: Max number of epochs for deeper training on best models.
-- `slurm_watcher`: Slurm options for best models training watcher, has only to dispatch the training jobs and collect their results, so it needs a **low time and resources**.
+- `slurm_watcher`: Slurm options for best models training watcher, has only to dispatch the training jobs and collect their results, so it needs **low time and resources**.
 - `slurm_opts`: Slurm options for best models training jobs, **allocate resources according to the model, GPU usage is reccomended**.
 - `modules`: Scripts to source for best models training.
 - `py_scripts`: Python scripts to run before best models training.
@@ -138,13 +138,13 @@ Below is a description of the main sections and their respective parameters:
 - `prerun_steps`: Number of pre-run steps.
 - `max_steps`: Maximum number of steps.
 - `slurm_watcher`: Slurm options for inference watcher, has only to dispatch the inference jobs, so it requires **low time and resources**.
-- `slurm_opts`: Slurm options for inference jobs, **allocate resources according to the model, GPU usage is reccomended**.
+- `slurm_opts`: Slurm options for inference jobs, **allocate resources according to the model, currently tested only on CPU**. Defining the `cpus_per_task` field is mandatory.
 - `modules`: Scripts to source for inference.
 - `py_scripts`: Python scripts to run before inference.
 
 #### Data Analysis
 - `slurm_watcher`: Slurm options for simulation watcher, has only to dispatch the simulation jobs, so it requires **low time and resources**.
-- `slurm_opts`: Slurm options for simulation jobs, **allocate resources according to the model, GPU usage is reccomended**.
+- `slurm_opts`: Slurm options for simulation jobs, **allocate resources according to the model, currently tested only on CPU**. Defining the `cpus_per_task` field is mandatory.
 - `modules`: Scripts to source for simulation.
 - `py_scripts`: Python scripts to run before simulation.
 

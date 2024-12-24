@@ -30,6 +30,7 @@ class DeepTrainer():
             iter_path.mkdir(exist_ok=True)
             tracker.model.switch_out_path(iter_path)
             tracker.model.set_config_maxiter(self._config.max_epochs)
+            tracker.save_info(iter_path)
 
     def collect(self):
         loss_logger = LossLogger(self._out_path)
@@ -52,6 +53,8 @@ class DeepTrainer():
         """
         deep_path: Path = sweep_path / DEEP_TRAIN_DIR_NAME
         model_dirs: list[Path] = [d for d in deep_path.iterdir() if d.is_dir()]
+        print(f"Found {len(model_dirs)} models in {deep_path}")
+        print(f"{model_dirs}")
         models: list[ModelTracker] = []
         for model_path in model_dirs:
             if model_path.is_dir():

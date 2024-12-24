@@ -28,6 +28,9 @@ pps_python=$3
 ref_data_path=$4
 n_cpu=$5
 
+export MKL_NUM_THREADS=${n_cpu}
+export OMP_NUM_THREADS=${n_cpu}
+
 # clear caches
 rm dump*
 rm *.csv
@@ -61,7 +64,7 @@ echo '#**********************************' | tee -a ./data/results.txt
 #**********************************
 # E-V curve 
 cp ${lmp_inps}/in.eos .
-eval mpirun -np ${n_cpu} ${LMMP} -in in.eos -v folder ${potential_name}
+eval mpirun -np 1 ${LMMP} -in in.eos -v folder ${potential_name}
 # fit EOS
 cp ${pps_python}/eos-fit.py .
 python eos-fit.py

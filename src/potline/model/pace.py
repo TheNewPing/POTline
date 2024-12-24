@@ -43,7 +43,7 @@ class PotPACE(PotModel):
 
     def create_potential(self) -> Path:
         potential_values: dict = {
-            'pstyle': 'pace product',
+            'pstyle': 'pace',
             'yace_path': str(self._yace_path),
         }
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)
@@ -60,7 +60,7 @@ class PotPACE(PotModel):
 
     @staticmethod
     def get_lammps_params() -> str:
-        return '-k on g 1 -sf kk -pk kokkos newton on neigh half'
+        return ''
 
     def get_name(self) -> SupportedModel:
         return SupportedModel.PACE
