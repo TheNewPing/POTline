@@ -2,10 +2,10 @@
     general: {
         lammps_bin_path: "/home4/p319875/repos/POTline/lammps_versions/mace/lammps/build/lmp",
         model_name: mace
-        best_n_models: 3
+        best_n_models: 20
         hpc: true
         cluster: 'habrok'
-        sweep_path: "/home4/p319875/repos/POTline/reworked_test/mace"
+        sweep_path: "/home4/p319875/repos/POTline/full_test/mace"
         repo_path: "/home4/p319875/repos/POTline"
         slurm_watcher: {
             ntasks: 1
@@ -20,7 +20,7 @@
         py_scripts: []
     }
     deep_training: {
-        max_epochs: 20,
+        max_epochs: 2000,
         slurm_watcher: {
             ntasks: 1
             cpus_per_task: 4
@@ -30,8 +30,8 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 8
-            mem: "50G"
-            time: "3:00:00"
+            mem: "80G"
+            time: "70:00:00"
             partition: "gpu"
             gpus_per_node:"a100:1"
         }
@@ -50,8 +50,8 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 32
-            mem: "50G"
-            time: "12:00:00"
+            mem: "80G"
+            time: "24:00:00"
         }
         modules: ["conda_mace.sh", "module_mpi.sh", "module_mkl.sh"]
         py_scripts: []
@@ -66,16 +66,16 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 32
-            mem: "50G"
-            time: "12:00:00"
+            mem: "80G"
+            time: "24:00:00"
         }
         modules: ["conda_mace.sh", "module_mpi.sh", "module_mkl.sh"]
         py_scripts: []
     }
     hyper_search: {
-        max_iter: 3,
+        max_iter: 25,
         n_initial_points: 5
-        n_points: 3
+        n_points: 5
         strategy: "cl_min"
         energy_weight: 0.3
         handle_collect_errors: true
@@ -88,8 +88,8 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 8
-            mem: "50G"
-            time: "3:00:00"
+            mem: "80G"
+            time: "50:00:00"
             partition: "gpu"
             gpus_per_node:"a100:1"
         }
@@ -107,7 +107,7 @@
             forces_key: "forces"
             device: cuda
             batch_size: "skopt.space.Integer(32, 64)"
-            max_num_epochs: 20
+            max_num_epochs: 600
             seed: 42
             default_dtype: "skopt.space.Categorical(categories=['float64', 'float32'])"
             swa: "skopt.space.Categorical(categories=['True', 'False'])"
