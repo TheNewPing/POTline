@@ -1,20 +1,26 @@
 #!/bin/bash
-#SBATCH --job-name=lmp_inst
-#SBATCH --output=lmp_inst_%j.out
-#SBATCH --error=lmp_inst_%j.err
+#SBATCH --job-name=lmp_grace_inst
+#SBATCH --output=lmp_grace_inst_%j.out
+#SBATCH --error=lmp_grace_inst_%j.err
 #SBATCH --time=01:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=20G
 
-module load 2023
-module load OpenMPI/4.1.5-NVHPC-24.5-CUDA-12.1.1
+module load 2024
+module load OpenMPI/5.0.3-GCC-13.3.0
 
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate grace
 
-cd lammps_grace
+cd lammps_versions
+cd grace
+
+if [ ! -d "lammps" ]; then
+      git clone -b grace --depth=1 https://github.com/yury-lysogorskiy/lammps.git
+fi
+
 cd lammps
 
 if [ -d "build" ]; then

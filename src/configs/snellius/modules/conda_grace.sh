@@ -1,8 +1,7 @@
 #!/bin/bash
 
 module load 2024
-module load CUDA/12.6.0
-export LD_LIBRARY_PATH=/home/erodaro/.conda/envs/grace/lib/:$LD_LIBRARY_PATH
+module load cuDNN/9.5.0.50-CUDA-12.6.0
 
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate grace

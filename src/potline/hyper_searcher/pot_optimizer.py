@@ -39,7 +39,9 @@ class PotOptimizer():
         self._mlp_total = load.merge_hypers({}, self._config.optimizer_params)
         load.validate_hypers(self._mlp_total, self._config.optimizer_params)
         self._optimizable_params = load.get_optimisable_params(self._mlp_total)
-        if not restart_optimizer:
+        if not restart_optimizer and self._iteration == 1:
+            # Create a new optimizer only if it is the first iteration
+            print("Creating optimizer...")
             self._out_path.mkdir(parents=True, exist_ok=True)
             self._optimizer: Optimizer = Optimizer(
                 dimensions=list(self._optimizable_params.values()),
@@ -47,9 +49,11 @@ class PotOptimizer():
                 n_initial_points=self._config.n_initial_points,
             )
         else:
+            print("Loading optimizer...")
             self.load_optimizer()
 
-        self._loss_logger = LossLogger(self._out_path, self._get_keys(), no_init=restart_optimizer)
+        self._loss_logger = LossLogger(self._out_path, self._get_keys(),
+                                       no_init=(restart_optimizer and self._iteration != 1))
 
     def run(self) -> None:
         """

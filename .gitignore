@@ -180,6 +180,7 @@ quick_config/*
 hyper_search/*
 test/*
 test_refactor/*
+env_test/*
 full_test/*
 reworked_test/*
 REF_DATA/*

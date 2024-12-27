@@ -20,18 +20,21 @@ def parse_args() -> Namespace:
     parser: ArgumentParser = ArgumentParser(description='Process some parameters.')
     parser.add_argument('--config', type=str, help='Path to the config file')
     parser.add_argument('--nohyper', action='store_false', help='Disable hyperparameter search')
+    parser.add_argument('--hypiter', type=int, default=1, help='Hyperparameter search startibg iteration')
     parser.add_argument('--nodeep', action='store_false', help='Disable deep training')
     parser.add_argument('--noconversion', action='store_false', help='Disable yace conversion')
     parser.add_argument('--noinference', action='store_false', help='Disable inference benchmark')
     parser.add_argument('--noproperties', action='store_false', help='Disable properties simulation')
     return parser.parse_args()
 
-def run_hyp(config_path: Path) -> int:
+def run_hyp(config_path: Path, start_iter: int) -> int:
     """
     Run hyperparameter search.
 
     Args:
         - config_path: the path to the configuration file.
+        - start_iter: the starting iteration.
+            If > 1, assusmes that iteration i-1 has already been registered.
 
     Returns:
         int: The id of the last watcher job.
@@ -46,13 +49,13 @@ def run_hyp(config_path: Path) -> int:
         JobType.WATCH_FIT.value, hyp_config.model_name, hyp_config.job_config.cluster)
 
     # init job
-    init_cmd: str = f'python {cli_path} --config {config_path} --iteration 1'
-    watch_manager.set_job([init_cmd], out_path / '1', hyp_config.job_config)
+    init_cmd: str = f'python {cli_path} --config {config_path} --iteration {start_iter}'
+    watch_manager.set_job([init_cmd], out_path / str(start_iter), hyp_config.job_config)
     watch_id = watch_manager.dispatch_job()
 
     # run jobs
     fit_cmd: str = get_fit_cmd(hyp_config.model_name, deep=False)
-    for i in range(1, hyp_config.max_iter+1):
+    for i in range(start_iter, hyp_config.max_iter+1):
         fit_manager.set_job([fit_cmd], out_path / str(i), hyp_config.job_config, dependency=watch_id,
                             array_ids=list(range(1,hyp_config.n_points+1)))
         fit_id = fit_manager.dispatch_job()
@@ -193,7 +196,7 @@ if __name__ == '__main__':
     next_id: int | None = None
 
     if args.nohyper:
-        next_id = run_hyp(conf_path)
+        next_id = run_hyp(conf_path, args.hypiter)
 
     if args.nodeep:
         next_id = run_deep(conf_path, dependency=next_id)

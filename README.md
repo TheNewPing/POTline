@@ -108,7 +108,7 @@ python src/run.py --config <path_to_config> [options]
 
 ### Configuration File Syntax
 
-The configuration file for POTline is written in HJSON format, which is a user-friendly extension of JSON. Some examples are provided in the folder `src/configs` (currently only Habrok configurations are updated), remember that when writing a configuration you have to keep in mind both the model and the cluster used.
+The configuration file for POTline is written in HJSON format, which is a user-friendly extension of JSON. Some examples are provided in the folder `src/configs`, remember that when writing a configuration you have to keep in mind both the model and the cluster used.
 
 REMEMBER: In every section, `modules` and `py_scripts` should be lists of filenames from the files contained in `[repo_path]/src/configs/[cluster_name]/modules` and `[repo_path]/src/configs/global` respectively.
 

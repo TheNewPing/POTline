@@ -2,10 +2,10 @@
     general: {
         lammps_bin_path: "/home/erodaro/repos/POTline/lammps_versions/pace/lammps/build/lmp",
         model_name: pacemaker
-        best_n_models: 20
+        best_n_models: 2
         hpc: true
         cluster: 'snellius'
-        sweep_path: "/scratch-shared/erodaro/POTline/full_test/pace"
+        sweep_path: "/home/erodaro/repos/POTline/env_test/pace"
         repo_path: "/home/erodaro/repos/POTline"
         slurm_watcher: {
             ntasks: 1
@@ -18,7 +18,7 @@
         py_scripts: []
     }
     deep_training: {
-        max_epochs: 2000,
+        max_epochs: 1,
         slurm_watcher: {
             ntasks: 1
             cpus_per_task: 4
@@ -28,9 +28,10 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 8
-            mem: "80G"
-            time: "70:00:00"
+            mem: "50G"
+            time: "1:00:00"
             partition: "gpu"
+            exclude: "gcn25,gcn56"
             gpus_per_node:"a100:1"
         }
         modules: ["conda_pace.sh"]
@@ -48,8 +49,8 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 32
-            mem: "80G"
-            time: "24:00:00"
+            mem: "50G"
+            time: "2:00:00"
         }
         modules: ["conda_pace.sh", "module_mpi.sh"]
         py_scripts: []
@@ -64,15 +65,15 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 32
-            mem: "80G"
-            time: "24:00:00"
+            mem: "50G"
+            time: "2:00:00"
         }
         modules: ["conda_pace.sh", "module_mpi.sh",]
         py_scripts: []
     }
     hyper_search: {
-        max_iter: 25,
-        n_initial_points: 5
+        max_iter: 1,
+        n_initial_points: 3
         n_points: 5
         strategy: "cl_min"
         energy_weight: 0.3
@@ -86,9 +87,10 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 8
-            mem: "80G"
-            time: "50:00:00"
+            mem: "50G"
+            time: "1:00:00"
             partition: "gpu"
+            exclude: "gcn25,gcn56"
             gpus_per_node:"a100:1"
         }
         modules: ["conda_pace.sh"]
@@ -147,12 +149,12 @@
                     "w_orth": "skopt.space.Real(0,1e-7)"
                 },
                 "optimizer": "BFGS",
-                "maxiter": 600,
+                "maxiter": 1,
                 "repulsion": "skopt.space.Categorical(categories=['auto', 'none'])",
                 "trainable_parameters": "ALL",
                 min_relative_train_loss_per_iter: 5e-5
                 min_relative_test_loss_per_iter: 1e-5
-                early_stopping_patience: 10
+                early_stopping_patience: 200
             },
             "backend": {
                 "evaluator": "tensorpot",
