@@ -5,7 +5,7 @@
         best_n_models: 20
         hpc: true
         cluster: 'habrok'
-        sweep_path: "/home4/p319875/repos/POTline/full_test/grace"
+        sweep_path: "/scratch/p319875/POTline/full_test/grace"
         repo_path: "/home4/p319875/repos/POTline"
         slurm_watcher: {
             ntasks: 1
