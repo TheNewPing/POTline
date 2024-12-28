@@ -147,6 +147,7 @@ class LossLogger():
         """
         Initialise the CSV files for the optimisation.
         """
+        print("Initialising CSV files...")
         if self._keys:
             with self._param_filepath.open("w+", encoding='utf-8') as f:
                 f.write("iteration,subiteration,loss," + ",".join(self._keys) + "\n")
