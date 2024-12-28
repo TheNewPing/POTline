@@ -74,7 +74,7 @@
     hyper_search: {
         max_iter: 25,
         n_initial_points: 5
-        n_points: 5
+        n_points: 10
         strategy: "cl_min"
         energy_weight: 0.3
         handle_collect_errors: true

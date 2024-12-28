@@ -77,7 +77,7 @@
     hyper_search: {
         max_iter: 25,
         n_initial_points: 5
-        n_points: 5
+        n_points: 10
         strategy: "cl_min"
         energy_weight: 0.3
         handle_collect_errors: true
@@ -121,7 +121,7 @@
             interaction_first: "skopt.space.Categorical(categories=['RealAgnosticResidualInteractionBlock', 'RealAgnosticInteractionBlock'])"
             interaction: "skopt.space.Categorical(categories=['RealAgnosticResidualInteractionBlock', 'RealAgnosticAttResidualInteractionBlock', 'RealAgnosticInteractionBlock'])"
             eval_interval: 1
-            patience: 10
+            patience: 20
         }
     }
 }
