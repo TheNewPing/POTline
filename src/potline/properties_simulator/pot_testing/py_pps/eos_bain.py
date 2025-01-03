@@ -17,7 +17,7 @@ eos_gap21["energy"] = (eos_gap21["energy"] -min(eos_gap21["energy"])) * 1000
 
 bp_dft = pd.read_csv("../REF_DATA/BainPath_DFT.csv",delimiter=",",decimal=".",header=None,names=["ratio","energy"])
 bp_gap18 = pd.read_csv("../REF_DATA/BainPath_GAP.csv",delimiter=",",decimal=".",header=None,names=["ratio","energy"])
-bp_gap21 = pd.read_csv("../data/bain_path.csv",delimiter=" ",decimal=".",header=None,names=["ratio","energy","ratio2","lx","ly","lz"])
+bp_gap21 = pd.read_csv("../data/bain_path.csv", usecols=[0, 1], delimiter=" ", decimal=".", header=None, names=["ratio", "energy"])
 bp_dft["energy"] = bp_dft["energy"] -min(bp_dft["energy"])
 bp_gap18["energy"] = bp_gap18["energy"] -min(bp_gap18["energy"])
 bp_gap21["energy"] = (bp_gap21["energy"] -min(bp_gap21["energy"]))*1000/2
