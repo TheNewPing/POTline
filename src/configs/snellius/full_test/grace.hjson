@@ -5,7 +5,7 @@
         best_n_models: 20
         hpc: true
         cluster: 'snellius'
-        sweep_path: "/scratch-shared/erodaro/POTline/easy_test/grace_fs"
+        sweep_path: "/scratch-shared/erodaro/POTline/full_test/grace"
         repo_path: "/home/erodaro/repos/POTline"
         slurm_watcher: {
             ntasks: 1
@@ -108,8 +108,8 @@
             "potential": {
                 "deltaSplineBins": 0.001,
                 "elements": ["Fe"],
-                preset: FS
-                kwargs: {max_order: 3, lmax: [5, 5, 4], n_rad_max: [20, 15, 10], embedding_size: 32, fs_parameters: [[1.0, 1.0], [1.0, 0.5]]}
+                preset: GRACE_1LAYER
+                kwargs: {lmax: 4, n_rad_max: 32, max_order: 4, n_mlp_dens: 12}
                 shift: "skopt.space.Categorical(categories=['True', 'False'])"
                 scale: "skopt.space.Categorical(categories=['True', 'False'])"
                 float_dtype: "skopt.space.Categorical(categories=['float64', 'float32'])"
@@ -126,24 +126,25 @@
                         type: huber
                         delta: 0.01 
                     },
+                    l2_reg: "skopt.space.Real(0,1e-7)"
                 }
                 maxiter: 600 # Number of epochs / iterations
 
                 optimizer: Adam
                 opt_params: {
-                            learning_rate: 0.01,
+                            learning_rate: "skopt.space.Real(1e-4,1e-1)",
                             amsgrad: True,
                             use_ema: True,
-                            ema_momentum: 0.99,
-                            weight_decay: null,
+                            ema_momentum: "skopt.space.Real(0.5,0.99999)",
+                            weight_decay: "skopt.space.Real(0,1e-8)",
                             clipvalue: 1.0,
                         }
 
                 # for learning-rate reduction
                 learning_rate_reduction: {
                     patience: 5,
-                    factor: 0.98,
-                    min: 5.0e-4,
+                    factor: "skopt.space.Real(0.5,0.99999)",
+                    min: 1e-5,
                     stop_at_min: True
                     resume_lr: True
                     loss_explosion_threshold: 2
@@ -154,7 +155,7 @@
 
                 ## needed for low-energy tier metrics and for "convex_hull"-based distance of energy-based weighting scheme
                 compute_convex_hull: False
-                batch_size: "skopt.space.Integer(16, 128)" # Important hyperparameter for Adam and irrelevant (but must be) for L-BFGS-B
+                batch_size: "skopt.space.Integer(32, 64)" # Important hyperparameter for Adam and irrelevant (but must be) for L-BFGS-B
                 test_batch_size: 128 # test batch size (optional)
 
                 jit_compile: True

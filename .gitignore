@@ -192,3 +192,4 @@ data/*
 *.stderr
 *_converted*
 *log.lammps
+src/data/input.yaml

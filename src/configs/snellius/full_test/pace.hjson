@@ -1,0 +1,169 @@
+{
+    general: {
+        lammps_bin_path: "/home/erodaro/repos/POTline/lammps_versions/pace/lammps/build/lmp",
+        model_name: pacemaker
+        best_n_models: 20
+        hpc: true
+        cluster: 'snellius'
+        sweep_path: "/scratch-shared/erodaro/POTline/full_test/pace"
+        repo_path: "/home/erodaro/repos/POTline"
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {}
+        modules: ["conda_pace.sh"]
+        py_scripts: []
+    }
+    deep_training: {
+        max_epochs: 2000,
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 8
+            mem: "80G"
+            time: "70:00:00"
+            partition: "gpu"
+            exclude: "gcn25,gcn56"
+            gpus_per_node:"a100:1"
+        }
+        modules: ["conda_pace.sh"]
+        py_scripts: ["tf_gpu_test.py"]
+    }
+    inference: {
+        prerun_steps: 100,
+        max_steps: 1100,
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 32
+            mem: "80G"
+            time: "24:00:00"
+        }
+        modules: ["conda_pace.sh", "module_mpi.sh"]
+        py_scripts: []
+    }
+    data_analysis: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 32
+            mem: "80G"
+            time: "24:00:00"
+        }
+        modules: ["conda_pace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }
+    hyper_search: {
+        max_iter: 25,
+        n_initial_points: 5
+        n_points: 5
+        strategy: "cl_min"
+        energy_weight: 0.3
+        handle_collect_errors: true
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "20G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 8
+            mem: "80G"
+            time: "50:00:00"
+            partition: "gpu"
+            exclude: "gcn25,gcn56"
+            gpus_per_node:"a100:1"
+        }
+        modules: ["conda_pace.sh"]
+        py_scripts: ["tf_gpu_test.py"]
+        optimizer_params: {
+            "cutoff": 6.0,
+            "seed": 42
+            "metadata": {
+                "purpose": "Potential fit"
+                },
+            "data": {
+                "filename": "/home/erodaro/repos/POTline/src/data/ogata_extended_corrected.pckl.gzip",
+                "test_size": 0.10
+            },
+            "potential": {
+                "deltaSplineBins": 0.001,
+                "elements": ["Fe"],
+                "embeddings": {
+                    "ALL": {
+                        "npot": "FinnisSinclairShiftedScaled",
+                        "fs_parameters": [1,1,1,"skopt.space.Real(0.1, 2)"],
+                        "ndensity": 2,
+                        "rho_core_cut": "skopt.space.Integer(1000, 6000)",
+                        "drho_core_cut": "skopt.space.Integer(100, 1000)"
+                    }
+                },
+                "rankmax": "",
+                "bonds": {
+                    "ALL": {
+                        "radbase": "SBessel",
+                        "radparameters": ["skopt.space.Real(1,10)"],
+                        "rcut": 6.0,
+                        "dcut": "skopt.space.Real(0.001, 0.1)",
+                        "NameofCutoffFunction": "cos"
+                    }
+                },
+                "functions": {
+                    "number_of_functions_per_element": 200,
+                    "ALL": {
+                        "nradmax_by_orders": [15,6,4,3,2,2],
+                        "lmax_by_orders": [0,4,3,2,1,0],
+                        "coefs_init": "skopt.space.Categorical(categories=['zero', 'random'])"
+                    },
+                }
+            },
+            "fit": {
+                "loss": {
+                    "kappa": 0.3,
+                    "L1_coeffs": "skopt.space.Real(0,1e-7)",
+                    "L2_coeffs": "skopt.space.Real(0,1e-7)",
+                    "w0_rad": "skopt.space.Real(0,1e-7)",
+                    "w1_rad": "skopt.space.Real(0,1e-7)",
+                    "w2_rad": "skopt.space.Real(0,1e-7)",
+                    "w1_coeffs": "skopt.space.Real(0,1e-7)",
+                    "w2_coeffs": "skopt.space.Real(0,1e-7)",
+                    "w_orth": "skopt.space.Real(0,1e-7)"
+                },
+                "optimizer": "BFGS",
+                "maxiter": 600,
+                "repulsion": "skopt.space.Categorical(categories=['auto', 'none'])",
+                "trainable_parameters": "ALL",
+                min_relative_train_loss_per_iter: 5e-5
+                min_relative_test_loss_per_iter: 1e-5
+                early_stopping_patience: 10
+            },
+            "backend": {
+                "evaluator": "tensorpot",
+                "batch_size": "skopt.space.Integer(32, 100)",
+                "batch_size_reduction": "True",
+                "batch_size_reduction_factor": 2,
+                "display_step": 50,
+                "gpu_config": {"mem_limit": 0}
+            }
+        }
+    }
+}
