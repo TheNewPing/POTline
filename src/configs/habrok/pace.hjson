@@ -5,7 +5,7 @@
         best_n_models: 20
         hpc: true
         cluster: 'habrok'
-        sweep_path: "/scratch/p319875/POTline/full_test/pace"
+        sweep_path: "/scratch/p319875/POTline/focus_test/pace"
         repo_path: "/home4/p319875/repos/POTline"
         slurm_watcher: {
             ntasks: 1
@@ -94,7 +94,7 @@
         modules: ["conda_pace.sh"]
         py_scripts: ["tf_gpu_test.py"]
         optimizer_params: {
-            "cutoff": 6.0,
+            "cutoff": 10.0,
             "seed": 42
             "metadata": {
                 "purpose": "Potential fit"
@@ -109,54 +109,44 @@
                 "embeddings": {
                     "ALL": {
                         "npot": "FinnisSinclairShiftedScaled",
-                        "fs_parameters": [1,1,1,"skopt.space.Real(0.1, 2)"],
+                        "fs_parameters": [1,1,1,0.5],
                         "ndensity": 2,
-                        "rho_core_cut": "skopt.space.Integer(1000, 6000)",
-                        "drho_core_cut": "skopt.space.Integer(100, 1000)"
                     }
                 },
                 "rankmax": "",
                 "bonds": {
                     "ALL": {
                         "radbase": "SBessel",
-                        "radparameters": ["skopt.space.Real(1,10)"],
-                        "rcut": 6.0,
-                        "dcut": "skopt.space.Real(0.001, 0.1)",
+                        "radparameters": ["skopt.space.Real(5,6)"],
+                        "rcut": "skopt.space.Real(9,11)",
+                        "dcut": "skopt.space.Real(0.009,0.011)",
                         "NameofCutoffFunction": "cos"
                     }
                 },
                 "functions": {
-                    "number_of_functions_per_element": 200,
-                    "ALL": {
-                        "nradmax_by_orders": [15,6,4,3,2,2],
-                        "lmax_by_orders": [0,4,3,2,1,0],
-                        "coefs_init": "skopt.space.Categorical(categories=['zero', 'random'])"
-                    },
+                    "number_of_functions_per_element": 1000,
+                    "UNARY": {
+                        nradmax_by_orders: [15, 6, 4, 3, 2, 2], 
+                        lmax_by_orders: [0, 3, 3, 2, 2, 1]
+                        }
                 }
             },
             "fit": {
                 "loss": {
                     "kappa": 0.3,
-                    "L1_coeffs": "skopt.space.Real(0,1e-7)",
-                    "L2_coeffs": "skopt.space.Real(0,1e-7)",
-                    "w0_rad": "skopt.space.Real(0,1e-7)",
-                    "w1_rad": "skopt.space.Real(0,1e-7)",
-                    "w2_rad": "skopt.space.Real(0,1e-7)",
-                    "w1_coeffs": "skopt.space.Real(0,1e-7)",
-                    "w2_coeffs": "skopt.space.Real(0,1e-7)",
-                    "w_orth": "skopt.space.Real(0,1e-7)"
+                    L1_coeffs: 1e-8, 
+                    L2_coeffs: 1e-8
                 },
                 "optimizer": "BFGS",
-                "maxiter": 600,
-                "repulsion": "skopt.space.Categorical(categories=['auto', 'none'])",
+                "maxiter": 1000,
                 "trainable_parameters": "ALL",
                 min_relative_train_loss_per_iter: 5e-5
                 min_relative_test_loss_per_iter: 1e-5
-                early_stopping_patience: 20
+                early_stopping_patience: 50
             },
             "backend": {
                 "evaluator": "tensorpot",
-                "batch_size": "skopt.space.Integer(32, 100)",
+                "batch_size": "skopt.space.Integer(32, 128)",
                 "batch_size_reduction": "True",
                 "batch_size_reduction_factor": 2,
                 "display_step": 50,

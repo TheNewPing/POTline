@@ -2,7 +2,7 @@
     general: {
         lammps_bin_path: "/home4/p319875/repos/POTline/lammps_versions/pace/lammps/build/lmp",
         model_name: pacemaker
-        best_n_models: 20
+        best_n_models: 17
         hpc: true
         cluster: 'habrok'
         sweep_path: "/scratch/p319875/POTline/full_test/pace"
