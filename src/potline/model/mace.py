@@ -47,12 +47,19 @@ class PotMACE(PotModel):
         with self._config_filepath.open('r', encoding='utf-8') as file:
             model_name: str = yaml.safe_load(file)['name']
 
+        # if the model is trained with swa, names are different
+        if (self._out_path / (model_name + '_stagetwo.model')).exists():
+            model_filepath = self._out_path / (model_name + '_stagetwo.model')
+            self._yace_path = self._out_path / f'{model_name}_stagetwo.model-lammps.pt'
+        else:
+            model_filepath: Path = self._out_path / (model_name + '.model')
+            self._yace_path = self._out_path / f'{model_name}.model-lammps.pt'
+
         old_argv = sys.argv
-        sys.argv = ["program", f'{self._out_path / model_name}.model']
+        sys.argv = ["program", str(model_filepath)]
         create_lammps_model()
         sys.argv = old_argv
 
-        self._yace_path = self._out_path / f'{model_name}.model-lammps.pt'
         return self._yace_path
 
     def create_potential(self) -> Path:
