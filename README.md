@@ -86,6 +86,14 @@ You can also use the Slurm scripts under `src/configs/[cluster_name]/install_lam
     - [MACE](https://mace-docs.readthedocs.io/en/latest/guide/lammps.html)
     - [grACE](https://gracemaker.readthedocs.io/en/latest/gracemaker/install/#lammps-with-grace)
 
+### Installation extra
+
+1. Modify line 1029 of `[mace_repo]/mace/modules/blocks.py` from 
+
+`    ) -> Tuple[torch.Tensor, NoneType]:` to
+
+`    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:`
+
 ## Usage
 
 To use the POTline framework, you can run the `run.py` script with various command line arguments to control its behavior. Below are the available options:
