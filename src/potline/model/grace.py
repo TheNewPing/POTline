@@ -24,6 +24,7 @@ class PotGRACE(PotModel):
             config: dict = yaml.safe_load(file)
             self._seed_number: int = config['seed']
             self._seed_path: Path = out_path / 'seed' / f'{self._seed_number}'
+            self._preset: str = config['potential']['preset']
         self._yace_path = self._seed_path / 'final_model'
 
     @staticmethod
@@ -44,8 +45,9 @@ class PotGRACE(PotModel):
         return self._yace_path
 
     def create_potential(self) -> Path:
+        preset: str = 'grace/fs' if self._preset == 'FS' else 'grace'
         potential_values: dict = {
-            'pstyle': 'grace pad_verbose',
+            'pstyle': f'{preset} pad_verbose',
             'yace_path': str(self._yace_path),
         }
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)

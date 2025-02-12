@@ -18,8 +18,8 @@ class PropertiesSimulator():
     Class for running the LAMMPS properties simulations.
 
     Args:
-        - config: configuration for the simulations
-        - tracker_list: trackers to simulate
+        - config : configuration for the simulations
+        - tracker_list : trackers to simulate
     """
 
     LAMMPS_INPS_PATH: Path = Path(__file__).parent / 'pot_testing' / 'lmps_inputs'
