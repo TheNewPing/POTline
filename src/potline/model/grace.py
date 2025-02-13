@@ -45,10 +45,9 @@ class PotGRACE(PotModel):
         return self._yace_path
 
     def create_potential(self) -> Path:
-        # preset: str = 'grace/fs' if self._preset == 'FS' else 'grace'
-        preset: str = 'grace'
+        preset: str = 'grace/fs' if self._preset == 'FS' else 'grace pad_verbose'
         potential_values: dict = {
-            'pstyle': f'{preset} pad_verbose',
+            'pstyle': preset,
             'yace_path': str(self._yace_path),
         }
         gen_from_template(POTENTIAL_TEMPLATE_PATH, potential_values, self._lmp_pot_path)

@@ -165,6 +165,7 @@ cython_debug/
 *.xyz
 *.gzip
 *.ipynb
+!metrics.ipynb
 
 # LAMMPS installation
 lammps_versions/

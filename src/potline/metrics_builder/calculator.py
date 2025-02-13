@@ -32,9 +32,18 @@ class MetricsCalculator():
         self._inf_path = sweep_path / INFERENCE_BENCH_DIR_NAME
         self._sim_path = sweep_path / PROPERTIES_BENCH_DIR_NAME
 
-    def calculate_q_factors(self) -> dict[Tuple[int,int], float]:
+    def calculate_q_factors(self, run_nums: list[int] | None = None) -> dict[Tuple[int,int], float]:
         """
         Calculate the q-factors for the simulations.
+
+        Args:
+            run_nums: The list of run numbers to calculate the q-factors for.
+            If None, all the simulations are used.
+
+        Returns:
+            A dictionary with the q-factors for each simulation.
+            Uses a tuple of the iteration and subiteration as the key.
+            (from the hyperparameter optimization step)
         """
         # List of q-factors, each simulations is identified by a tuple of the iteration and subiteration
         q_factors: dict[Tuple[int,int], float] = {}
@@ -44,6 +53,8 @@ class MetricsCalculator():
             ref_values = yaml.safe_load(file)
 
         sim_paths: list[Path] = [p for p in self._sim_path.iterdir() if p.is_dir()]
+        if run_nums: # Filter the simulations
+            sim_paths = [p for p in sim_paths if int(p.name) in run_nums]
         for p in sim_paths:
             info_path = p / INFO_FILENAME
             # Load the iteration and subiteration
@@ -75,14 +86,25 @@ class MetricsCalculator():
 
         return q_factors
 
-    def calculate_inference_time(self) -> dict[Tuple[int,int], float]:
+    def calculate_inference_time(self, run_nums: list[int] | None = None) -> dict[Tuple[int,int], float]:
         """
         Calculate the inference time for the simulations.
+
+        Args:
+            run_nums: The list of run numbers to calculate the inference times for.
+            If None, all the simulations are used.
+
+        Returns:
+            A dictionary with the inference times for each simulation.
+            Uses a tuple of the iteration and subiteration as the key.
+            (from the hyperparameter optimization step)
         """
         # List of inference times, each simulations is identified by a tuple of the iteration and subiteration
         inference_times: dict[Tuple[int,int], float] = {}
 
         inf_paths: list[Path] = [p for p in self._inf_path.iterdir() if p.is_dir()]
+        if run_nums: # Filter the simulations
+            inf_paths = [p for p in inf_paths if int(p.name) in run_nums]
         for p in inf_paths:
             info_path = p / INFO_FILENAME
             # Load the iteration and subiteration
