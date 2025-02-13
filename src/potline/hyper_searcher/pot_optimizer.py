@@ -116,6 +116,7 @@ class PotOptimizer():
                   [fit_tr.get_total_valid_loss(self._config.energy_weight) for fit_tr in fit_trackers])
 
         # Write the results to the parameters.csv file
+        # TODO: fix parameters printing
         for fit_tr in fit_trackers:
             i: int = self._config.n_points - fit_tr.subiter + 1
             loss: float = fit_tr.get_total_valid_loss(self._config.energy_weight)

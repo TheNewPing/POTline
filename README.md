@@ -32,7 +32,7 @@ sweep_path
 |       |---subiter_n
 |           |---training_files
 |           |---optimized_params.yaml (parameters used for that subiteration)
-|           |---model_info.csv (iter, subiter, loss, used for identification in the next phases)
+|           |---model_info.yaml (iter, subiter, loss, used for identification in the next phases)
 |           |---potential.in (only if --nodeep is used)
 |
 |---deep_train
@@ -41,7 +41,7 @@ sweep_path
 |   |---best_n
 |       |---training_files
 |       |---optimized_params.yaml
-|       |---model_info.csv
+|       |---model_info.yaml
 |       |---potential.in
 |
 |---inference_bench
@@ -49,15 +49,15 @@ sweep_path
 |   ...
 |   |---best_n
 |       |---bench_files
-|       |---model_info.csv
-|       |---timings.csv
+|       |---model_info.yaml
+|       |---bench_timings.csv
 |
 |---properties_simulation
     |---1
     ...
     |---best_n
         |---simulation_files
-        |---model_info.csv
+        |---model_info.yaml
         |---plots
 ```
 
@@ -108,7 +108,7 @@ python src/run.py --config <path_to_config> [options]
 
 ### Options
 
-- `--nohyper`: Disable potential fitting (requires `--fitted` to work)
+- `--nohyper`: Disable potential fitting
 - `--nodeep`: Disable fitting on best models from hyperparameter optimization
 - `--noconversion`: Disable LAMMPS potential conversion
 - `--noinference`: Disable inference benchmark
