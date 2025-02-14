@@ -4,6 +4,7 @@ Gracemaker wrapper.
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 import shutil
 
@@ -25,7 +26,10 @@ class PotGRACE(PotModel):
             self._seed_number: int = config['seed']
             self._seed_path: Path = out_path / 'seed' / f'{self._seed_number}'
             self._preset: str = config['potential']['preset']
-        self._yace_path = self._seed_path / 'final_model'
+        if self._preset == 'FS':
+            self._yace_path = self._seed_path / 'FS_model.yaml'
+        else:
+            self._yace_path = self._seed_path / 'final_model'
 
     @staticmethod
     def get_fit_cmd(deep: bool = False):
@@ -42,6 +46,11 @@ class PotGRACE(PotModel):
         return Losses(rmse_de, rmse_f_comp)
 
     def lampify(self) -> Path:
+        cmd: list[str] = ['gracemaker', '-r', '-s']
+        if self._preset == 'FS':
+            cmd.append('-sf')
+        cmd.append(CONFIG_NAME)
+        subprocess.run(cmd, check=True, cwd=self._out_path)
         return self._yace_path
 
     def create_potential(self) -> Path:
@@ -73,4 +82,7 @@ class PotGRACE(PotModel):
         shutil.copytree(self._out_path, out_path, dirs_exist_ok=True)
         super().switch_out_path(out_path)
         self._seed_path = self._out_path / 'seed' / f'{self._seed_number}'
-        self._yace_path = self._seed_path / 'final_model'
+        if self._preset == 'FS':
+            self._yace_path = self._seed_path / 'FS_model.yaml'
+        else:
+            self._yace_path = self._seed_path / 'final_model'
