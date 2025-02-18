@@ -70,18 +70,24 @@ class ModelTracker():
             pickle.dump(self.params, f)
 
     @staticmethod
-    def from_path(model_name: str, model_path: Path) -> 'ModelTracker':
+    def from_path(model_name: str, model_path: Path, pretrained: bool = False) -> 'ModelTracker':
         """
         Create a model tracker from a path.
 
         Args:
             - model_name: name of the model
             - model_path: path to the model, used to recover the model
+            - pretrained: flag for pretrained model
 
         Returns:
             ModelTracker: the model tracker
         """
-        model = create_model(model_name, model_path)
+        model = create_model(model_name, model_path, pretrained)
+        if pretrained:
+            # Return a dummy model tracker for pretrained models,
+            # it will only be used to create the LAMMPS potentials
+            return ModelTracker(model, 0, 0, {}, Losses(0, 0))
+
         with (model_path / INFO_FILENAME).open("r", encoding='utf-8') as f:
             data: dict = yaml.safe_load(f)
             iteration = int(data['iteration'])

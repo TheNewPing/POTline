@@ -49,10 +49,10 @@ class PotMACE(PotModel):
 
         # if the model is trained with swa, names are different
         if (self._out_path / (model_name + '_stagetwo.model')).exists():
-            model_filepath = self._out_path / (model_name + '_stagetwo.model')
+            model_filepath: Path = self._out_path / (model_name + '_stagetwo.model')
             self._yace_path = self._out_path / f'{model_name}_stagetwo.model-lammps.pt'
         else:
-            model_filepath: Path = self._out_path / (model_name + '.model')
+            model_filepath = self._out_path / (model_name + '.model')
             self._yace_path = self._out_path / f'{model_name}.model-lammps.pt'
 
         old_argv = sys.argv

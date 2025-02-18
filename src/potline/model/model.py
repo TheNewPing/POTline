@@ -61,8 +61,9 @@ class PotModel(ABC):
 
     Args:
         - out_path: path to the output directory.
+        - pretrained: flag for pretrained model.
     """
-    def __init__(self, out_path: Path):
+    def __init__(self, out_path: Path, pretrained: bool = False):
         self._out_path: Path = out_path
         self._config_filepath: Path = self._out_path / CONFIG_NAME
         self._yace_path: Path = self._out_path / YACE_NAME

@@ -94,6 +94,12 @@ You can also use the Slurm scripts under `src/configs/[cluster_name]/install_lam
 
 `    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:`
 
+2. Modify line 280 of `[mace_repo]/mace/tools/train.py` from
+
+`    if valid_loss >= lowest_loss:` to
+
+`    if math.isnan(valid_loss) or valid_loss >= lowest_loss:`
+
 ## Usage
 
 To use the POTline framework, you can run the `run.py` script with various command line arguments to control its behavior. Below are the available options:

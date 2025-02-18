@@ -15,7 +15,8 @@ def filter_best_loss(model_list: list[ModelTracker], energy_weight: float, n: in
 
 
 def get_model_trackers(sweep_path: Path, model_name: str,
-                       force_from_hyp: bool = False) -> list[ModelTracker]:
+                       force_from_hyp: bool = False,
+                       pretrained_path: Path | None = None) -> list[ModelTracker]:
     """
     Get the model trackers from the sweep path.
 
@@ -23,10 +24,14 @@ def get_model_trackers(sweep_path: Path, model_name: str,
         - sweep_path: path to the sweep
         - model_name: name of the model
         - force_from_hyp: force the model to be from hyperparameter search
+        - pretrained_path: path to the pretrained model
 
     Returns:
         - list of model trackers
     """
+    if pretrained_path:
+        return [ModelTracker.from_path(model_name, pretrained_path, pretrained=True)]
+
     if force_from_hyp:
         return PotOptimizer.get_model_trackers(sweep_path, model_name)
 

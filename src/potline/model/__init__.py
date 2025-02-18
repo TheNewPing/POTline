@@ -9,6 +9,7 @@ from .model import (
     POTENTIAL_NAME,
     CONFIG_NAME,
     POTENTIAL_TEMPLATE_PATH,
+    gen_from_template,
     )
 from .pace import PotPACE
 from .model_factory import create_model, get_fit_cmd, get_lammps_params

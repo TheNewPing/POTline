@@ -37,6 +37,7 @@ class GeneralKW(Enum):
     CLUSTER = 'cluster'
     SWEEP_PATH = 'sweep_path'
     REPO_PATH = 'repo_path'
+    PRETRAINED_PATH = 'pretrained_path'
 
 class DeepTrainKW(Enum):
     """
@@ -170,7 +171,8 @@ class GeneralConfig():
                  cluster: str,
                  sweep_path: Path,
                  job_config: JobConfig,
-                 repo_path: Path):
+                 repo_path: Path,
+                 pretrained_path: Path | None = None):
         self.lammps_bin_path: Path = lammps_bin_path
         self.model_name: str = model_name
         self.best_n_models: int = best_n_models
@@ -179,6 +181,7 @@ class GeneralConfig():
         self.sweep_path: Path = sweep_path
         self.job_config: JobConfig = job_config
         self.repo_path: Path = repo_path
+        self.pretrained_path: Path | None = pretrained_path
 
 def patify(config_dict: dict[str, Any]) -> dict:
     """
@@ -262,7 +265,8 @@ class ConfigReader():
                 MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.ENERGY_WEIGHT.value])),
             self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.OPTIMIZER_PARAMS.value],
             self.get_slurm_config(MainSectionKW.HYPER_SEARCH.value),
-            bool(str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.HANDLE_COLLECT_ERRORS.value])),
+            bool(str(self.get_config_section(
+                MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.HANDLE_COLLECT_ERRORS.value])),
         )
 
     def get_bench_config(self) -> BenchConfig:
@@ -293,17 +297,21 @@ class ConfigReader():
         if MainSectionKW.DEEP_TRAINING.value not in self.config_data:
             raise ValueError('No deep training configuration found in the config file.')
         return DeepTrainConfig(
-            int(str(self.get_config_section(MainSectionKW.DEEP_TRAINING.value)[DeepTrainKW.MAX_EPOCHS.value])),
+            int(str(self.get_config_section(
+                MainSectionKW.DEEP_TRAINING.value)[DeepTrainKW.MAX_EPOCHS.value])),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
             self.get_slurm_config(MainSectionKW.DEEP_TRAINING.value),
             str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
-            float(str(self.get_config_section(MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.ENERGY_WEIGHT.value])),
+            float(str(self.get_config_section(
+                MainSectionKW.HYPER_SEARCH.value)[HyperSearchKW.ENERGY_WEIGHT.value])),
             int(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.BEST_N.value]))
         )
 
     def get_general_config(self) -> GeneralConfig:
         if MainSectionKW.GENERAL.value not in self.config_data:
             raise ValueError('No general configuration found in the config file.')
+        pretrained_path = self.get_config_section(
+            MainSectionKW.GENERAL.value).get(GeneralKW.PRETRAINED_PATH.value)
         return GeneralConfig(
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.LMP_BIN.value])),
             str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
@@ -312,5 +320,6 @@ class ConfigReader():
             str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.CLUSTER.value]),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
             self.get_slurm_config(MainSectionKW.GENERAL.value),
-            Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.REPO_PATH.value]))
+            Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.REPO_PATH.value])),
+            Path(pretrained_path) if pretrained_path else None
         )
