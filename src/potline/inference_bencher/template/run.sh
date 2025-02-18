@@ -1,20 +1,21 @@
 #!/bin/bash
 
 # Collect arguments
-n_cpu=$1
-lammps_bin_path=$2
-prerun_steps=$3
-max_steps=$4
+lammps_bin_path=$1
+prerun_steps=$2
+max_steps=$3
+cpus_per_task=$4
+ntasks=$5
 
-export MKL_NUM_THREADS=${n_cpu}
-export OMP_NUM_THREADS=${n_cpu}
+export MKL_NUM_THREADS=${cpus_per_task}
+export OMP_NUM_THREADS=${cpus_per_task}
 
 echo "start"
 start_time=`date +%s`
-eval mpirun -np 1 --bind-to core ${lammps_bin_path} -in "bench.in" -v steps ${prerun_steps}
+eval mpirun -n ${ntasks} --bind-to core:overload-allowed --report-bindings --display-allocation ${lammps_bin_path} -in "bench.in" -v steps ${prerun_steps}
 echo "prerun done"
 mid_time=`date +%s`
-eval mpirun -np 1 --bind-to core ${lammps_bin_path} -in "bench.in" -v steps ${max_steps}
+eval mpirun -n ${ntasks} --bind-to core:overload-allowed --report-bindings --display-allocation ${lammps_bin_path} -in "bench.in" -v steps ${max_steps}
 end_time=`date +%s`
 echo "finished"
 
@@ -24,7 +25,7 @@ runtime3=$((runtime2-runtime1))
 
 # Write timings to a file
 timings_file="bench_timings.csv"
-echo "start_time,mid_time,end_time,prerun_steps,max_steps,n_cpu,time_diff" > $timings_file
-echo "$start_time,$mid_time,$end_time,${prerun_steps},${max_steps},${n_cpu},$runtime3" >> $timings_file
+echo "start_time,mid_time,end_time,prerun_steps,max_steps,cpus_per_task,ntasks,time_diff" > $timings_file
+echo "$start_time,$mid_time,$end_time,${prerun_steps},${max_steps},${cpus_per_task},${ntasks},$runtime3" >> $timings_file
 
 exit 0

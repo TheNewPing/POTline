@@ -143,11 +143,13 @@ def run_inf(config_path: Path, dependency: int | None = None) -> int:
     init_id = watch_manager.dispatch_job()
 
     # run jobs
-    n_cpu = int(inf_config.job_config.slurm_opts['cpus_per_task'])
+    cpus_per_task = int(inf_config.job_config.slurm_opts['cpus_per_task'])
+    ntasks = int(inf_config.job_config.slurm_opts['ntasks'])
     bench_cmd: str = ' '.join([str(cmd) for cmd in [
-        'srun', BENCH_SCRIPT_NAME, n_cpu,
+        'bash', BENCH_SCRIPT_NAME,
         f'"{inf_config.lammps_bin_path} {get_lammps_params(inf_config.model_name)}"',
-        inf_config.prerun_steps, inf_config.max_steps
+        inf_config.prerun_steps, inf_config.max_steps,
+        cpus_per_task, ntasks
     ]])
     inf_manager.set_job([bench_cmd], out_path, inf_config.job_config, dependency=init_id,
                         array_ids=list(range(1,inf_config.best_n_models+1)))

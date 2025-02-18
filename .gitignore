@@ -194,3 +194,4 @@ data/*
 *_converted*
 *log.lammps
 src/data/input.yaml
+.vscode/
