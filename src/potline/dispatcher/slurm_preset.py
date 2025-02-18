@@ -33,6 +33,7 @@ class SlurmCluster(Enum):
     """
     SNELLIUS = 'snellius'
     HABROK = 'habrok'
+    LEONARDO = 'leonardo'
 
 class CommandsName(Enum):
     """

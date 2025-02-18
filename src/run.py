@@ -13,6 +13,8 @@ from potline.deep_trainer import DEEP_TRAIN_DIR_NAME
 from potline.inference_bencher import BENCH_SCRIPT_NAME, INFERENCE_BENCH_DIR_NAME
 from potline.properties_simulator import PROPERTIES_BENCH_DIR_NAME, SUBMIT_SCRIPT_NAME, PropertiesSimulator
 
+PYTHON_BIN: str = 'conda run python'
+
 def parse_args() -> Namespace:
     """
     Parse the command line arguments.
@@ -49,7 +51,7 @@ def run_hyp(config_path: Path, start_iter: int) -> int:
         JobType.WATCH_FIT.value, hyp_config.model_name, hyp_config.job_config.cluster)
 
     # init job
-    init_cmd: str = f'python {cli_path} --config {config_path} --iteration {start_iter}'
+    init_cmd: str = f'{PYTHON_BIN} {cli_path} --config {config_path} --iteration {start_iter}'
     watch_manager.set_job([init_cmd], out_path / str(start_iter), hyp_config.job_config)
     watch_id = watch_manager.dispatch_job()
 
@@ -59,7 +61,7 @@ def run_hyp(config_path: Path, start_iter: int) -> int:
         fit_manager.set_job([fit_cmd], out_path / str(i), hyp_config.job_config, dependency=watch_id,
                             array_ids=list(range(1,hyp_config.n_points+1)))
         fit_id = fit_manager.dispatch_job()
-        cmd: str = f'python {cli_path} --config {config_path} --restart --iteration {i+1}'
+        cmd: str = f'{PYTHON_BIN} {cli_path} --config {config_path} --restart --iteration {i+1}'
         watch_manager.set_job([cmd], out_path / str(i+1),
                                 hyp_config.job_config, dependency=fit_id)
         watch_id = watch_manager.dispatch_job()
@@ -85,7 +87,7 @@ def run_deep(config_path: Path, dependency: int | None = None) -> int:
         JobType.WATCH_DEEP.value, deep_config.model_name, deep_config.job_config.cluster)
 
     # init job
-    init_cmd: str = f'python {cli_path} --config {config_path}'
+    init_cmd: str = f'{PYTHON_BIN} {cli_path} --config {config_path}'
     watch_manager.set_job([init_cmd], out_path, deep_config.job_config, dependency=dependency)
     init_id = watch_manager.dispatch_job()
 
@@ -96,7 +98,7 @@ def run_deep(config_path: Path, dependency: int | None = None) -> int:
     fit_id = deep_manager.dispatch_job()
 
     # collect job
-    coll_cmd: str = f'python {cli_path} --config {config_path} --collect'
+    coll_cmd: str = f'{PYTHON_BIN} {cli_path} --config {config_path} --collect'
     watch_manager.set_job([coll_cmd], out_path, deep_config.job_config, dependency=fit_id)
     return watch_manager.dispatch_job()
 
@@ -113,7 +115,7 @@ def run_conv(config_path: Path, dependency: int | None = None) -> int:
     """
     gen_config = ConfigReader(config_path).get_general_config()
     cli_path: Path = Path(__file__).resolve().parent / 'run_conv.py'
-    conv_cmd: str = f'python {cli_path} --config {config_path}'
+    conv_cmd: str = f'{PYTHON_BIN} {cli_path} --config {config_path}'
     conv_manager = DispatcherManager(JobType.CONV.value, gen_config.model_name, gen_config.cluster)
     conv_manager.set_job([conv_cmd], gen_config.sweep_path, gen_config.job_config, dependency=dependency)
     return conv_manager.dispatch_job()
@@ -132,13 +134,14 @@ def run_inf(config_path: Path, dependency: int | None = None) -> int:
     inf_config = ConfigReader(config_path).get_bench_config()
     cli_path: Path = Path(__file__).resolve().parent / 'run_inf.py'
     out_path: Path = inf_config.sweep_path / INFERENCE_BENCH_DIR_NAME
+    out_path.mkdir(exist_ok=True)
     watch_manager = DispatcherManager(
         JobType.WATCH_INF.value, inf_config.model_name, inf_config.job_config.cluster)
     inf_manager = DispatcherManager(
         JobType.INF.value, inf_config.model_name, inf_config.job_config.cluster)
 
     # init job
-    init_cmd: str = f'python {cli_path} --config {config_path}'
+    init_cmd: str = f'{PYTHON_BIN} {cli_path} --config {config_path}'
     watch_manager.set_job([init_cmd], out_path, inf_config.job_config, dependency=dependency)
     init_id = watch_manager.dispatch_job()
 
@@ -169,13 +172,14 @@ def run_sim(config_path: Path, dependency: int | None = None) -> int:
     sim_config = ConfigReader(config_path).get_prop_config()
     cli_path: Path = Path(__file__).resolve().parent / 'run_sim.py'
     out_path: Path = sim_config.sweep_path / PROPERTIES_BENCH_DIR_NAME
+    out_path.mkdir(exist_ok=True)
     watch_manager = DispatcherManager(
         JobType.WATCH_SIM.value, sim_config.model_name, sim_config.job_config.cluster)
     sim_manager = DispatcherManager(
         JobType.SIM.value, sim_config.model_name, sim_config.job_config.cluster)
 
     # init job
-    init_cmd: str = f'python {cli_path} --config {config_path}'
+    init_cmd: str = f'{PYTHON_BIN} {cli_path} --config {config_path}'
     watch_manager.set_job([init_cmd], out_path, sim_config.job_config, dependency=dependency)
     init_id = watch_manager.dispatch_job()
 

@@ -67,7 +67,7 @@ cp ${lmp_inps}/in.eos .
 eval mpirun -np 1 ${LMMP} -in in.eos -v folder ${potential_name}
 # fit EOS
 cp ${pps_python}/eos-fit.py .
-python eos-fit.py
+conda run python eos-fit.py
 cp volume.dat ./data/eos_mlip.csv
 # Get lattice parameter
 a0=$(grep 'a0 =' ./data/results.txt | awk '{print $3}')
@@ -122,9 +122,9 @@ cd plots
 cp ${pps_python}/eos_bain.py .
 cp ${pps_python}/sfe.py .
 cp ${pps_python}/ts.py .
-python eos_bain.py
-python sfe.py
-python ts.py
+conda run python eos_bain.py
+conda run python sfe.py
+conda run python ts.py
 rm *.py
 
 echo "Finish plotting results!"

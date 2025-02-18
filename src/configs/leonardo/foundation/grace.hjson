@@ -2,10 +2,10 @@
     general: {
         lammps_bin_path: "/leonardo/home/userexternal/erodaro0/repos/POTline/lammps_versions/grace/lammps/build/lmp",
         model_name: grace
-        best_n_models: 2
+        best_n_models: 1
         hpc: true
-        cluster: 'habrok'
-        sweep_path: "/scratch/p319875/POTline/foundation/GRACE-1L-OAM_2Feb25"
+        cluster: 'leonardo'
+        sweep_path: "/leonardo_work/IscrC_GNNAIron/erodaro0/POTline/foundation/GRACE-1L-OAM_2Feb25"
         repo_path: "/leonardo/home/userexternal/erodaro0/repos/POTline"
         pretrained_path: "/leonardo/home/userexternal/erodaro0/.cache/grace/GRACE-1L-OAM_2Feb25/"
         slurm_watcher: {
@@ -28,8 +28,10 @@
             time: "1:00:00"
         }
         slurm_opts: {
-            ntasks: 1
-            cpus_per_task: 32
+            partition: boost_usr_prod
+            nodes: 1
+            ntasks: 32
+            cpus_per_task: 1
             mem: "80G"
             time: "24:00:00"
         }
@@ -44,6 +46,7 @@
             time: "1:00:00"
         }
         slurm_opts: {
+            partition: boost_usr_prod
             ntasks: 1
             cpus_per_task: 32
             mem: "80G"
