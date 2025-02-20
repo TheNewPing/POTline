@@ -21,12 +21,24 @@ class PotMACE(PotModel):
     """
     MACE implementation.
     """
+    def __init__(self, out_path: Path, pretrained: bool = False):
+        super().__init__(out_path, pretrained)
+        if self._pretrained:
+            self._model_name: str = self._out_path.name
+            self._out_path = self._out_path.parent
+            self._lmp_pot_path = self._out_path / self._lmp_pot_path.name
+        else:
+            with self._config_filepath.open('r', encoding='utf-8') as file:
+                self._model_name = yaml.safe_load(file)['name']
     @staticmethod
     def get_fit_cmd(deep: bool = False,):
         return ' '.join(['mace_run_train', f'--config {CONFIG_NAME}'] +
                      (['--restart_latest'] if deep else []))
 
     def collect_loss(self) -> Losses:
+        if self._pretrained:
+            raise NotImplementedError('Pretrained model does not support loss collection.')
+
         results_path: Path = next((self._out_path / "results").glob("*.txt"))
         with results_path.open('r', encoding='utf-8') as file:
             lines = file.readlines()
@@ -44,16 +56,16 @@ class PotMACE(PotModel):
         return Losses(rmse_e, rmse_f)
 
     def lampify(self) -> Path:
-        with self._config_filepath.open('r', encoding='utf-8') as file:
-            model_name: str = yaml.safe_load(file)['name']
-
         # if the model is trained with swa, names are different
-        if (self._out_path / (model_name + '_stagetwo.model')).exists():
-            model_filepath: Path = self._out_path / (model_name + '_stagetwo.model')
-            self._yace_path = self._out_path / f'{model_name}_stagetwo.model-lammps.pt'
+        if (self._out_path / (self._model_name + '_stagetwo.model')).exists():
+            model_filepath: Path = self._out_path / (self._model_name + '_stagetwo.model')
+            self._yace_path = self._out_path / f'{self._model_name}_stagetwo.model-lammps.pt'
+        elif self._pretrained:
+            model_filepath = self._out_path / self._model_name
+            self._yace_path = self._out_path / f'{self._model_name}.model-lammps.pt'
         else:
-            model_filepath = self._out_path / (model_name + '.model')
-            self._yace_path = self._out_path / f'{model_name}.model-lammps.pt'
+            model_filepath = self._out_path / (self._model_name + '.model')
+            self._yace_path = self._out_path / f'{self._model_name}.model-lammps.pt'
 
         old_argv = sys.argv
         sys.argv = ["program", str(model_filepath)]
@@ -71,6 +83,9 @@ class PotMACE(PotModel):
         return self._lmp_pot_path
 
     def set_config_maxiter(self, maxiter: int):
+        if self._pretrained:
+            raise NotImplementedError('Pretrained model does not support maxiter setting.')
+
         with self._config_filepath.open('r', encoding='utf-8') as file:
             config = yaml.safe_load(file)
 
@@ -87,5 +102,8 @@ class PotMACE(PotModel):
         return SupportedModel.MACE
 
     def switch_out_path(self, out_path: Path):
+        if self._pretrained:
+            raise NotImplementedError('Pretrained model does not support switching output path.')
+
         shutil.copytree(self._out_path / 'checkpoints', out_path / 'checkpoints', dirs_exist_ok=True)
         super().switch_out_path(out_path)

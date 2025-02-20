@@ -195,3 +195,4 @@ data/*
 *log.lammps
 src/data/input.yaml
 .vscode/
+*.zip

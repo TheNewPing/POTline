@@ -1,0 +1,59 @@
+{
+    general: {
+        lammps_bin_path: "/leonardo/home/userexternal/erodaro0/repos/POTline/lammps_versions/mace/lammps/build/lmp",
+        model_name: mace
+        best_n_models: 1
+        hpc: true
+        cluster: 'leonardo'
+        sweep_path: "/leonardo_work/IscrC_GNNAIron/erodaro0/POTline/foundation/mace/20231210mace128L0_energy_epoch249model"
+        repo_path: "/leonardo/home/userexternal/erodaro0/repos/POTline"
+        pretrained_path: "/leonardo/home/userexternal/erodaro0/.cache/mace/20231210mace128L0_energy_epoch249model"
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+            partition: boost_usr_prod
+            gres: "gpu:1"
+        }
+        slurm_opts: {}
+        modules: ["conda_mace.sh"]
+        py_scripts: []
+    }
+    inference: {
+        prerun_steps: 100,
+        max_steps: 1100,
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 32
+            mem: "80G"
+            time: "24:00:00"
+            partition: boost_usr_prod
+        }
+        modules: ["module_mkl.sh", "conda_mace.sh"]
+        py_scripts: []
+    }
+    data_analysis: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 32
+            mem: "80G"
+            time: "24:00:00"
+            partition: boost_usr_prod
+        }
+        modules: ["module_mkl.sh", "conda_mace.sh"]
+        py_scripts: []
+    }
+}

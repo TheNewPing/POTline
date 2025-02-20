@@ -45,6 +45,7 @@ def run_hyp(config_path: Path, start_iter: int) -> int:
     hyp_config = ConfigReader(config_path).get_optimizer_config()
     cli_path: Path = Path(__file__).resolve().parent / 'run_hyp.py'
     out_path: Path = hyp_config.sweep_path / OPTIM_DIR_NAME
+    out_path.mkdir(exist_ok=True)
     fit_manager = DispatcherManager(
         JobType.FIT.value, hyp_config.model_name, hyp_config.job_config.cluster)
     watch_manager = DispatcherManager(
@@ -53,6 +54,7 @@ def run_hyp(config_path: Path, start_iter: int) -> int:
     # init job
     init_cmd: str = f'{PYTHON_BIN} {cli_path} --config {config_path} --iteration {start_iter}'
     watch_manager.set_job([init_cmd], out_path / str(start_iter), hyp_config.job_config)
+    (out_path / str(start_iter)).mkdir(exist_ok=True)
     watch_id = watch_manager.dispatch_job()
 
     # run jobs
@@ -64,6 +66,7 @@ def run_hyp(config_path: Path, start_iter: int) -> int:
         cmd: str = f'{PYTHON_BIN} {cli_path} --config {config_path} --restart --iteration {i+1}'
         watch_manager.set_job([cmd], out_path / str(i+1),
                                 hyp_config.job_config, dependency=fit_id)
+        (out_path / str(i+1)).mkdir(exist_ok=True)
         watch_id = watch_manager.dispatch_job()
     return watch_id
 
@@ -81,6 +84,7 @@ def run_deep(config_path: Path, dependency: int | None = None) -> int:
     deep_config = ConfigReader(config_path).get_deep_train_config()
     cli_path: Path = Path(__file__).resolve().parent / 'run_deep.py'
     out_path: Path = deep_config.sweep_path / DEEP_TRAIN_DIR_NAME
+    out_path.mkdir(exist_ok=True)
     deep_manager = DispatcherManager(
         JobType.DEEP.value, deep_config.model_name, deep_config.job_config.cluster)
     watch_manager = DispatcherManager(
@@ -200,6 +204,8 @@ if __name__ == '__main__':
     args: Namespace = parse_args()
     conf_path: Path = Path(args.config).resolve()
     next_id: int | None = None
+    gen_conf = ConfigReader(conf_path).get_general_config()
+    gen_conf.sweep_path.mkdir(exist_ok=True)
 
     if args.nohyper:
         next_id = run_hyp(conf_path, args.hypiter)

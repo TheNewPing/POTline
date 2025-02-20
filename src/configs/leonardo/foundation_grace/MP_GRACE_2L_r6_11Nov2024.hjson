@@ -1,0 +1,58 @@
+{
+    general: {
+        lammps_bin_path: "/leonardo/home/userexternal/erodaro0/repos/POTline/lammps_versions/grace/lammps/build/lmp",
+        model_name: grace
+        best_n_models: 1
+        hpc: true
+        cluster: 'leonardo'
+        sweep_path: "/leonardo_work/IscrC_GNNAIron/erodaro0/POTline/foundation/MP_GRACE_2L_r6_11Nov2024"
+        repo_path: "/leonardo/home/userexternal/erodaro0/repos/POTline"
+        pretrained_path: "/leonardo/home/userexternal/erodaro0/.cache/grace/MP_GRACE_2L_r6_11Nov2024/"
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {}
+        modules: ["conda_grace.sh"]
+        py_scripts: []
+    }
+    inference: {
+        prerun_steps: 100,
+        max_steps: 1100,
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            partition: boost_usr_prod
+            nodes: 1
+            ntasks: 32
+            cpus_per_task: 1
+            mem: "256G"
+            time: "24:00:00"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh"]
+        py_scripts: []
+    }
+    data_analysis: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            partition: boost_usr_prod
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "80G"
+            time: "24:00:00"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }
+}

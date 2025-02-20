@@ -20,8 +20,7 @@ class PotGRACE(PotModel):
     GRACE implementation.
     """
     def __init__(self, out_path: Path, pretrained: bool = False):
-        super().__init__(out_path)
-        self._pretrained: bool = pretrained
+        super().__init__(out_path, pretrained)
         if self._pretrained:
             self._yace_path = out_path
         else:
@@ -53,14 +52,13 @@ class PotGRACE(PotModel):
         return Losses(rmse_de, rmse_f_comp)
 
     def lampify(self) -> Path:
-        if self._pretrained:
-            raise NotImplementedError('Pretrained model does not support lampify.')
+        if not self._pretrained:
+            cmd: list[str] = ['gracemaker', '-r', '-s']
+            if self._preset == 'FS':
+                cmd.append('-sf')
+            cmd.append(CONFIG_NAME)
+            subprocess.run(cmd, check=True, cwd=self._out_path)
 
-        cmd: list[str] = ['gracemaker', '-r', '-s']
-        if self._preset == 'FS':
-            cmd.append('-sf')
-        cmd.append(CONFIG_NAME)
-        subprocess.run(cmd, check=True, cwd=self._out_path)
         return self._yace_path
 
     def create_potential(self) -> Path:

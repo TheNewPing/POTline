@@ -32,6 +32,5 @@ if __name__ == '__main__':
     best_trackers = filter_best_loss(tracker_list, energy_weight, gen_config.best_n_models)
 
     for tracker in best_trackers:
-        if not gen_config.pretrained_path:
-            tracker.model.lampify()
+        tracker.model.lampify()
         tracker.model.create_potential()

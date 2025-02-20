@@ -68,6 +68,7 @@ class PotModel(ABC):
         self._config_filepath: Path = self._out_path / CONFIG_NAME
         self._yace_path: Path = self._out_path / YACE_NAME
         self._lmp_pot_path: Path = self._out_path / POTENTIAL_NAME
+        self._pretrained: bool = pretrained
 
     @staticmethod
     @abstractmethod
