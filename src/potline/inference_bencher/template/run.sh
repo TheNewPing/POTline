@@ -12,10 +12,10 @@ export OMP_NUM_THREADS=${cpus_per_task}
 
 echo "start"
 start_time=`date +%s`
-eval mpirun -n ${ntasks} --bind-to core:overload-allowed --report-bindings --display-allocation ${lammps_bin_path} -in "bench.in" -v steps ${prerun_steps}
+eval srun -n ${ntasks} ${lammps_bin_path} -in "bench.in" -v steps ${prerun_steps}
 echo "prerun done"
 mid_time=`date +%s`
-eval mpirun -n ${ntasks} --bind-to core:overload-allowed --report-bindings --display-allocation ${lammps_bin_path} -in "bench.in" -v steps ${max_steps}
+eval srun -n ${ntasks} ${lammps_bin_path} -in "bench.in" -v steps ${max_steps}
 end_time=`date +%s`
 echo "finished"
 

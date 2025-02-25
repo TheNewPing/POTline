@@ -1,0 +1,57 @@
+{
+    general: {
+        lammps_bin_path: "/home4/p319875/repos/POTline/lammps_versions/mace/lammps/build2/lmp",
+        model_name: mace
+        best_n_models: 1
+        hpc: true
+        cluster: 'habrok'
+        sweep_path: "/scratch/p319875/POTline/foundation/mace/macempa0mediummodel"
+        repo_path: "/home4/p319875/repos/POTline"
+        pretrained_path: "/home4/p319875/.cache/mace/macempa0mediummodel"
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "0:05:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+        }
+        slurm_opts: {}
+        modules: ["conda_mace.sh"]
+        py_scripts: []
+    }
+    inference: {
+        prerun_steps: 100,
+        max_steps: 1100,
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "2G"
+            time: "0:05:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 32
+            mem: "80G"
+            time: "24:00:00"
+        }
+        modules: ["conda_mace.sh", "module_mpi.sh", "module_mkl.sh"]
+        py_scripts: []
+    }
+    data_analysis: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "2G"
+            time: "0:05:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 32
+            mem: "80G"
+            time: "24:00:00"
+        }
+        modules: ["conda_mace.sh", "module_mpi.sh", "module_mkl.sh"]
+        py_scripts: []
+    }
+}
