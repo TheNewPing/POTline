@@ -163,6 +163,7 @@ cython_debug/
 
 # Dataset
 *.xyz
+!Meng_screw_dis.xyz
 *.gzip
 *.ipynb
 !metrics.ipynb
