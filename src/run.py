@@ -188,13 +188,15 @@ def run_sim(config_path: Path, dependency: int | None = None) -> int:
     init_id = watch_manager.dispatch_job()
 
     # run jobs
-    n_cpu = int(sim_config.job_config.slurm_opts['cpus_per_task'])
+    cpus_per_task = int(sim_config.job_config.slurm_opts['cpus_per_task'])
+    ntasks = int(sim_config.job_config.slurm_opts['ntasks'])
     sim_cmd: str = ' '.join([str(cmd) for cmd in [
         'bash', SUBMIT_SCRIPT_NAME,
         f'"{sim_config.lammps_bin_path} {get_lammps_params(sim_config.model_name)}"',
         PropertiesSimulator.LAMMPS_INPS_PATH,
         PropertiesSimulator.PPS_PYTHON_PATH,
-        PropertiesSimulator.REF_DATA_PATH, n_cpu
+        PropertiesSimulator.REF_DATA_PATH,
+        cpus_per_task, ntasks
     ]])
     sim_manager.set_job([sim_cmd], out_path, sim_config.job_config, dependency=init_id,
                         array_ids=list(range(1, sim_config.best_n_models+1)))

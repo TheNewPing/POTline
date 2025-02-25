@@ -1,8 +1,8 @@
 {
     general: {
-        lammps_bin_path: "/home4/p319875/repos/POTline/lammps_versions/mace/lammps/build/lmp",
+        lammps_bin_path: "/home4/p319875/repos/POTline/lammps_versions/mace/lammps/build2/lmp",
         model_name: mace
-        best_n_models: 20
+        best_n_models: 1
         hpc: true
         cluster: 'habrok'
         sweep_path: "/scratch/p319875/POTline/full_test/mace"

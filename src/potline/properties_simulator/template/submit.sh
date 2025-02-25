@@ -26,10 +26,11 @@ LMMP=$1
 lmp_inps=$2
 pps_python=$3
 ref_data_path=$4
-n_cpu=$5
+cpus_per_task=$4
+ntasks=$5
 
-export MKL_NUM_THREADS=${n_cpu}
-export OMP_NUM_THREADS=${n_cpu}
+export MKL_NUM_THREADS=${cpus_per_task}
+export OMP_NUM_THREADS=${cpus_per_task}
 
 # clear caches
 rm dump*
@@ -64,7 +65,7 @@ echo '#**********************************' | tee -a ./data/results.txt
 #**********************************
 # E-V curve 
 cp ${lmp_inps}/in.eos .
-eval mpirun -np 1 ${LMMP} -in in.eos -v folder ${potential_name}
+eval srun -n ${ntasks} ${LMMP} -in in.eos -v folder ${potential_name}
 # fit EOS
 cp ${pps_python}/eos-fit.py .
 conda run python eos-fit.py
@@ -74,40 +75,40 @@ a0=$(grep 'a0 =' ./data/results.txt | awk '{print $3}')
 
 # Vacancy formation energy
 cp ${lmp_inps}/in.vac .
-eval srun ${LMMP} -in in.vac -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.vac -v lat ${a0}
 
 # Calculation of elastic constants.--------------------------------
 cp ${lmp_inps}/in.elastic .
 cp ${lmp_inps}/*.mod .
-eval srun ${LMMP} -in in.elastic -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.elastic -v lat ${a0}
 
 # Calculation of surface energies.---------------------------------
 cp ${lmp_inps}/in.surf* .
 # (100) plane
-eval srun ${LMMP} -in in.surf1 -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.surf1 -v lat ${a0}
 # (110) plane
-eval srun ${LMMP} -in in.surf2 -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.surf2 -v lat ${a0}
 # (111) plane
-eval srun ${LMMP} -in in.surf3 -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.surf3 -v lat ${a0}
 # (112) plane
-eval srun ${LMMP} -in in.surf4 -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.surf4 -v lat ${a0}
 
 # Bain path calculation.------------------------------------------
 cp ${lmp_inps}/in.bain_path .
-eval srun ${LMMP} -in in.bain_path -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.bain_path -v lat ${a0}
 cp bain_path.csv ./data
 
 # Stacking fault energy---------------------------------------------
 cp ${lmp_inps}/in.sfe_* .
-eval srun ${LMMP} -in in.sfe_110 -v lat ${a0}
-eval srun ${LMMP} -in in.sfe_112 -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.sfe_110 -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.sfe_112 -v lat ${a0}
 cp ./sfe_110.csv ./data
 cp ./sfe_112.csv ./data
 
 # Traction-separatio curve------------------------------------------
 cp ${lmp_inps}/in.ts_* .
-eval srun ${LMMP} -in in.ts_100 -v lat ${a0}
-eval srun ${LMMP} -in in.ts_110 -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.ts_100 -v lat ${a0}
+eval srun -n ${ntasks} ${LMMP} -in in.ts_110 -v lat ${a0}
 cp ./ts_100.csv ./data
 cp ./ts_110.csv ./data
 

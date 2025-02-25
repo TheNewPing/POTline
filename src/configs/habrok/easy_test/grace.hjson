@@ -48,7 +48,7 @@
         slurm_opts: {
             nodes: 1
             ntasks: 4
-            cpus_per_task: 8
+            cpus_per_task: 1
             mem: "5G"
             time: "3:00:00"
         }
