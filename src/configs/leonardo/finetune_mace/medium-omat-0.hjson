@@ -56,9 +56,9 @@
         py_scripts: []
     }
     hyper_search: {
-        max_iter: 5,
-        n_initial_points: 5
-        n_points: 5
+        max_iter: 7,
+        n_initial_points: 3
+        n_points: 3
         strategy: "cl_min"
         energy_weight: 0.3
         handle_collect_errors: true
