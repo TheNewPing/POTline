@@ -25,6 +25,8 @@ class PotMACE(PotModel):
         super().__init__(out_path, pretrained)
         if self._pretrained:
             self._model_name: str = self._out_path.name
+            # if it is pretrained, the initial path is the file path of the model
+            # so we need to go up one level to get the output path
             self._out_path = self._out_path.parent
             self._lmp_pot_path = self._out_path / self._lmp_pot_path.name
         else:
