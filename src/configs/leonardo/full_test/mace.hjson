@@ -1,0 +1,108 @@
+{
+    general: {
+        lammps_bin_path: "/leonardo/home/userexternal/erodaro0/repos/POTline/lammps_versions/mace/lammps/build/lmp",
+        model_name: mace
+        best_n_models: 1
+        hpc: true
+        cluster: 'leonardo'
+        sweep_path: "/leonardo_work/IscrC_GNNAIron/erodaro0/POTline/full_test/mace"
+        repo_path: "/leonardo/home/userexternal/erodaro0/repos/POTline"
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+            partition: boost_usr_prod
+            gres: "gpu:1"
+        }
+        slurm_opts: {}
+        modules: ["conda_mace.sh"]
+        py_scripts: []
+    }
+    inference: {
+        prerun_steps: 100,
+        max_steps: 1100,
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "2G"
+            time: "0:10:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 32
+            mem: "40G"
+            time: "24:00:00"
+            partition: boost_usr_prod
+        }
+        modules: ["module_mkl.sh", "conda_mace.sh"]
+        py_scripts: []
+    }
+    data_analysis: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "2G"
+            time: "0:10:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 32
+            mem: "40G"
+            time: "24:00:00"
+            partition: boost_usr_prod
+        }
+        modules: ["module_mkl.sh", "conda_mace.sh"]
+        py_scripts: []
+    }
+    hyper_search: {
+        max_iter: 7,
+        n_initial_points: 3
+        n_points: 3
+        strategy: "cl_min"
+        energy_weight: 0.3
+        handle_collect_errors: true
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "5G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 8
+            mem: "50G"
+            time: "24:00:00"
+            partition: boost_usr_prod
+            gres: "gpu:1"
+            qos: "boost_qos_lprod"
+        }
+        modules: ["conda_mace.sh"]
+        py_scripts: ["pyt_gpu_test.py"]
+        optimizer_params: {
+            model: "MACE"
+            num_channels: 32
+            max_L: 1
+            r_max: 5.0
+            name: "mace_test"
+            train_file: "/leonardo/home/userexternal/erodaro0/repos/POTline/src/data/ogata_extended.xyz"
+            valid_fraction: 0.10
+            energy_key: "energy"
+            forces_key: "forces"
+            device: cuda
+            batch_size: "skopt.space.Integer(32, 64)"
+            max_num_epochs: 600
+            seed: 42
+            default_dtype: "skopt.space.Categorical(categories=['float64', 'float32'])"
+            swa: "skopt.space.Categorical(categories=['True', 'False'])"
+            ema: "skopt.space.Categorical(categories=['True', 'False'])"
+            ema_decay: "skopt.space.Real(0, 1)"
+            amsgrad: "skopt.space.Categorical(categories=['True', 'False'])"
+            lr: "skopt.space.Real(0.0001, 0.1)"
+            interaction_first: "skopt.space.Categorical(categories=['RealAgnosticResidualInteractionBlock', 'RealAgnosticInteractionBlock'])"
+            interaction: "skopt.space.Categorical(categories=['RealAgnosticResidualInteractionBlock', 'RealAgnosticAttResidualInteractionBlock', 'RealAgnosticInteractionBlock'])"
+            eval_interval: 1
+            patience: 20
+        }
+    }
+}

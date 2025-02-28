@@ -13,6 +13,9 @@ from string import Template
 import yaml
 import numpy as np
 
+from ..config_reader import ConfigReader
+from ..dispatcher import DispatcherManager, JobType
+
 YACE_NAME: str = 'model.yace'
 POTENTIAL_NAME: str = 'potential.in'
 CONFIG_NAME: str = "optimized_params.yaml"
@@ -164,3 +167,22 @@ class PotModel(ABC):
         Get the path to the potential file.
         """
         return self._lmp_pot_path
+
+    @staticmethod
+    def run_conv(config_path: Path, dependency: int | None = None) -> int:
+        """
+        Run conversion.
+
+        Args:
+            - config_path: the path to the configuration file.
+            - dependency: the job dependency.
+
+        Returns:
+            int: The id of the last watcher job.
+        """
+        gen_config = ConfigReader(config_path).get_general_config()
+        cli_path: Path = gen_config.repo_path/ 'src' / 'run_conv.py'
+        conv_cmd: str = f'{gen_config.python_bin} {cli_path} --config {config_path}'
+        conv_manager = DispatcherManager(JobType.CONV.value, gen_config.model_name, gen_config.cluster)
+        conv_manager.set_job([conv_cmd], gen_config.sweep_path, gen_config.job_config, dependency=dependency)
+        return conv_manager.dispatch_job()

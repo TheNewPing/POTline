@@ -172,7 +172,8 @@ class GeneralConfig():
                  sweep_path: Path,
                  job_config: JobConfig,
                  repo_path: Path,
-                 pretrained_path: Path | None = None):
+                 pretrained_path: Path | None = None,
+                 python_bin: str = 'conda run python',):
         self.lammps_bin_path: Path = lammps_bin_path
         self.model_name: str = model_name
         self.best_n_models: int = best_n_models
@@ -182,6 +183,7 @@ class GeneralConfig():
         self.job_config: JobConfig = job_config
         self.repo_path: Path = repo_path
         self.pretrained_path: Path | None = pretrained_path
+        self.python_bin: str = python_bin
 
 def patify(config_dict: dict[str, Any]) -> dict:
     """
@@ -321,5 +323,6 @@ class ConfigReader():
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
             self.get_slurm_config(MainSectionKW.GENERAL.value),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.REPO_PATH.value])),
-            Path(pretrained_path) if pretrained_path else None
+            Path(pretrained_path) if pretrained_path else None,
+            self.get_config_section(MainSectionKW.GENERAL.value).get('python_bin', 'conda run python')
         )

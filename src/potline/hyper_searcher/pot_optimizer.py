@@ -13,8 +13,9 @@ from skopt import Optimizer # type: ignore
 import xpot.loaders as load # type: ignore
 
 from ..config_reader import ConfigReader
-from ..model import create_model, CONFIG_NAME, Losses
+from ..model import create_model, CONFIG_NAME, Losses, get_fit_cmd
 from ..loss_logger import LossLogger, ModelTracker
+from ..dispatcher import DispatcherManager, JobType
 
 OPTIM_DIR_NAME: str = "hyper_search"
 
@@ -225,3 +226,47 @@ class PotOptimizer():
                 model_tracker = ModelTracker.from_path(model_name, model_path)
                 models.append(model_tracker)
         return models
+
+    @staticmethod
+    def run_hyp(config_path: Path, start_iter: int) -> int:
+        """
+        Run hyperparameter search.
+
+        Args:
+            - config_path: the path to the configuration file.
+            - start_iter: the starting iteration.
+                If > 1, assusmes that iteration i-1 has already been registered.
+
+        Returns:
+            int: The id of the last watcher job.
+        """
+        # Dispatch watchers
+        hyp_config = ConfigReader(config_path).get_optimizer_config()
+        gen_config = ConfigReader(config_path).get_general_config()
+        cli_path: Path = gen_config.repo_path/ 'src' / 'run_hyp.py'
+        out_path: Path = hyp_config.sweep_path / OPTIM_DIR_NAME
+        out_path.mkdir(exist_ok=True)
+        fit_manager = DispatcherManager(
+            JobType.FIT.value, hyp_config.model_name, hyp_config.job_config.cluster)
+        watch_manager = DispatcherManager(
+            JobType.WATCH_FIT.value, hyp_config.model_name, hyp_config.job_config.cluster)
+
+        # init job
+        init_cmd: str = f'{gen_config.python_bin} {cli_path} --config {config_path} --iteration {start_iter}'
+        watch_manager.set_job([init_cmd], out_path / str(start_iter), hyp_config.job_config)
+        (out_path / str(start_iter)).mkdir(exist_ok=True)
+        watch_id = watch_manager.dispatch_job()
+
+        # run jobs
+        fit_cmd: str = get_fit_cmd(hyp_config.model_name, deep=False)
+        for i in range(start_iter, hyp_config.max_iter+1):
+            fit_manager.set_job([fit_cmd], out_path / str(i), hyp_config.job_config, dependency=watch_id,
+                                array_ids=list(range(1,hyp_config.n_points+1)))
+            fit_id = fit_manager.dispatch_job()
+            cmd: str = \
+                f'{gen_config.python_bin} {cli_path} --config {config_path} --restart --iteration {i+1}'
+            watch_manager.set_job([cmd], out_path / str(i+1),
+                                    hyp_config.job_config, dependency=fit_id)
+            (out_path / str(i+1)).mkdir(exist_ok=True)
+            watch_id = watch_manager.dispatch_job()
+        return watch_id
