@@ -38,6 +38,7 @@ class GeneralKW(Enum):
     SWEEP_PATH = 'sweep_path'
     REPO_PATH = 'repo_path'
     PRETRAINED_PATH = 'pretrained_path'
+    PYTHON_BIN = 'python_bin'
 
 class DeepTrainKW(Enum):
     """
@@ -165,6 +166,7 @@ class GeneralConfig():
     Configuration class for the general configuration.
     """
     def __init__(self, lammps_bin_path: Path,
+                 python_bin: str,
                  model_name: str,
                  best_n_models: int,
                  hpc: bool,
@@ -172,9 +174,9 @@ class GeneralConfig():
                  sweep_path: Path,
                  job_config: JobConfig,
                  repo_path: Path,
-                 pretrained_path: Path | None = None,
-                 python_bin: str = 'conda run python',):
+                 pretrained_path: Path | None = None,):
         self.lammps_bin_path: Path = lammps_bin_path
+        self.python_bin: str = python_bin
         self.model_name: str = model_name
         self.best_n_models: int = best_n_models
         self.hpc: bool = hpc
@@ -183,7 +185,6 @@ class GeneralConfig():
         self.job_config: JobConfig = job_config
         self.repo_path: Path = repo_path
         self.pretrained_path: Path | None = pretrained_path
-        self.python_bin: str = python_bin
 
 def patify(config_dict: dict[str, Any]) -> dict:
     """
@@ -316,6 +317,8 @@ class ConfigReader():
             MainSectionKW.GENERAL.value).get(GeneralKW.PRETRAINED_PATH.value)
         return GeneralConfig(
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.LMP_BIN.value])),
+            self.get_config_section(
+                MainSectionKW.GENERAL.value).get(GeneralKW.PYTHON_BIN.value, 'conda run python'),
             str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
             int(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.BEST_N.value])),
             bool(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.HPC.value])),
@@ -324,5 +327,4 @@ class ConfigReader():
             self.get_slurm_config(MainSectionKW.GENERAL.value),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.REPO_PATH.value])),
             Path(pretrained_path) if pretrained_path else None,
-            self.get_config_section(MainSectionKW.GENERAL.value).get('python_bin', 'conda run python')
         )

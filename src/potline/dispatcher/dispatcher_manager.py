@@ -64,6 +64,8 @@ class DispatcherManager():
         tot_cmds = export_cmds + array_cmds + source_cmds + py_cmds + commands
 
         # Create dispatcher
+        print("Commands to run:", tot_cmds)
+        print("Slurm options:", options)
         self._dispatcher = SlurmDispatcher(tot_cmds, options)
 
     def dispatch_job(self) -> int:

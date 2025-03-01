@@ -60,7 +60,7 @@ class PropertiesSimulator():
         """
         sim_config = ConfigReader(config_path).get_prop_config()
         gen_config = ConfigReader(config_path).get_general_config()
-        cli_path: Path = gen_config.repo_path/ 'src' / 'run_sim.py'
+        cli_path: Path = gen_config.repo_path / 'src' / 'run_sim.py'
         out_path: Path = sim_config.sweep_path / PROPERTIES_BENCH_DIR_NAME
         out_path.mkdir(exist_ok=True)
         watch_manager = DispatcherManager(
