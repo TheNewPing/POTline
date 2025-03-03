@@ -1,0 +1,32 @@
+# An example for the usage of NNIP-FeH
+
+# ---------- Initialize Simulation --------------------- 
+clear 
+units metal 
+dimension 3 
+boundary p p p 
+atom_style atomic 
+
+# ---------- Create Atomistic Structure --------------------- 
+read_data ${lmpdata}
+
+# ---------- Define Interatomic Potential --------------------- 
+include    potential.in
+ 
+mass            1       55.845
+
+neighbor        2.0     bin 
+neigh_modify    every   1      check   yes 
+#-------------------------------------------------
+reset_timestep  0
+timestep        0.001 
+
+thermo 1
+thermo_style custom step pe lx ly lz press pxx pyy pzz
+run 0
+variable pot_eng equal pe
+print "Potential energy from hard to split ${pot_eng}"
+print "${pot_eng}" append energy.dat
+
+# SIMULATION DONE
+print "All done!"

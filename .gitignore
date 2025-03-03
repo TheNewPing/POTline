@@ -197,4 +197,3 @@ data/*
 src/data/input.yaml
 .vscode/
 *.zip
-screw_DB_lmp_data/

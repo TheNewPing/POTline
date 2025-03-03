@@ -19,13 +19,11 @@ class JobType(Enum):
     """
     FIT = 'fit'
     WATCH_FIT = 'w_fit'
-    INF = 'inf'
-    WATCH_INF = 'w_inf'
     DEEP = 'deep'
     WATCH_DEEP = 'w_deep'
-    SIM = 'sim'
-    WATCH_SIM = 'w_sim'
     CONV = 'conv'
+    EXP = 'exp'
+    WATCH_EXP = 'w_exp'
 
 class SlurmCluster(Enum):
     """
@@ -91,7 +89,7 @@ def get_slurm_options(cluster: str, job_type: str, out_path: Path,
     if cluster not in SlurmCluster._value2member_map_: # pylint: disable=protected-access
         raise ValueError(f"Cluster {cluster} is not supported.")
 
-    if job_type not in [JobType.FIT.value, JobType.INF.value, JobType.DEEP.value, JobType.SIM.value]:
+    if job_type not in [JobType.FIT.value, JobType.DEEP.value, JobType.EXP.value]:
         return make_base_options(job_type, model, out_path, slurm_opts, dependency)
 
     if not array_ids:

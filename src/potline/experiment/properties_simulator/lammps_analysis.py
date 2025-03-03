@@ -6,8 +6,7 @@ from pathlib import Path
 
 from ..experiment import Experiment
 
-from ...config_reader import ConfigReader
-from ...dispatcher import JobType
+from ...config_reader import ConfigReader, MainSectionKW
 from ...model import get_lammps_params
 
 PROPERTIES_BENCH_DIR_NAME: str = 'properties_bench'
@@ -20,8 +19,7 @@ class PropertiesSimulator():
     Class for running the LAMMPS properties simulations.
 
     Args:
-        - config : configuration for the simulations
-        - tracker_list : trackers to simulate
+        - config_path: the path to the configuration file.
     """
 
     LAMMPS_INPS_PATH: Path = Path(__file__).parent / 'pot_testing' / 'lmps_inputs'
@@ -30,7 +28,7 @@ class PropertiesSimulator():
 
     def __init__(self, config_path: Path):
         self._config_path = config_path
-        self._config = ConfigReader(config_path).get_prop_config()
+        self._config = ConfigReader(config_path).get_experiment_config(MainSectionKW.PROP_SIM.value)
         self._out_path = self._config.sweep_path / PROPERTIES_BENCH_DIR_NAME
 
     def run_sim(self, dependency: int | None = None) -> int:
@@ -54,5 +52,4 @@ class PropertiesSimulator():
 
         return Experiment.run_exp(self._config_path, self._out_path, PROP_BENCH_TEMPLATE_PATH,
                                   PROPERTIES_BENCH_DIR_NAME, sim_cmd, self._config.best_n_models,
-                                  self._config.job_config, JobType.WATCH_SIM.value, JobType.SIM.value,
-                                  self._config.model_name, dependency)
+                                  self._config.job_config, self._config.model_name, dependency)

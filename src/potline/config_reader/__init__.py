@@ -5,7 +5,7 @@ This module contains the ConfigReader class which is used to read the configurat
 from .config_reader import (
     ConfigReader,
     BenchConfig,
-    PropConfig,
+    ExperimentConfig,
     HyperConfig,
     DeepTrainConfig,
     JobConfig,

@@ -6,7 +6,7 @@ from pathlib import Path
 import shutil
 
 from ..config_reader import ConfigReader
-from ..dispatcher import DispatcherManager
+from ..dispatcher import DispatcherManager, JobType
 from ..loss_logger import ModelTracker
 from ..config_reader import JobConfig
 
@@ -37,7 +37,7 @@ class Experiment():
 
     @staticmethod
     def run_exp(config_path: Path, out_path: Path, copy_dir: Path, exp_name: str, command: str,
-                n_models: int, job_config: JobConfig, job_type_prep: str, job_type_run: str,
+                n_models: int, job_config: JobConfig,
                 model: str, dependency: int | None = None,) -> int:
         """
         Run the experiment.
@@ -50,8 +50,7 @@ class Experiment():
             - command: the command to run.
             - n_models: the number of models to run.
             - job_config: the job configuration.
-            - job_type_prep: the job type for the preparation.
-            - job_type_run: the job type for the run.
+            - job_type_prefix: prefix for slurm jobs.
             - model: the model name.
             - dependency: the job dependency.
 
@@ -61,8 +60,8 @@ class Experiment():
         out_path.mkdir(exist_ok=True)
         gen_config = ConfigReader(config_path).get_general_config()
 
-        prep_manager = DispatcherManager(job_type_prep, model, job_config.cluster)
-        run_manager = DispatcherManager(job_type_run, model, job_config.cluster)
+        prep_manager = DispatcherManager(JobType.WATCH_EXP.value, model, job_config.cluster)
+        run_manager = DispatcherManager(JobType.EXP.value, model, job_config.cluster)
         cli_path: Path = gen_config.repo_path / 'src' / 'run_exp.py'
 
         # init job
@@ -74,8 +73,7 @@ class Experiment():
         init_id = prep_manager.dispatch_job()
 
         # run jobs
-        cpus_per_task = int(job_config.slurm_opts['cpus_per_task'])
-        ntasks = int(job_config.slurm_opts['ntasks'])
-        run_manager.set_job([command + f' {cpus_per_task} {ntasks}'], out_path, job_config,
+        run_manager.set_job([command + f' {job_config.cpus_per_task} {job_config.ntasks}'],
+                            out_path, job_config,
                             dependency=init_id, array_ids=list(range(1, n_models+1)))
         return run_manager.dispatch_job()

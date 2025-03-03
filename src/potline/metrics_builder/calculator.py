@@ -16,14 +16,17 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error # type: igno
 from ..loss_logger import INFO_FILENAME
 from ..experiment.properties_simulator import PROPERTIES_BENCH_DIR_NAME
 from ..experiment.inference_bencher import INFERENCE_BENCH_DIR_NAME
+from ..experiment.hard_split_screw import HSS_DIR_NAME
 
 METRICS_DIR_NAME: str = 'metrics'
 Q_FACTOR_REF_VALUES_NAME: str = 'q_factor.yaml'
+HSS_REF_VALUES_NAME: str = 'Meng_screw_dis.xyz'
 SIM_RESULTS_DIR_NAME: str = 'data'
 SIM_RESULTS_FILE_NAME: str = 'results.txt'
 BENCH_RESULTS_FILE_NAME: str = 'bench_timings.csv'
-Q_FACTOR_PATH: Path = Path(__file__).parent / Q_FACTOR_REF_VALUES_NAME
-SCREW_REF_PATH: Path = Path(__file__).parent / 'Meng_screw_dis.xyz'
+REF_DATA_PATH: Path = Path(__file__).parent / 'ref_data'
+Q_FACTOR_PATH: Path = REF_DATA_PATH / Q_FACTOR_REF_VALUES_NAME
+HSS_REF_PATH: Path = REF_DATA_PATH / HSS_REF_VALUES_NAME
 
 class MetricsCalculator():
     """
@@ -36,6 +39,7 @@ class MetricsCalculator():
         self._out_path = sweep_path / METRICS_DIR_NAME
         self._inf_path = sweep_path / INFERENCE_BENCH_DIR_NAME
         self._sim_path = sweep_path / PROPERTIES_BENCH_DIR_NAME
+        self._hss_path = sweep_path / HSS_DIR_NAME
 
     def calculate_q_factors(self, run_nums: list[int] | None = None) -> dict[Tuple[int,int], float]:
         """
@@ -141,7 +145,7 @@ class MetricsCalculator():
         Returns:
             A dictionary with the metrics for each simulation
         """
-        screw_in_atoms_dft = ase.io.read(SCREW_REF_PATH, ':')
+        screw_in_atoms_dft = ase.io.read(HSS_REF_PATH, ':')
         screw_ener_dft = np.array([at.get_potential_energy() for at in screw_in_atoms_dft])
         screw_dft_150at = screw_ener_dft[0:126]
         screw_dft_81at = screw_ener_dft[126:152]
@@ -154,14 +158,14 @@ class MetricsCalculator():
             screw_dft_h2s_150.append(screw_dft_150at[index]*1000)
         screw_dft_h2s_150 = screw_dft_h2s_150 - screw_dft_h2s_150[0]
 
-        sim_paths: list[Path] = [p for p in self._sim_path.iterdir() if p.is_dir()]
+        hss_paths: list[Path] = [p for p in self._hss_path.iterdir() if p.is_dir()]
         if run_nums: # Filter the simulations
-            sim_paths = [p for p in sim_paths if int(p.name) in run_nums]
+            hss_paths = [p for p in hss_paths if int(p.name) in run_nums]
 
         tot_out = {}
 
-        for p in sim_paths:
-            ener_ace = np.genfromtxt(p / 'data' / 'energy.dat')
+        for p in hss_paths:
+            ener_ace = np.genfromtxt(p / 'energy.dat')
 
             ace_150at = ener_ace[0:126]
             ace_81at = ener_ace[126:152]
@@ -184,17 +188,17 @@ class MetricsCalculator():
             axs[0].plot(np.arange(0,1.01,1/(len(screw_dft_e2h_81)-1)), screw_dft_e2h_81,
                         marker='o',markersize=12, c=cc1, label='DFT')
             axs[0].plot(np.arange(0,1.01,1/(len(ace_e2h_81)-1)),ace_e2h_81,
-                        marker='d',markersize=12,c=cc4,label='PACE')
+                        marker='d',markersize=12,c=cc4,label='ML-IAP')
 
             axs[1].plot(np.arange(0,1.01,1/(len(screw_dft_h2s_81)-1)),screw_dft_h2s_81,
                         marker='o',markersize=12, c=cc1,label='81at, DFT')
             axs[1].plot(np.arange(0,1.01,1/(len(ace_h2s_81)-1)),ace_h2s_81,
-                        marker='d',markersize=12, c=cc4,label='81at, ACE')
+                        marker='d',markersize=12, c=cc4,label='81at, ML-IAP')
 
             axs[2].plot(np.arange(0,1.01,1/(len(screw_dft_h2s_150)-1)),np.array(screw_dft_h2s_150),
                         marker='o',markersize=12, c=cc1,label='150at, DFT')
             axs[2].plot(np.arange(0,1.01,1/(len(ace_h2s_150)-1)),ace_h2s_150,
-                        marker='d',markersize=12, c=cc4,label='150at, ACE')
+                        marker='d',markersize=12, c=cc4,label='150at, ML-IAP')
 
             axs[0].set_ylim(-20,150)
             axs[1].set_ylim(-20,150)
@@ -210,7 +214,7 @@ class MetricsCalculator():
             axs[1].annotate("(b)", xy=(-0.17, 1), weight='bold', xycoords="axes fraction", fontsize=26)
             axs[2].annotate("(c)", xy=(-0.17, 1), weight='bold', xycoords="axes fraction", fontsize=26)
 
-            plt.savefig(p / 'plots' / 'screw_disloc.png', format='png', dpi=600)
+            plt.savefig(p / 'screw_disloc.png', format='png', dpi=600)
 
             p_out = []
 
@@ -250,7 +254,7 @@ class MetricsCalculator():
             axs.set_ylabel('Energy, (meV/b)')
             axs.set_xlabel('Configuration No.')
 
-            plt.savefig(p / 'plots' / 'screw_config.png', format='png', dpi=600)
+            plt.savefig(p / 'screw_config.png', format='png', dpi=600)
 
             p_out.append({
                 "property": "Screw Config Energy",

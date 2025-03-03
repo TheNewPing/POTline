@@ -53,12 +53,22 @@ sweep_path
 |       |---bench_timings.csv
 |
 |---properties_simulation
-    |---1
-    ...
-    |---best_n
-        |---simulation_files
-        |---model_info.yaml
-        |---plots
+|   |---1
+|   ...
+|   |---best_n
+|       |---simulation_files
+|       |---model_info.yaml
+|       |---plots
+|
+|---hard_split_screw
+|   |---1
+|   ...
+|   |---best_n
+|       |---simulation_files
+|       |---model_info.yaml
+|       |---energy.dat
+|       |---screw_config.png
+|       |---screw_disloc.png
 ```
 
 ## Installation
@@ -119,6 +129,7 @@ python src/run.py --config <path_to_config> [options]
 - `--noconversion`: Disable LAMMPS potential conversion
 - `--noinference`: Disable inference benchmark
 - `--noproperties`: Disable properties simulation
+- `--nohss`: Disable hard to split dislocation simulation
 
 ### Configuration File Syntax
 
@@ -136,6 +147,7 @@ Below is a description of the main sections and their respective parameters:
 - `cluster`: Cluster configuration to use (currently supports `snellius`, `habrok`).
 - `sweep_path`: Output path for the experiments.
 - `repo_path`: Path where POTLine has been cloned, used to handle modules and python scripts for Slurm jobs
+- `pretrained_path`: Path to the pretrained model, currently supports only GRACE and MACE, only for the experiments.
 - `slurm_watcher`: Slurm options for general watcher, currently used only in the conversion phase. **NOTE: MACE needs a GPU for the conversion phase**
 - `slurm_opts`: Currently not used, keep always `{}`
 - `modules`: Scripts to source for general jobs, currently used only in the conversion phase.
@@ -152,13 +164,19 @@ Below is a description of the main sections and their respective parameters:
 - `prerun_steps`: Number of pre-run steps.
 - `max_steps`: Maximum number of steps.
 - `slurm_watcher`: Slurm options for inference watcher, has only to dispatch the inference jobs, so it requires **low time and resources**.
-- `slurm_opts`: Slurm options for inference jobs, **allocate resources according to the model, currently tested only on CPU**. Defining the `cpus_per_task` field is mandatory.
+- `slurm_opts`: Slurm options for inference jobs, **allocate resources according to the model, currently tested only on CPU**. Defining the `cpus_per_task` and `ntasks` fields is mandatory.
 - `modules`: Scripts to source for inference.
 - `py_scripts`: Python scripts to run before inference.
 
 #### Data Analysis
 - `slurm_watcher`: Slurm options for simulation watcher, has only to dispatch the simulation jobs, so it requires **low time and resources**.
-- `slurm_opts`: Slurm options for simulation jobs, **allocate resources according to the model, currently tested only on CPU**. Defining the `cpus_per_task` field is mandatory.
+- `slurm_opts`: Slurm options for simulation jobs, **allocate resources according to the model, currently tested only on CPU**.Defining the `cpus_per_task` and `ntasks` fields is mandatory.
+- `modules`: Scripts to source for simulation.
+- `py_scripts`: Python scripts to run before simulation.
+
+#### Hard Split Screw
+- `slurm_watcher`: Slurm options for simulation watcher, has only to dispatch the simulation jobs, so it requires **low time and resources**.
+- `slurm_opts`: Slurm options for simulation jobs, **allocate resources according to the model, currently tested only on CPU**.Defining the `cpus_per_task` and `ntasks` fields is mandatory.
 - `modules`: Scripts to source for simulation.
 - `py_scripts`: Python scripts to run before simulation.
 

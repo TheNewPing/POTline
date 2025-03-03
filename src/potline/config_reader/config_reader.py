@@ -16,6 +16,9 @@ class MainSectionKW(Enum):
     INFERENCE = 'inference'
     PROP_SIM = 'data_analysis'
     HYPER_SEARCH = 'hyper_search'
+    HARD_SPLIT_SCREW = 'hard_split_screw'
+    DISCLOCATIONS = 'dislocations'
+    CRACKS = 'cracks'
 
 class SlurmJobKW(Enum):
     """
@@ -58,6 +61,21 @@ class PropSimKW(Enum):
     Keywords for the property simulation configuration.
     """
 
+class HardSplitKW(Enum):
+    """
+    Keywords for the hard split screw configuration.
+    """
+
+class DislocationsKW(Enum):
+    """
+    Keywords for the dislocations configuration.
+    """
+
+class CracksKW(Enum):
+    """
+    Keywords for the cracks configuration.
+    """
+
 class HyperSearchKW(Enum):
     """
     Keywords for the hyperparameter search configuration.
@@ -78,46 +96,42 @@ class JobConfig():
                  slurm_opts: dict,
                  modules: list[Path],
                  py_scripts: list[Path],
-                 cluster: str):
+                 cluster: str,
+                 ntasks: int = 1,
+                 cpus_per_task: int = 1,):
         self.slurm_watcher: dict = slurm_watcher
         self.slurm_opts: dict = slurm_opts
         self.modules: list[Path] = modules
         self.py_scripts: list[Path] = py_scripts
         self.cluster: str = cluster
+        self.ntasks: int = ntasks
+        self.cpus_per_task: int = cpus_per_task
+
+class ExperimentConfig():
+    """
+    Configuration class for a generic LAMMPS experiment.
+    """
+    def __init__(self, lammps_bin_path: Path,
+                 sweep_path: Path,
+                 job_config: JobConfig,
+                 model_name: str,
+                 best_n_models: int,):
+        self.lammps_bin_path: Path = lammps_bin_path
+        self.sweep_path: Path = sweep_path
+        self.job_config: JobConfig = job_config
+        self.model_name: str = model_name
+        self.best_n_models: int = best_n_models
 
 class BenchConfig():
     """
     Configuration class for the benchmarking step.
     """
-    def __init__(self, lammps_bin_path: Path,
-                 prerun_steps: int,
+    def __init__(self, prerun_steps: int,
                  max_steps: int,
-                 sweep_path: Path,
-                 job_config: JobConfig,
-                 model_name: str,
-                 best_n_models: int):
-        self.lammps_bin_path: Path = lammps_bin_path
+                 experiment_config: ExperimentConfig,):
         self.prerun_steps: int = prerun_steps
         self.max_steps: int = max_steps
-        self.sweep_path: Path = sweep_path
-        self.job_config: JobConfig = job_config
-        self.model_name: str = model_name
-        self.best_n_models: int = best_n_models
-
-class PropConfig():
-    """
-    Configuration class for the data analysis step.
-    """
-    def __init__(self, lammps_bin_path: Path,
-                 sweep_path: Path,
-                 job_config: JobConfig,
-                 model_name: str,
-                 best_n_models: int):
-        self.lammps_bin_path: Path = lammps_bin_path
-        self.sweep_path: Path = sweep_path
-        self.job_config: JobConfig = job_config
-        self.model_name: str = model_name
-        self.best_n_models: int = best_n_models
+        self.experiment_config: ExperimentConfig = experiment_config
 
 class HyperConfig():
     """
@@ -242,12 +256,16 @@ class ConfigReader():
         for script in py_scripts:
             script_paths.append(scripts_dir / script)
 
+        slurm_opts: dict = section_config[SlurmJobKW.SLURM_OPTS.value]
+
         return JobConfig(
             section_config[SlurmJobKW.SLURM_WATCHER.value],
             section_config[SlurmJobKW.SLURM_OPTS.value],
             module_paths,
             script_paths,
-            gen_config[GeneralKW.CLUSTER.value]
+            gen_config[GeneralKW.CLUSTER.value],
+            slurm_opts.get('ntasks', 1),
+            slurm_opts.get('cpus_per_task', 1),
         )
 
     def get_optimizer_config(self) -> HyperConfig:
@@ -276,22 +294,18 @@ class ConfigReader():
         if MainSectionKW.INFERENCE.value not in self.config_data:
             raise ValueError('No benchmark configuration found in the config file.')
         return BenchConfig(
-            Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.LMP_BIN.value])),
             int(str(self.get_config_section(MainSectionKW.INFERENCE.value)[InferenceKW.PRE_STEPS.value])),
             int(str(self.get_config_section(MainSectionKW.INFERENCE.value)[InferenceKW.MAX_STEPS.value])),
-            Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
-            self.get_slurm_config(MainSectionKW.INFERENCE.value),
-            str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
-            int(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.BEST_N.value])),
+            self.get_experiment_config(MainSectionKW.INFERENCE.value),
         )
 
-    def get_prop_config(self) -> PropConfig:
-        if MainSectionKW.PROP_SIM.value not in self.config_data:
-            raise ValueError('No property simulation configuration found in the config file.')
-        return PropConfig(
+    def get_experiment_config(self, section_name: str) -> ExperimentConfig:
+        if section_name not in self.config_data:
+            raise ValueError(f'No {section_name} configuration found in the config file.')
+        return ExperimentConfig(
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.LMP_BIN.value])),
             Path(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.SWEEP_PATH.value])),
-            self.get_slurm_config(MainSectionKW.PROP_SIM.value),
+            self.get_slurm_config(section_name),
             str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.MODEL.value]),
             int(str(self.get_config_section(MainSectionKW.GENERAL.value)[GeneralKW.BEST_N.value])),
         )

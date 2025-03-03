@@ -6,6 +6,12 @@ If you are using this repository for new experiments, use the following content 
 from pathlib import Path
 from potline.metrics_builder import MetricsCalculator
 
+
+grace_ez_test = MetricsCalculator(Path('/leonardo_work/IscrC_GNNAIron/erodaro0/POTline/easy_test/grace_fs'))
+print('GRACE EZ Test')
+print(grace_ez_test.calculate_q_factors())
+print(grace_ez_test.plot_screw_dislocation())
+
 grace_base = MetricsCalculator(Path('/leonardo_work/IscrC_GNNAIron/erodaro0/POTline/full_test/grace'))
 print('GRACE Base')
 print(grace_base.calculate_q_factors())
