@@ -9,8 +9,7 @@ from potline.config_reader import ConfigReader
 from potline.model import PotModel
 from potline.hyper_searcher import PotOptimizer
 from potline.deep_trainer import DeepTrainer
-from potline.inference_bencher import InferenceBencher
-from potline.properties_simulator import PropertiesSimulator
+from potline.experiment import PropertiesSimulator, InferenceBencher
 
 def parse_args() -> Namespace:
     """
@@ -43,7 +42,7 @@ if __name__ == '__main__':
         next_id = PotModel.run_conv(conf_path, dependency=next_id)
 
     if args.noinference:
-        InferenceBencher.run_inf(conf_path, dependency=next_id)
+        InferenceBencher(conf_path).run_inf(dependency=next_id)
 
     if args.noproperties:
-        PropertiesSimulator.run_sim(conf_path, dependency=next_id)
+        PropertiesSimulator(conf_path).run_sim(dependency=next_id)

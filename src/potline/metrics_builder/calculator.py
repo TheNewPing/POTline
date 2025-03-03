@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, mean_absolute_error # type: ignore
 
 from ..loss_logger import INFO_FILENAME
-from ..properties_simulator import PROPERTIES_BENCH_DIR_NAME
-from ..inference_bencher import INFERENCE_BENCH_DIR_NAME
+from ..experiment.properties_simulator import PROPERTIES_BENCH_DIR_NAME
+from ..experiment.inference_bencher import INFERENCE_BENCH_DIR_NAME
 
 METRICS_DIR_NAME: str = 'metrics'
 Q_FACTOR_REF_VALUES_NAME: str = 'q_factor.yaml'

@@ -1,13 +1,13 @@
 """
-CLI entry point for running inference benchmark.
+CLI entry point for running properties simulations.
 """
 
 from argparse import Namespace, ArgumentParser
 from pathlib import Path
 
 from potline.utils import get_model_trackers, filter_best_loss
-from potline.inference_bencher import InferenceBencher
 from potline.config_reader import ConfigReader
+from potline.experiment import Experiment
 
 def parse_config() -> Namespace:
     """
@@ -15,6 +15,8 @@ def parse_config() -> Namespace:
     """
     parser: ArgumentParser = ArgumentParser(description='Process some parameters.')
     parser.add_argument('--config', type=str, help='Path to the config file')
+    parser.add_argument('--copydir', type=str, help='Path to the directory to copy')
+    parser.add_argument('--expname', type=str, help='Name of the experiment')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -32,4 +34,4 @@ if __name__ == '__main__':
                                       pretrained_path=gen_config.pretrained_path)
     best_trackers = filter_best_loss(tracker_list, energy_weight, gen_config.best_n_models)
 
-    InferenceBencher(config_path, best_trackers).prep_inf()
+    Experiment.prep_exp(gen_config.sweep_path / args.expname, Path(args.copydir), best_trackers)
