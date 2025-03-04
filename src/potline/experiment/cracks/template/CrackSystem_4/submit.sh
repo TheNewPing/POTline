@@ -8,7 +8,7 @@ ntasks=$3
 export MKL_NUM_THREADS=${cpus_per_task}
 export OMP_NUM_THREADS=${cpus_per_task}
 
-results_path="../../coeff/lefm_coeffs/lefm_paras.CrackSystem_4"
+results_path=../../coeff/${SLURM_ARRAY_TASK_ID}/lefm_coeffs/lefm_paras.CrackSystem_4
 
 # get the equilibrium constants
 a0=$(grep 'a0 =' ${results_path} | awk '{print $3}')
