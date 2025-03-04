@@ -24,8 +24,6 @@ class Experiment():
             - copy_dir: the path to the directory to copy, it should contain the experiment scripts.
             - tracker_list: the list of model trackers to use in the experiments.
         """
-        out_path.mkdir(exist_ok=True)
-
         for i, tracker in enumerate(tracker_list):
             iter_path = out_path / str(i+1)
             iter_path.mkdir(exist_ok=True)
@@ -34,9 +32,13 @@ class Experiment():
             for file in copy_dir.iterdir():
                 if file.is_file():
                     shutil.copy(file, iter_path)
+                elif file.is_dir():
+                    shutil.copytree(file, iter_path / file.name, dirs_exist_ok=True)
+                else:
+                    raise ValueError(f'Unknown file type: {file}')
 
     @staticmethod
-    def run_exp(config_path: Path, out_path: Path, copy_dir: Path, exp_name: str, command: str,
+    def run_exp(config_path: Path, out_path: Path, copy_dir: Path, command: str,
                 n_models: int, job_config: JobConfig,
                 model: str, dependency: int | None = None,) -> int:
         """
@@ -46,7 +48,6 @@ class Experiment():
             - config_path: the path to the configuration file.
             - out_path: the path to the output directory.
             - copy_dir: the path to the directory to copy, it should contain the experiment scripts.
-            - exp_name: the name of the experiment.
             - command: the command to run.
             - n_models: the number of models to run.
             - job_config: the job configuration.
@@ -68,7 +69,7 @@ class Experiment():
         init_cmd: str = f'{gen_config.python_bin} {cli_path}' + \
                         f' --config {config_path}' + \
                         f' --copydir {copy_dir}' + \
-                        f' --expname {exp_name}'
+                        f' --outpath {out_path}'
         prep_manager.set_job([init_cmd], out_path, job_config, dependency=dependency)
         init_id = prep_manager.dispatch_job()
 

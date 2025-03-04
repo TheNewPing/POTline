@@ -69,6 +69,30 @@ sweep_path
 |       |---energy.dat
 |       |---screw_config.png
 |       |---screw_disloc.png
+|
+|---dislocations
+|   |---edge_011_100
+|       |---1
+|       ...
+|       |---best_n
+|           |---sim_results.zip
+|   |---edge_011_111
+|   |---edge_100_010
+|   |---M111
+|   |---screw
+|
+|---cracks
+|   |---coeff
+|       |---1
+|       ...
+|       |---best_n
+|           |---lefm_coeffs
+|               |---lefm_paras.CrackSystem_[1-4]
+|   |---CrackSystem_[1-4]
+|       |---1
+|       ...
+|       |---best_n
+|           |---sim_results.zip
 ```
 
 ## Installation
@@ -130,6 +154,7 @@ python src/run.py --config <path_to_config> [options]
 - `--noinference`: Disable inference benchmark
 - `--noproperties`: Disable properties simulation
 - `--nohss`: Disable hard to split dislocation simulation
+- `--nodislocations`: Disable disclocation simulations
 
 ### Configuration File Syntax
 
@@ -175,6 +200,18 @@ Below is a description of the main sections and their respective parameters:
 - `py_scripts`: Python scripts to run before simulation.
 
 #### Hard Split Screw
+- `slurm_watcher`: Slurm options for simulation watcher, has only to dispatch the simulation jobs, so it requires **low time and resources**.
+- `slurm_opts`: Slurm options for simulation jobs, **allocate resources according to the model, currently tested only on CPU**.Defining the `cpus_per_task` and `ntasks` fields is mandatory.
+- `modules`: Scripts to source for simulation.
+- `py_scripts`: Python scripts to run before simulation.
+
+#### Dislocations
+- `slurm_watcher`: Slurm options for simulation watcher, has only to dispatch the simulation jobs, so it requires **low time and resources**.
+- `slurm_opts`: Slurm options for simulation jobs, **allocate resources according to the model, currently tested only on CPU**.Defining the `cpus_per_task` and `ntasks` fields is mandatory.
+- `modules`: Scripts to source for simulation.
+- `py_scripts`: Python scripts to run before simulation.
+
+#### Cracks
 - `slurm_watcher`: Slurm options for simulation watcher, has only to dispatch the simulation jobs, so it requires **low time and resources**.
 - `slurm_opts`: Slurm options for simulation jobs, **allocate resources according to the model, currently tested only on CPU**.Defining the `cpus_per_task` and `ntasks` fields is mandatory.
 - `modules`: Scripts to source for simulation.

@@ -45,8 +45,7 @@ class InferenceBencher():
             self._config.prerun_steps, self._config.max_steps,
         ]])
 
-        return Experiment.run_exp(self._config_path, self._out_path, INF_BENCH_TEMPLATE_PATH,
-                                  INFERENCE_BENCH_DIR_NAME, bench_cmd,
+        return Experiment.run_exp(self._config_path, self._out_path, INF_BENCH_TEMPLATE_PATH, bench_cmd,
                                   self._config.experiment_config.best_n_models,
                                   self._config.experiment_config.job_config,
                                   self._config.experiment_config.model_name, dependency)

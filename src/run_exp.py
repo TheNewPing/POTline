@@ -16,7 +16,7 @@ def parse_config() -> Namespace:
     parser: ArgumentParser = ArgumentParser(description='Process some parameters.')
     parser.add_argument('--config', type=str, help='Path to the config file')
     parser.add_argument('--copydir', type=str, help='Path to the directory to copy')
-    parser.add_argument('--expname', type=str, help='Name of the experiment')
+    parser.add_argument('--outpath', type=str, help='Path to the output directory')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -34,4 +34,4 @@ if __name__ == '__main__':
                                       pretrained_path=gen_config.pretrained_path)
     best_trackers = filter_best_loss(tracker_list, energy_weight, gen_config.best_n_models)
 
-    Experiment.prep_exp(gen_config.sweep_path / args.expname, Path(args.copydir), best_trackers)
+    Experiment.prep_exp(Path(args.outpath), Path(args.copydir), best_trackers)

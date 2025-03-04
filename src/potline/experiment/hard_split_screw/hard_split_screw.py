@@ -47,5 +47,5 @@ class HardSplitter():
         ]])
 
         return Experiment.run_exp(self._config_path, self._out_path, HSS_TEMPLATE_PATH,
-                                  HSS_DIR_NAME, hss_cmd, self._config.best_n_models,
+                                  hss_cmd, self._config.best_n_models,
                                   self._config.job_config, self._config.model_name, dependency)

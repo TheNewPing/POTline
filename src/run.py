@@ -9,7 +9,7 @@ from potline.config_reader import ConfigReader
 from potline.model import PotModel
 from potline.hyper_searcher import PotOptimizer
 from potline.deep_trainer import DeepTrainer
-from potline.experiment import PropertiesSimulator, InferenceBencher, HardSplitter
+from potline.experiment import PropertiesSimulator, InferenceBencher, HardSplitter, Dislocater
 
 def parse_args() -> Namespace:
     """
@@ -24,6 +24,7 @@ def parse_args() -> Namespace:
     parser.add_argument('--noinference', action='store_false', help='Disable inference benchmark')
     parser.add_argument('--noproperties', action='store_false', help='Disable properties simulation')
     parser.add_argument('--nohss', action='store_false', help='Disable hard split screw simulation')
+    parser.add_argument('--nodislocations', action='store_false', help='Disable dislocations simulation')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -50,3 +51,6 @@ if __name__ == '__main__':
 
     if args.nohss:
         HardSplitter(conf_path).run_sim(dependency=next_id)
+
+    if args.nodislocations:
+        Dislocater(conf_path).run_sim(dependency=next_id)

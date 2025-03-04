@@ -51,5 +51,5 @@ class PropertiesSimulator():
         ]])
 
         return Experiment.run_exp(self._config_path, self._out_path, PROP_BENCH_TEMPLATE_PATH,
-                                  PROPERTIES_BENCH_DIR_NAME, sim_cmd, self._config.best_n_models,
+                                  sim_cmd, self._config.best_n_models,
                                   self._config.job_config, self._config.model_name, dependency)
