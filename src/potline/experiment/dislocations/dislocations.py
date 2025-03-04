@@ -14,7 +14,7 @@ SUBMIT_SCRIPT_NAME: str = 'submit.sh'
 DISLOCATIONS_TEMPLATE_PATH: Path = Path(__file__).parent / 'template'
 SUBMIT_TEMPLATE_PATH: Path = DISLOCATIONS_TEMPLATE_PATH / SUBMIT_SCRIPT_NAME
 
-class Dislocater():
+class Dislocator():
     """
     Class for running the LAMMPS properties simulations.
 

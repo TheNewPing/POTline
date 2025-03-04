@@ -92,7 +92,7 @@ variable rtop equal  0
 variable rbot equal  0
 
 #---- Define Interatomic Potential -----------
-include ../potential.in
+include ./potential.in
 
 #---- Run Minimization -----------------------
 reset_timestep 0

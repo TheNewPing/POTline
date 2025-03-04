@@ -13,7 +13,7 @@ CRACKS_DIR_NAME: str = 'cracks'
 SUBMIT_SCRIPT_NAME: str = 'submit.sh'
 CRACKS_TEMPLATE_PATH: Path = Path(__file__).parent / 'template'
 
-class Craker():
+class Cracker():
     """
     Class for running the LAMMPS properties simulations.
 
