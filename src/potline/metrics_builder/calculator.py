@@ -84,7 +84,9 @@ class MetricsCalculator():
                     'se100': float(lines[27]),                                # surface energy
                     'se110': float(lines[30]),                                # surface energy
                     'se111': float(lines[33]),                                # surface energy
-                    'se112': float(lines[36])                                 # surface energy
+                    'se112': float(lines[36]),                                # surface energy
+                    'sfe110': float(lines[39]),                               # max stacking fault energy
+                    'sfe112': float(lines[41]),                               # max stacking fault energy
                 }
 
             # Calculate the q-factor
