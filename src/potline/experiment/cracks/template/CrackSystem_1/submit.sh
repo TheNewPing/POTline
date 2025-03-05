@@ -14,7 +14,7 @@ results_path=../../coeff/${SLURM_ARRAY_TASK_ID}/lefm_coeffs/lefm_paras.CrackSyst
 a0=$(grep 'a0 =' ${results_path} | awk '{print $3}')
 mass=95.95
 
-KI=$(grep '#K_I=' ./lefm_coeffs/lefm_paras.CrackSystem_1 | awk '{print $2}')
+KI=$(grep '#K_I=' ${results_path} | awk '{print $2}')
 Kstart=`printf "%.0f" $(bc <<< "$KI*100-10")`
 Kstop=`printf "%.0f" $(bc <<< "$Kstart+100")`
 
