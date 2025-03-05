@@ -72,10 +72,10 @@ sweep_path
 |
 |---dislocations
 |   |---edge_011_100
-|       |---1
-|       ...
-|       |---best_n
-|           |---sim_results.zip
+|   |   |---1
+|   |   ...
+|   |   |---best_n
+|   |       |---sim_results.zip
 |   |---edge_011_111
 |   |---edge_100_010
 |   |---M111
@@ -83,11 +83,11 @@ sweep_path
 |
 |---cracks
 |   |---coeff
-|       |---1
-|       ...
-|       |---best_n
-|           |---lefm_coeffs
-|               |---lefm_paras.CrackSystem_[1-4]
+|   |   |---1
+|   |   ...
+|   |   |---best_n
+|   |       |---lefm_coeffs
+|   |           |---lefm_paras.CrackSystem_[1-4]
 |   |---CrackSystem_[1-4]
 |       |---1
 |       ...
