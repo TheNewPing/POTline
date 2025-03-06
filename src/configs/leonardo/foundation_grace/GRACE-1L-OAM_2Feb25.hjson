@@ -1,6 +1,6 @@
 {
     general: {
-        lammps_bin_path: "/leonardo/home/userexternal/erodaro0/repos/POTline/lammps_versions/grace/lammps/build/lmp",
+        lammps_bin_path: "/leonardo_work/IscrC_GNNAIron/erodaro0/POTline/lammps_versions/grace/lammps/build/lmp",
         model_name: grace
         best_n_models: 1
         hpc: true
@@ -32,7 +32,7 @@
             nodes: 1
             ntasks: 32
             cpus_per_task: 1
-            mem: "80G"
+            mem: "120G"
             time: "24:00:00"
         }
         modules: ["conda_grace.sh", "module_mpi.sh"]
@@ -47,9 +47,65 @@
         }
         slurm_opts: {
             partition: boost_usr_prod
+            nodes: 1
+            ntasks: 32
+            cpus_per_task: 1
+            mem: "120G"
+            time: "24:00:00"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }
+    hard_split_screw: {
+        slurm_watcher: {
             ntasks: 1
-            cpus_per_task: 32
-            mem: "80G"
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            partition: boost_usr_prod
+            nodes: 1
+            ntasks: 32
+            cpus_per_task: 1
+            mem: "120G"
+            time: "24:00:00"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }
+    dislocations: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            partition: boost_usr_prod
+            nodes: 1
+            ntasks: 32
+            cpus_per_task: 1
+            mem: "120G"
+            time: "48:00:00"
+            qos: "boost_qos_lprod"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }
+    cracks: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            partition: boost_usr_prod
+            nodes: 1
+            ntasks: 32
+            cpus_per_task: 1
+            mem: "120G"
             time: "24:00:00"
         }
         modules: ["conda_grace.sh", "module_mpi.sh",]
