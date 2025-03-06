@@ -20,6 +20,9 @@ if [ ! -d "lammps" ]; then
       git clone -b grace --depth=1 https://github.com/yury-lysogorskiy/lammps.git
 fi
 
+cd lammps
+cp ~/repos/Potential_benchmark_iron/cracks/lammps_src/displace_atoms.cpp ./src/
+
 if [ -d "build" ]; then
       rm -rf build
 fi
