@@ -104,7 +104,8 @@
             ntasks: 32
             cpus_per_task: 1
             mem: "40G"
-            time: "24:00:00"
+            time: "48:00:00"
+            qos: "boost_qos_lprod"
         }
         modules: ["conda_grace.sh", "module_mpi.sh",]
         py_scripts: []
