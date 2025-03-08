@@ -9,5 +9,5 @@ export MKL_NUM_THREADS=${cpus_per_task}
 export OMP_NUM_THREADS=${cpus_per_task}
 
 eval srun -n ${ntasks} ${LMMP} -in input_BCC_init
-zip sim_result.zip dump*
-rm dump*
+zip e_011_100_result.zip *dump*
+rm *dump*

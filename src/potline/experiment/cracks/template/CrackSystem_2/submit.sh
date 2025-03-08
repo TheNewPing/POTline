@@ -22,5 +22,5 @@ Kstop=`printf "%.0f" $(bc <<< "$Kstart+100")`
 sed -i '/Fe$/ s/$/ Fe/' ./potential.in
 
 eval srun -n ${ntasks} ${LMMP} -in in.cracksystem_2 -v a0 ${a0} -v m ${mass} -v CrkSys 2 -v Kstart ${Kstart} -v Kstop ${Kstop}
-zip sim_result.zip dump*
-rm dump*
+zip cs2_result.zip *dump*
+rm *dump*

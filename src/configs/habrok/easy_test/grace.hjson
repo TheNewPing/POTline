@@ -1,6 +1,6 @@
 {
     general: {
-        lammps_bin_path: "/home4/p319875/repos/POTline/lammps_versions/grace/lammps/build/lmp",
+        lammps_bin_path: "/scratch/p319875/POTline/lammps_versions/grace/lammps/build/lmp",
         model_name: grace
         best_n_models: 2
         hpc: true
@@ -28,7 +28,7 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 8
-            mem: "80G"
+            mem: "40G"
             time: "70:00:00"
             partition: "gpu"
             gpus_per_node:"a100:1"
@@ -65,7 +65,58 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 32
-            mem: "80G"
+            mem: "40G"
+            time: "24:00:00"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }    
+    hard_split_screw: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            nodes: 1
+            ntasks: 16
+            cpus_per_task: 1
+            mem: "40G"
+            time: "24:00:00"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }
+    dislocations: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            nodes: 1
+            ntasks: 64
+            cpus_per_task: 1
+            mem: "40G"
+            time: "48:00:00"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }
+    cracks: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            nodes: 1
+            ntasks: 8
+            cpus_per_task: 1
+            mem: "40G"
             time: "24:00:00"
         }
         modules: ["conda_grace.sh", "module_mpi.sh",]
@@ -87,7 +138,7 @@
         slurm_opts: {
             ntasks: 1
             cpus_per_task: 8
-            mem: "80G"
+            mem: "40G"
             time: "50:00:00"
             partition: "gpu"
             gpus_per_node:"a100:1"
