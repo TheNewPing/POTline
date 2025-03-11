@@ -22,6 +22,6 @@ Kstop=`printf "%.0f" $(bc <<< "$Kstart+100")`
 cp ${coeff_path} .
 sed -i '/Fe$/ s/$/ Fe/' ./potential.in
 
-eval srun -n ${ntasks} ${LMMP} -in in.cracksystem_1 -v a0 ${a0} -v m ${mass} -v CrkSys 1 -v Kstart ${Kstart} -v Kstop ${Kstop}
+eval srun -N 1 -n ${ntasks} ${LMMP} -in in.cracksystem_1 -v a0 ${a0} -v m ${mass} -v CrkSys 1 -v Kstart ${Kstart} -v Kstop ${Kstop}
 zip cs1_result.zip *dump*
 rm *dump*
