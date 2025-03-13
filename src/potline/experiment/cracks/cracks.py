@@ -25,7 +25,7 @@ class Cracker():
 
     def __init__(self, config_path: Path):
         self._config_path = config_path
-        self._config = ConfigReader(config_path).get_experiment_config(MainSectionKW.DISCLOCATIONS.value)
+        self._config = ConfigReader(config_path).get_experiment_config(MainSectionKW.CRACKS.value)
         self._out_path = self._config.sweep_path / CRACKS_DIR_NAME
 
     def run_sim(self, dependency: int | None = None) -> list[int]:

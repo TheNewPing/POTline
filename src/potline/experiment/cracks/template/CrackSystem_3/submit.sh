@@ -19,8 +19,9 @@ KI=$(grep '#K_I=' ${coeff_path} | awk '{print $2}')
 Kstart=`printf "%.0f" $(bc <<< "$KI*100-10")`
 Kstop=`printf "%.0f" $(bc <<< "$Kstart+100")`
 
+cp ${coeff_path} .
 sed -i '/Fe$/ s/$/ Fe/' ./potential.in
 
-eval srun -n ${ntasks} ${LMMP} -in in.cracksystem_3 -v a0 ${a0} -v m ${mass} -v CrkSys 3 -v Kstart ${Kstart} -v Kstop ${Kstop}
-zip sim_result.zip dump*
-rm dump*
+eval srun -N 1 -n ${ntasks} ${LMMP} -in in.cracksystem_3 -v a0 ${a0} -v m ${mass} -v CrkSys 3 -v Kstart ${Kstart} -v Kstop ${Kstop}
+zip cs3_result.zip *dump*
+rm *dump*

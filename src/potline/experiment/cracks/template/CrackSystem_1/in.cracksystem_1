@@ -77,7 +77,7 @@ undump          1
 reset_timestep	0
 compute		disp all displace/atom
 #---------------aniotropic input as a function of the material elastic properties-------------
-include         ../lefm_coeffs/lefm_paras.CrackSystem_${CrkSys}
+include         ./lefm_paras.CrackSystem_${CrkSys}
 
 #------------------initial crack from which the loop will be started------------------------------------------
 reset_timestep  0

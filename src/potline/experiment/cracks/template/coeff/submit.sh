@@ -1,6 +1,6 @@
 #!/bin/bash
-cpus_per_task=$3
-ntasks=$4
+cpus_per_task=$1
+ntasks=$2
 
 export MKL_NUM_THREADS=${cpus_per_task}
 export OMP_NUM_THREADS=${cpus_per_task}
