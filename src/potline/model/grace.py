@@ -28,7 +28,8 @@ class PotGRACE(PotModel):
                 config: dict = yaml.safe_load(file)
                 self._seed_number: int = config['seed']
                 self._seed_path: Path = out_path / 'seed' / f'{self._seed_number}'
-                self._preset: str = config['potential']['preset']
+                pot: dict = config['potential']
+                self._preset: str = pot.get('preset', 'default')
             if self._preset == 'FS':
                 self._yace_path = self._seed_path / 'FS_model.yaml'
             else:
