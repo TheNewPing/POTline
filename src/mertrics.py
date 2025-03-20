@@ -40,3 +40,8 @@ grace_2l_r6_metrics = MetricsCalculator(Path(
     '/leonardo_work/IscrC_GNNAIron/erodaro0/POTline/foundation/MP_GRACE_2L_r6_11Nov2024'))
 print('GRACE 2L R6 MP')
 print(grace_2l_r6_metrics.calculate_q_factors())
+
+grace_1l_oam_finetune_metrics = MetricsCalculator(Path(
+    '/leonardo_work/IscrC_GNNAIron/erodaro0/POTline/finetune/grace/GRACE-1L-OAM'))
+print('GRACE 1L OAM finetune')
+print(grace_1l_oam_finetune_metrics.calculate_q_factors())

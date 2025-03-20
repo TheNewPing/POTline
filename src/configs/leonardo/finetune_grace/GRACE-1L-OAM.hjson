@@ -30,8 +30,8 @@
         slurm_opts: {
             partition: boost_usr_prod
             nodes: 1
-            ntasks: 32
-            cpus_per_task: 1
+            ntasks: 1
+            cpus_per_task: 32
             mem: "80G"
             time: "24:00:00"
         }
@@ -111,25 +111,6 @@
         modules: ["conda_grace.sh", "module_mpi.sh",]
         py_scripts: []
     }
-    deep_training: {
-        max_epochs: 500,
-        slurm_watcher: {
-            ntasks: 1
-            cpus_per_task: 4
-            mem: "5G"
-            time: "1:00:00"
-        }
-        slurm_opts: {
-            ntasks: 1
-            cpus_per_task: 8
-            mem: "50G"
-            time: "24:00:00"
-            partition: boost_usr_prod
-            gres: "gpu:1"
-        }
-        modules: ["conda_grace.sh"]
-        py_scripts: []
-    }
     hyper_search: {
         max_iter: 5,
         n_initial_points: 5
@@ -181,7 +162,7 @@
                         delta: 0.01 
                     },
                 }
-                maxiter: 500 # Number of epochs / iterations
+                maxiter: 2000 # Number of epochs / iterations
 
                 optimizer: Adam
                 opt_params: {
