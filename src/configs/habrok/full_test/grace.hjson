@@ -81,10 +81,12 @@
         }
         slurm_opts: {
             nodes: 1
-            ntasks: 16
-            cpus_per_task: 1
+            ntasks: 1
+            cpus_per_task: 16
             mem: "80G"
             time: "24:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
         }
         modules: ["conda_grace.sh", "module_mpi.sh",]
         py_scripts: []
@@ -98,10 +100,12 @@
         }
         slurm_opts: {
             nodes: 1
-            ntasks: 64
-            cpus_per_task: 1
+            ntasks: 1
+            cpus_per_task: 16
             mem: "80G"
-            time: "48:00:00"
+            time: "24:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
         }
         modules: ["conda_grace.sh", "module_mpi.sh",]
         py_scripts: []
@@ -115,10 +119,12 @@
         }
         slurm_opts: {
             nodes: 1
-            ntasks: 32
-            cpus_per_task: 1
-            mem: "100G"
-            time: "120:00:00"
+            ntasks: 1
+            cpus_per_task: 16
+            mem: "80G"
+            time: "24:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
         }
         modules: ["conda_grace.sh", "module_mpi.sh",]
         py_scripts: []
