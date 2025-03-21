@@ -1,0 +1,208 @@
+{
+    general: {
+        lammps_bin_path: "/scratch/p319875/POTline/lammps_versions/grace/lammps/build/lmp",
+        model_name: grace
+        best_n_models: 1
+        hpc: true
+        cluster: 'habrok'
+        sweep_path: "/scratch/p319875/POTline/finetune/grace/GRACE-1L-OAM"
+        repo_path: "/home4/p319875/repos/POTline"
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {}
+        modules: ["conda_grace.sh"]
+        py_scripts: []
+    }
+    inference: {
+        prerun_steps: 100,
+        max_steps: 1100,
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            nodes: 1
+            ntasks: 1
+            cpus_per_task: 32
+            mem: "80G"
+            time: "24:00:00"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh"]
+        py_scripts: []
+    }
+    data_analysis: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            nodes: 1
+            ntasks: 1
+            cpus_per_task: 16
+            mem: "80G"
+            time: "6:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }    
+    hard_split_screw: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            nodes: 1
+            ntasks: 1
+            cpus_per_task: 16
+            mem: "80G"
+            time: "6:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }
+    dislocations: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            nodes: 1
+            ntasks: 1
+            cpus_per_task: 16
+            mem: "80G"
+            time: "6:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }
+    cracks: {
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "10G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            nodes: 1
+            ntasks: 1
+            cpus_per_task: 16
+            mem: "80G"
+            time: "6:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+        }
+        modules: ["conda_grace.sh", "module_mpi.sh",]
+        py_scripts: []
+    }
+    hyper_search: {
+        max_iter: 5,
+        n_initial_points: 5
+        n_points: 5
+        strategy: "cl_min"
+        energy_weight: 0.3
+        handle_collect_errors: true
+        slurm_watcher: {
+            ntasks: 1
+            cpus_per_task: 4
+            mem: "5G"
+            time: "1:00:00"
+        }
+        slurm_opts: {
+            ntasks: 1
+            cpus_per_task: 8
+            mem: "80G"
+            time: "50:00:00"
+            partition: "gpu"
+            gpus_per_node:"a100:1"
+        }
+        modules: ["conda_grace.sh"]
+        py_scripts: ["tf_gpu_test.py"]
+        optimizer_params: {
+            "cutoff": 6.0
+            "seed": 42
+            "metadata": {
+                "purpose": "Potential fit"
+                },
+            "data": {
+                "filename": "/home4/p319875/repos/POTline/src/data/ogata_extended_corrected.pckl.gzip",
+                "test_size": 0.10
+            },
+            "potential": { 
+                finetune_foundation_model: GRACE-1L-OAM
+                reduce_elements: True
+            },
+            "fit": {
+                eval_init_stats: True  
+                loss: {
+                    energy: { 
+                        weight: 1, 
+                        type: huber
+                        delta: 0.01 
+                    },
+                    forces: {
+                        weight: 5,
+                        type: huber
+                        delta: 0.01 
+                    },
+                }
+                maxiter: 2000 # Number of epochs / iterations
+
+                optimizer: Adam
+                opt_params: {
+                            learning_rate: "skopt.space.Real(0.0001, 0.005)",
+                            amsgrad: True,
+                            use_ema: True,
+                            ema_momentum: 0.99,
+                            weight_decay: null,
+                            clipvalue: 1.0,
+                        }
+
+                # for learning-rate reduction
+                learning_rate_reduction: {
+                    patience: 5,
+                    factor: 0.98,
+                    min: 5.0e-5,
+                    stop_at_min: True
+                    resume_lr: True
+                    loss_explosion_threshold: 2
+                    }
+
+                ## needed for low-energy tier metrics and for "convex_hull"-based distance of energy-based weighting scheme
+                compute_convex_hull: False
+                batch_size: "skopt.space.Integer(8, 128)" # Important hyperparameter for Adam and irrelevant (but must be) for L-BFGS-B
+                test_batch_size: 128 # test batch size (optional)
+
+                jit_compile: True
+
+                train_max_n_buckets: "skopt.space.Integer(1,50)" # max number of buckets (group of batches of same shape) in train set
+                test_max_n_buckets: "skopt.space.Integer(1,50)" # same for test
+
+                checkpoint_freq: 10 # frequency for **REGULAR** checkpoints.
+                # save_all_regular_checkpoints: True # to store ALL regular checkpoints
+                progressbar: False 
+                # show batch-evaluation progress bar
+                train_shuffle: "skopt.space.Categorical(categories=['True', 'False'])"
+                # shuffle train batches on every epoch
+                normalize_weights: "skopt.space.Categorical(categories=['True', 'False'])"
+            },
+        }
+    }
+}

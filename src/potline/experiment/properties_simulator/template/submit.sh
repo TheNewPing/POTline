@@ -26,8 +26,8 @@ LMMP=$1
 lmp_inps=$2
 pps_python=$3
 ref_data_path=$4
-cpus_per_task=$4
-ntasks=$5
+cpus_per_task=$5
+ntasks=$6
 
 export MKL_NUM_THREADS=${cpus_per_task}
 export OMP_NUM_THREADS=${cpus_per_task}

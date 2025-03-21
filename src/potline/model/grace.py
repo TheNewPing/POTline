@@ -33,7 +33,7 @@ class PotGRACE(PotModel):
             if self._preset == 'FS':
                 self._yace_path = self._seed_path / 'FS_model.yaml'
             else:
-                self._yace_path = self._seed_path / 'final_model'
+                self._yace_path = self._seed_path / 'saved_model'
 
     @staticmethod
     def get_fit_cmd(deep: bool = False):
